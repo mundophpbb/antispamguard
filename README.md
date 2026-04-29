@@ -1,6 +1,6 @@
-**? TraduÃ§Ã£o revisada e polida para o InglÃªs**
+**? Tradução revisada e polida para o Inglês**
 
-Aqui estÃ¡ uma versÃ£o mais fluida, profissional e natural do texto em inglÃªs:
+Aqui está uma versão mais fluida, profissional e natural do texto em inglês:
 
 ---
 
@@ -85,4 +85,4 @@ Production-ready.
 
 ---
 
-Se quiser, posso tambÃ©m fazer uma versÃ£o em **Espanhol**, **FrancÃªs** ou ajustar o tom (mais tÃ©cnico, mais simples, etc.). Ã‰ sÃ³ pedir!
+Se quiser, posso também fazer uma versão em **Espanhol**, **Francês** ou ajustar o tom (mais técnico, mais simples, etc.). É só pedir!
