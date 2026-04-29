@@ -1,0 +1,57 @@
+{% if ANTISPAMGUARD_ENABLED and (ANTISPAMGUARD_PROTECT_CONTACT or ANTISPAMGUARD_PROTECT_PM) %}
+<script>
+(function() {
+    var params = null;
+    try {
+        params = new URL(window.location.href).searchParams;
+    } catch (e) {}
+
+    var mode = params ? (params.get('mode') || '') : '';
+    var i = params ? (params.get('i') || '') : '';
+    var path = window.location.pathname || '';
+
+    var isContact = {{ ANTISPAMGUARD_PROTECT_CONTACT ? 'true' : 'false' }} &&
+        (mode === 'contactadmin' || mode === 'email') && path.indexOf('memberlist.php') !== -1;
+    var isPm = {{ ANTISPAMGUARD_PROTECT_PM ? 'true' : 'false' }} &&
+        mode === 'compose' && i.indexOf('pm') !== -1 && path.indexOf('ucp.php') !== -1;
+
+    if (!isContact && !isPm) {
+        return;
+    }
+
+    var forms = document.querySelectorAll('form');
+    for (var iForm = 0; iForm < forms.length; iForm++) {
+        var form = forms[iForm];
+        if (form.querySelector('input[name="antispamguard_ts"]')) {
+            continue;
+        }
+
+        var hpWrap = document.createElement('div');
+        hpWrap.className = 'antispamguard-field';
+        hpWrap.setAttribute('aria-hidden', 'true');
+        hpWrap.style.position = 'absolute';
+        hpWrap.style.left = '-9999px';
+        hpWrap.style.width = '1px';
+        hpWrap.style.height = '1px';
+        hpWrap.style.overflow = 'hidden';
+        hpWrap.style.opacity = '0';
+
+        var hpInput = document.createElement('input');
+        hpInput.type = 'text';
+        hpInput.name = '{{ ANTISPAMGUARD_HP_NAME|escape('js') }}';
+        hpInput.value = '';
+        hpInput.tabIndex = -1;
+        hpInput.autocomplete = 'off';
+        hpWrap.appendChild(hpInput);
+
+        var tsInput = document.createElement('input');
+        tsInput.type = 'hidden';
+        tsInput.name = 'antispamguard_ts';
+        tsInput.value = '{{ ANTISPAMGUARD_TS|escape('js') }}';
+
+        form.appendChild(hpWrap);
+        form.appendChild(tsInput);
+    }
+})();
+</script>
+{% endif %}

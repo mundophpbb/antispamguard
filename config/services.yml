@@ -1,0 +1,21 @@
+services:
+    mundophpbb.antispamguard.listener:
+        class: mundophpbb\antispamguard\event\listener
+        arguments:
+            - '@config'
+            - '@request'
+            - '@template'
+            - '@user'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        tags:
+            - { name: event.listener }
+
+    mundophpbb.antispamguard.cron.prune_logs:
+        class: mundophpbb\antispamguard\cron\task\prune_logs
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        tags:
+            - { name: cron.task }
