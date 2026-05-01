@@ -19,7 +19,7 @@
 .asg-panel dd { margin-left: 0; }
 .asg-panel dt label { font-weight: 700; font-size: 12px; }
 .asg-panel dt span { display: block; margin-top: 2px; color: #667; line-height: 1.3; font-size: 11px; }
-.asg-panel input[type="text"], .asg-panel input[type="number"] { max-width: 260px; }
+.asg-panel input[type="text"], .asg-panel input[type="number"], .asg-panel input[type="password"] { max-width: 260px; }
 .asg-panel textarea { width: 96%; max-width: 680px; }
 .asg-alert { border: 1px solid #ead28a; background: #fff9e6; border-radius: 6px; padding: 8px 10px; margin: 8px 0 10px; font-size: 12px; }
 .asg-alert strong { display: block; margin-bottom: 3px; }
@@ -42,19 +42,55 @@
     <div class="asg-modern-grid">
         <div class="asg-panel"><h2>🛡️ {{ lang('ACP_ANTISPAMGUARD_PANEL_PROTECTION') }}</h2>
             <dl><dt><label for="antispamguard_enabled">{{ lang('ACP_ANTISPAMGUARD_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_enabled" value="1"{% if ANTISPAMGUARD_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_enabled" value="0"{% if not ANTISPAMGUARD_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_register_notice_enabled">{{ lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_register_notice_enabled" value="1"{% if ANTISPAMGUARD_REGISTER_NOTICE_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_register_notice_enabled" value="0"{% if not ANTISPAMGUARD_REGISTER_NOTICE_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_register_notice_text">{{ lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN') }}</span></dt><dd><textarea id="antispamguard_register_notice_text" name="antispamguard_register_notice_text" rows="3" cols="55" maxlength="255">{{ ANTISPAMGUARD_REGISTER_NOTICE_TEXT|e }}</textarea></dd></dl>
             <dl><dt><label for="antispamguard_protect_posts">{{ lang('ACP_ANTISPAMGUARD_PROTECT_POSTS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_PROTECT_POSTS_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_protect_posts" value="1"{% if ANTISPAMGUARD_PROTECT_POSTS %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_protect_posts" value="0"{% if not ANTISPAMGUARD_PROTECT_POSTS %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_posts_guests_only">{{ lang('ACP_ANTISPAMGUARD_POSTS_GUESTS_ONLY') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_POSTS_GUESTS_ONLY_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_posts_guests_only" value="1"{% if ANTISPAMGUARD_POSTS_GUESTS_ONLY %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_posts_guests_only" value="0"{% if not ANTISPAMGUARD_POSTS_GUESTS_ONLY %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_protect_contact">{{ lang('ACP_ANTISPAMGUARD_PROTECT_CONTACT') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_PROTECT_CONTACT_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_protect_contact" value="1"{% if ANTISPAMGUARD_PROTECT_CONTACT %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_protect_contact" value="0"{% if not ANTISPAMGUARD_PROTECT_CONTACT %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_protect_pm">{{ lang('ACP_ANTISPAMGUARD_PROTECT_PM') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_PROTECT_PM_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_protect_pm" value="1"{% if ANTISPAMGUARD_PROTECT_PM %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_protect_pm" value="0"{% if not ANTISPAMGUARD_PROTECT_PM %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
         </div>
         <div class="asg-panel"><h2>⏱️ {{ lang('ACP_ANTISPAMGUARD_PANEL_BEHAVIOR') }}</h2>
+            <dl><dt><label for="antispamguard_max_form_age">{{ lang('ACP_ANTISPAMGUARD_MAX_FORM_AGE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_max_form_age" name="antispamguard_max_form_age" value="{{ ANTISPAMGUARD_MAX_FORM_AGE }}" min="0" max="86400"></dd></dl>
             <dl><dt><label for="antispamguard_hp_name">{{ lang('ACP_ANTISPAMGUARD_HP_NAME') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_HP_NAME_EXPLAIN') }}</span></dt><dd><input type="text" id="antispamguard_hp_name" name="antispamguard_hp_name" value="{{ ANTISPAMGUARD_HP_NAME }}" maxlength="31"></dd></dl>
+            <dl><dt><label for="antispamguard_hp_dynamic_enabled">{{ lang('ACP_ANTISPAMGUARD_HP_DYNAMIC_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_HP_DYNAMIC_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_hp_dynamic_enabled" value="1"{% if ANTISPAMGUARD_HP_DYNAMIC_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_hp_dynamic_enabled" value="0"{% if not ANTISPAMGUARD_HP_DYNAMIC_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_hp_dynamic_prefix">{{ lang('ACP_ANTISPAMGUARD_HP_DYNAMIC_PREFIX') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_HP_DYNAMIC_PREFIX_EXPLAIN') }}</span></dt><dd><input type="text" id="antispamguard_hp_dynamic_prefix" name="antispamguard_hp_dynamic_prefix" value="{{ ANTISPAMGUARD_HP_DYNAMIC_PREFIX }}" maxlength="21"></dd></dl>
+            <dl><dt><label for="antispamguard_hp_camouflage_enabled">{{ lang('ACP_ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_hp_camouflage_enabled" value="1"{% if ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_hp_camouflage_enabled" value="0"{% if not ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_min_seconds">{{ lang('ACP_ANTISPAMGUARD_MIN_SECONDS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_MIN_SECONDS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_min_seconds" name="antispamguard_min_seconds" value="{{ ANTISPAMGUARD_MIN_SECONDS }}" min="0" max="60"></dd></dl>
             <dl><dt><label for="antispamguard_max_seconds">{{ lang('ACP_ANTISPAMGUARD_MAX_SECONDS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_max_seconds" name="antispamguard_max_seconds" value="{{ ANTISPAMGUARD_MAX_SECONDS }}" min="10" max="86400"></dd></dl>
             <dl><dt><label for="antispamguard_bypass_group_ids">{{ lang('ACP_ANTISPAMGUARD_BYPASS_GROUP_IDS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_BYPASS_GROUP_IDS_EXPLAIN') }}</span></dt><dd><input type="text" id="antispamguard_bypass_group_ids" name="antispamguard_bypass_group_ids" value="{{ ANTISPAMGUARD_BYPASS_GROUP_IDS }}" maxlength="255" placeholder="4,5,8"></dd></dl>
         </div>
         <div class="asg-panel"><h2>🌐 {{ lang('ACP_ANTISPAMGUARD_PANEL_IP') }}</h2>
             <dl><dt><label for="antispamguard_ip_whitelist">{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_EXPLAIN') }}</span></dt><dd><textarea id="antispamguard_ip_whitelist" name="antispamguard_ip_whitelist" rows="5" cols="45">{{ ANTISPAMGUARD_IP_WHITELIST }}</textarea></dd></dl>
+            <dl>
+                <dt><label for="antispamguard_ip_whitelist_mode">{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_EXPLAIN') }}</span></dt>
+                <dd>
+                    <select id="antispamguard_ip_whitelist_mode" name="antispamguard_ip_whitelist_mode">
+                        <option value="partial"{% if IP_WHITELIST_MODE == 'partial' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_PARTIAL') }}</option>
+                        <option value="total"{% if IP_WHITELIST_MODE == 'total' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_TOTAL') }}</option>
+                    </select>
+                </dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_ip_whitelist_test">{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_EXPLAIN') }}</span></dt>
+                <dd>
+                    <input type="text" id="antispamguard_ip_whitelist_test" name="antispamguard_ip_whitelist_test" value="{{ IP_WHITELIST_TEST_IP }}" size="40">
+                    <input class="button2" type="submit" name="test_ip_whitelist" value="{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_BUTTON') }}" data-ajax="false">
+                </dd>
+            </dl>
+            {% if S_IP_WHITELIST_TEST_DONE %}
+            <div class="successbox notice">
+                <h3>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_RESULT') }}</h3>
+                <p><strong>{{ IP_WHITELIST_TEST_RESULT }}</strong></p>
+                <p>
+                    {{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}{{ lang('COLON') }} <strong>{{ IP_WHITELIST_TEST_IP }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_MATCHED') }}{{ lang('COLON') }} <strong>{{ IP_WHITELIST_TEST_MATCHED }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_ENTRY') }}{{ lang('COLON') }} <strong>{{ IP_WHITELIST_TEST_ENTRY }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE') }}{{ lang('COLON') }} <strong>{{ IP_WHITELIST_TEST_MODE }}</strong>
+                </p>
+            </div>
+            {% endif %}
+
             <dl><dt><label for="antispamguard_ip_blacklist">{{ lang('ACP_ANTISPAMGUARD_IP_BLACKLIST') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_BLACKLIST_EXPLAIN') }}</span></dt><dd><textarea id="antispamguard_ip_blacklist" name="antispamguard_ip_blacklist" rows="5" cols="45">{{ ANTISPAMGUARD_IP_BLACKLIST }}</textarea></dd></dl>
             <dl><dt><label for="antispamguard_rate_limit_enabled">{{ lang('ACP_ANTISPAMGUARD_RATE_LIMIT_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_RATE_LIMIT_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_rate_limit_enabled" value="1"{% if ANTISPAMGUARD_RATE_LIMIT_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_rate_limit_enabled" value="0"{% if not ANTISPAMGUARD_RATE_LIMIT_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_rate_limit_max_attempts">{{ lang('ACP_ANTISPAMGUARD_RATE_LIMIT_MAX_ATTEMPTS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_RATE_LIMIT_MAX_ATTEMPTS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_rate_limit_max_attempts" name="antispamguard_rate_limit_max_attempts" value="{{ ANTISPAMGUARD_RATE_LIMIT_MAX_ATTEMPTS }}" min="1" max="100"></dd></dl>
@@ -68,6 +104,280 @@
         <div class="asg-panel"><h2>⚙️ {{ lang('ACP_ANTISPAMGUARD_PANEL_MODES') }}</h2>
             <dl><dt><label for="antispamguard_silent_mode">{{ lang('ACP_ANTISPAMGUARD_SILENT_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SILENT_MODE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_silent_mode" value="1"{% if ANTISPAMGUARD_SILENT_MODE %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_silent_mode" value="0"{% if not ANTISPAMGUARD_SILENT_MODE %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_simulation_mode">{{ lang('ACP_ANTISPAMGUARD_SIMULATION_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SIMULATION_MODE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_simulation_mode" value="1"{% if ANTISPAMGUARD_SIMULATION_MODE %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_simulation_mode" value="0"{% if not ANTISPAMGUARD_SIMULATION_MODE %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+        </div>
+<div class="asg-panel"><h2>🧠 {{ lang('ACP_ANTISPAMGUARD_PANEL_IP_REPUTATION') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_IP_REPUTATION_EXPLAIN') }}</p>
+
+            <dl><dt><label for="antispamguard_ip_reputation_enabled">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_ip_reputation_enabled" value="1"{% if IP_REPUTATION_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_ip_reputation_enabled" value="0"{% if not IP_REPUTATION_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_reputation_threshold">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_THRESHOLD') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_THRESHOLD_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_reputation_threshold" name="antispamguard_ip_reputation_threshold" value="{{ IP_REPUTATION_THRESHOLD }}" min="1"></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_reputation_decay_interval">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_DECAY_INTERVAL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_DECAY_INTERVAL_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_reputation_decay_interval" name="antispamguard_ip_reputation_decay_interval" value="{{ IP_REPUTATION_DECAY_INTERVAL }}" min="0"></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_reputation_ttl">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_TTL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_TTL_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_reputation_ttl" name="antispamguard_ip_reputation_ttl" value="{{ IP_REPUTATION_TTL }}" min="3600"></dd></dl>
+            <dl><dt><label for="antispamguard_ip_reputation_cleanup_interval">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_CLEANUP_INTERVAL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_CLEANUP_INTERVAL_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_reputation_cleanup_interval" name="antispamguard_ip_reputation_cleanup_interval" value="{{ IP_REPUTATION_CLEANUP_INTERVAL }}" min="3600"></dd></dl>
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_CLEANUP_LAST_GC') ~ lang('COLON') }}</label></dt><dd><strong>{{ IP_REPUTATION_CLEANUP_LAST_GC }}</strong></dd></dl>
+
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_COUNTS') ~ lang('COLON') }}</label></dt><dd>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_TOTAL') }}: <strong>{{ IP_REPUTATION_TOTAL }}</strong> | {{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_BLOCKED') }}: <strong>{{ IP_REPUTATION_BLOCKED }}</strong> | {{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_EXPIRED') }}: <strong>{{ IP_REPUTATION_EXPIRED }}</strong></dd></dl>
+
+            <h3>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHTS') }}</h3>
+            <dl><dt><label for="antispamguard_ip_reputation_weight_honeypot">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_HONEYPOT') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_honeypot" name="antispamguard_ip_reputation_weight_honeypot" value="{{ IP_REPUTATION_WEIGHT_HONEYPOT }}" min="0"></dd></dl>
+            <dl><dt><label for="antispamguard_ip_reputation_weight_timestamp_fast">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_TIMESTAMP_FAST') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_timestamp_fast" name="antispamguard_ip_reputation_weight_timestamp_fast" value="{{ IP_REPUTATION_WEIGHT_TIMESTAMP_FAST }}" min="0"></dd></dl>
+            <dl><dt><label for="antispamguard_ip_reputation_weight_timestamp_expired">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_TIMESTAMP_EXPIRED') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_timestamp_expired" name="antispamguard_ip_reputation_weight_timestamp_expired" value="{{ IP_REPUTATION_WEIGHT_TIMESTAMP_EXPIRED }}" min="0"></dd></dl>
+            <dl><dt><label for="antispamguard_ip_reputation_weight_sfs">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_sfs" name="antispamguard_ip_reputation_weight_sfs" value="{{ IP_REPUTATION_WEIGHT_SFS }}" min="0"></dd></dl>
+
+            <div class="asg-actions">
+                <input class="button2" type="submit" name="prune_ip_reputation" value="{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_PRUNE') }}" data-ajax="false">
+                <input class="button2" type="submit" name="reset_ip_reputation" value="{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_RESET') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_RESET_CONFIRM')|e('js') }}');">
+            </div>
+        </div>
+
+        <div class="asg-panel"><h2>🚨 {{ lang('ACP_ANTISPAMGUARD_PANEL_ALERTS') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_ALERTS_EXPLAIN') }}</p>
+            <dl><dt><label for="antispamguard_alerts_enabled">{{ lang('ACP_ANTISPAMGUARD_ALERTS_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_alerts_enabled" value="1"{% if ALERTS_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_alerts_enabled" value="0"{% if not ALERTS_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_alerts_retention">{{ lang('ACP_ANTISPAMGUARD_ALERTS_RETENTION') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_ALERTS_RETENTION_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_alerts_retention" name="antispamguard_alerts_retention" value="{{ ALERTS_RETENTION }}" min="3600"></dd></dl>
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_ALERTS_COUNTS') ~ lang('COLON') }}</label></dt><dd>{{ lang('ACP_ANTISPAMGUARD_ALERTS_TOTAL') }}: <strong>{{ ALERTS_TOTAL }}</strong> | {{ lang('ACP_ANTISPAMGUARD_ALERTS_UNREAD') }}: <strong>{{ ALERTS_UNREAD }}</strong> | {{ lang('ACP_ANTISPAMGUARD_ALERTS_EXPIRED') }}: <strong>{{ ALERTS_EXPIRED }}</strong></dd></dl>
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_ALERTS_LAST_GC') ~ lang('COLON') }}</label></dt><dd><strong>{{ ALERTS_LAST_GC }}</strong></dd></dl>
+            <div class="asg-actions">
+                <input class="button2" type="submit" name="mark_alerts_read" value="{{ lang('ACP_ANTISPAMGUARD_ALERTS_MARK_READ') }}" data-ajax="false">
+                <input class="button2" type="submit" name="prune_alerts" value="{{ lang('ACP_ANTISPAMGUARD_ALERTS_PRUNE') }}" data-ajax="false">
+            </div>
+            {% if antispamguard_alerts %}
+            <table class="table1 zebra-table">
+                <thead><tr><th>{{ lang('ACP_ANTISPAMGUARD_ALERTS_TIME') }}</th><th>{{ lang('ACP_ANTISPAMGUARD_ALERTS_SEVERITY') }}</th><th>{{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}</th><th>{{ lang('USERNAME') }}</th><th>{{ lang('MESSAGE') }}</th></tr></thead>
+                <tbody>
+                    {% for alert in antispamguard_alerts %}
+                    <tr{% if not alert.S_READ %} class="reported"{% endif %}>
+                        <td>{{ alert.CREATED_AT }}</td>
+                        <td>{{ alert.SEVERITY }}</td>
+                        <td>{{ alert.IP }}</td>
+                        <td>{{ alert.USERNAME }}</td>
+                        <td>{{ alert.MESSAGE }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+
+        <div class="asg-panel"><h2>🐢 {{ lang('ACP_ANTISPAMGUARD_PANEL_SLOWSPAM') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SLOWSPAM_EXPLAIN') }}</p>
+            <dl><dt><label for="antispamguard_slowspam_enabled">{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_slowspam_enabled" value="1"{% if SLOWSPAM_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_slowspam_enabled" value="0"{% if not SLOWSPAM_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_slowspam_window">{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_WINDOW') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_WINDOW_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_slowspam_window" name="antispamguard_slowspam_window" value="{{ SLOWSPAM_WINDOW }}" min="60"></dd></dl>
+            <dl><dt><label for="antispamguard_slowspam_threshold">{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_THRESHOLD') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_THRESHOLD_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_slowspam_threshold" name="antispamguard_slowspam_threshold" value="{{ SLOWSPAM_THRESHOLD }}" min="1"></dd></dl>
+            <dl><dt><label for="antispamguard_slowspam_prune_after">{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_PRUNE_AFTER') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_PRUNE_AFTER_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_slowspam_prune_after" name="antispamguard_slowspam_prune_after" value="{{ SLOWSPAM_PRUNE_AFTER }}" min="3600"></dd></dl>
+            <dl><dt><label for="antispamguard_slowspam_cleanup_interval">{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_CLEANUP_INTERVAL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_CLEANUP_INTERVAL_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_slowspam_cleanup_interval" name="antispamguard_slowspam_cleanup_interval" value="{{ SLOWSPAM_CLEANUP_INTERVAL }}" min="3600"></dd></dl>
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_ACTIVITY_ROWS') ~ lang('COLON') }}</label></dt><dd>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_TOTAL') }}: <strong>{{ SLOWSPAM_ACTIVITY_TOTAL }}</strong> | {{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_EXPIRED') }}: <strong>{{ SLOWSPAM_ACTIVITY_EXPIRED }}</strong></dd></dl>
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_CLEANUP_LAST_GC') ~ lang('COLON') }}</label></dt><dd><strong>{{ SLOWSPAM_CLEANUP_LAST_GC }}</strong></dd></dl>
+            <div class="asg-actions">
+                                <input class="button2" type="submit" name="export_slowspam_activity" value="{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_EXPORT') }}" data-ajax="false">
+                <input class="button2" type="submit" name="prune_slowspam_activity" value="{{ lang('ACP_ANTISPAMGUARD_SLOWSPAM_PRUNE_NOW') }}" data-ajax="false">
+            </div>
+            <dl><dt><label for="antispamguard_decision_weight_slowspam">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_SLOWSPAM') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_slowspam" name="antispamguard_decision_weight_slowspam" value="{{ DECISION_WEIGHT_SLOWSPAM }}" min="0"></dd></dl>
+        </div>
+
+        <div class="asg-panel"><h2>⏱ {{ lang('ACP_ANTISPAMGUARD_PANEL_IP_RATE_LIMIT') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_IP_RATE_LIMIT_EXPLAIN') }}</p>
+
+            <dl><dt><label for="antispamguard_ip_rate_limit_enabled">{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_ip_rate_limit_enabled" value="1"{% if IP_RATE_LIMIT_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_ip_rate_limit_enabled" value="0"{% if not IP_RATE_LIMIT_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_rate_limit_window">{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_WINDOW') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_WINDOW_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_rate_limit_window" name="antispamguard_ip_rate_limit_window" value="{{ IP_RATE_LIMIT_WINDOW }}" min="1"></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_rate_limit_max_hits">{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_MAX_HITS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_MAX_HITS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_rate_limit_max_hits" name="antispamguard_ip_rate_limit_max_hits" value="{{ IP_RATE_LIMIT_MAX_HITS }}" min="1"></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_rate_limit_action">{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTION') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTION_EXPLAIN') }}</span></dt><dd><select id="antispamguard_ip_rate_limit_action" name="antispamguard_ip_rate_limit_action"><option value="block"{% if IP_RATE_LIMIT_ACTION == 'block' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTION_BLOCK') }}</option><option value="score"{% if IP_RATE_LIMIT_ACTION == 'score' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTION_SCORE') }}</option><option value="log_only"{% if IP_RATE_LIMIT_ACTION == 'log_only' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTION_LOG_ONLY') }}</option></select></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_reputation_weight_rate_limit">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_RATE_LIMIT') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_rate_limit" name="antispamguard_ip_reputation_weight_rate_limit" value="{{ IP_REPUTATION_WEIGHT_RATE_LIMIT }}" min="0"></dd></dl>
+
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_ACTIVE_ROWS') ~ lang('COLON') }}</label></dt><dd>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_TOTAL') }}: <strong>{{ IP_RATE_LIMIT_TOTAL }}</strong> | {{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_EXPIRED') }}: <strong>{{ IP_RATE_LIMIT_EXPIRED }}</strong></dd></dl>
+
+            <dl><dt><label for="antispamguard_ip_rate_limit_cleanup_interval">{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_CLEANUP_INTERVAL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_CLEANUP_INTERVAL_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_rate_limit_cleanup_interval" name="antispamguard_ip_rate_limit_cleanup_interval" value="{{ IP_RATE_LIMIT_CLEANUP_INTERVAL }}" min="300"></dd></dl>
+
+            <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_CLEANUP_LAST_GC') ~ lang('COLON') }}</label></dt><dd><strong>{{ IP_RATE_LIMIT_CLEANUP_LAST_GC }}</strong></dd></dl>
+
+            <div class="asg-actions">
+                                <input class="button2" type="submit" name="export_config_inventory" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_CONFIG_INVENTORY') }}" data-ajax="false">
+                <input class="button2" type="submit" name="export_ip_rate_limit" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_IP_RATE_LIMIT') }}" data-ajax="false">
+                <input class="button2" type="submit" name="prune_ip_rate_limit" value="{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_PRUNE') }}" data-ajax="false">
+                <input class="button2" type="submit" name="reset_ip_rate_limit" value="{{ lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_RESET') }}" data-ajax="false">
+            </div>
+        </div>
+
+        <div class="asg-panel"><h2>🧪 {{ lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST_EXPLAIN') }}</p>
+
+            <dl><dt><label for="antispamguard_sfs_test_ip">{{ lang('ACP_ANTISPAMGUARD_LOG_IP') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_IP_EXPLAIN') }}</span></dt><dd><input type="text" id="antispamguard_sfs_test_ip" name="antispamguard_sfs_test_ip" value="{{ SFS_MANUAL_TEST_IP }}" size="40"></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_test_email">{{ lang('EMAIL') ~ lang('COLON') }}</label></dt><dd><input type="text" id="antispamguard_sfs_test_email" name="antispamguard_sfs_test_email" value="{{ SFS_MANUAL_TEST_EMAIL }}" size="40"></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_test_username">{{ lang('USERNAME') ~ lang('COLON') }}</label></dt><dd><input type="text" id="antispamguard_sfs_test_username" name="antispamguard_sfs_test_username" value="{{ SFS_MANUAL_TEST_USERNAME }}" size="40"></dd></dl>
+
+            <div class="asg-actions">
+                <input class="button2" type="submit" name="test_sfs_and_log" value="{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_AND_LOG') }}" data-ajax="false">
+            </div>
+
+            {% if S_SFS_MANUAL_TEST_DONE %}
+            <div class="successbox notice">
+                <h3>{{ lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST_RESULT') }}</h3>
+                <p>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_LISTED_COUNT') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_LISTED_COUNT }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_STRONG_HIT') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_STRONG_HIT }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_BLOCK }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_ACTION_MODE }}</strong>
+                    <br>{{ lang('ACP_ANTISPAMGUARD_SFS_STATUS') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_STATUS }}</strong>
+                </p>
+                <p><strong>{{ SFS_MANUAL_TEST_LOG_STATUS }}</strong>{% if SFS_MANUAL_TEST_LOGGED and SFS_MANUAL_TEST_LOG_ID %} #{{ SFS_MANUAL_TEST_LOG_ID }}{% endif %}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="asg-panel"><h2>🧠 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS') }}</h2>
+            <div class="asg-sfs-diag" style="margin: 12px 0; padding: 10px; border: 1px solid #ccc; background: #f8f8f8;">
+                <strong>🧪 {{ lang('ACP_ANTISPAMGUARD_SFS_DIAG_TITLE') }}</strong><br>
+                {{ lang('ACP_ANTISPAMGUARD_SFS_DIAG_ENABLED') }}{{ lang('COLON') }}
+                <strong>{% if SFS_DIAG_ENABLED %}{{ lang('YES') }}{% else %}{{ lang('NO') }}{% endif %}</strong><br>
+                {{ lang('ACP_ANTISPAMGUARD_SFS_DIAG_ACTION_MODE') }}{{ lang('COLON') }}
+                <strong>{{ SFS_DIAG_ACTION_MODE }}</strong><br>
+                {{ lang('ACP_ANTISPAMGUARD_SFS_DIAG_CACHE_TOTAL') }}{{ lang('COLON') }}
+                <strong>{{ SFS_DIAG_CACHE_TOTAL }}</strong><br>
+                {{ lang('ACP_ANTISPAMGUARD_SFS_DIAG_LOGS_TOTAL') }}{{ lang('COLON') }}
+                <strong>{{ SFS_DIAG_LOGS_TOTAL }}</strong><br>
+                {{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_CONFIGURED') }}{{ lang('COLON') }}
+                <strong>{% if SFS_API_KEY_CONFIGURED %}{{ lang('YES') }}{% else %}{{ lang('NO') }}{% endif %}</strong>
+            </div>
+
+            <dl><dt><label for="antispamguard_sfs_enabled">{{ lang('ACP_ANTISPAMGUARD_SFS_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_enabled" value="1"{% if ANTISPAMGUARD_SFS_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_enabled" value="0"{% if not ANTISPAMGUARD_SFS_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_action_mode">{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_EXPLAIN') }}</span></dt><dd><select id="antispamguard_sfs_action_mode" name="antispamguard_sfs_action_mode"><option value="block"{% if SFS_ACTION_MODE == 'block' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_BLOCK') }}</option><option value="soft"{% if SFS_ACTION_MODE == 'soft' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_SOFT') }}</option><option value="log_only"{% if SFS_ACTION_MODE == 'log_only' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_LOG_ONLY') }}</option></select></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_api_key">{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_EXPLAIN') }}</span></dt><dd><input type="password" id="antispamguard_sfs_api_key" name="antispamguard_sfs_api_key" value="" size="40" autocomplete="new-password">{% if SFS_API_KEY_CONFIGURED %}<br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_CURRENT') }}: <strong>{{ SFS_API_KEY_MASKED }}</strong></small><br><input class="button2" type="submit" name="remove_sfs_api_key" value="{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_REMOVE') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_REMOVE_CONFIRM')|e('js') }}');">{% endif %}</dd></dl>
+            <dl><dt><label for="antispamguard_sfs_min_confidence">{{ lang('ACP_ANTISPAMGUARD_SFS_MIN_CONFIDENCE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_MIN_CONFIDENCE_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_sfs_min_confidence" name="antispamguard_sfs_min_confidence" value="{{ ANTISPAMGUARD_SFS_MIN_CONFIDENCE }}" min="0" max="100"></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_min_frequency">{{ lang('ACP_ANTISPAMGUARD_SFS_MIN_FREQUENCY') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_MIN_FREQUENCY_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_sfs_min_frequency" name="antispamguard_sfs_min_frequency" value="{{ ANTISPAMGUARD_SFS_MIN_FREQUENCY }}" min="1" max="100000"></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_block_multiple_hits">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_block_multiple_hits" value="1"{% if ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_block_multiple_hits" value="0"{% if not ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_log_all_checks">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ALL_CHECKS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ALL_CHECKS_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_all_checks" value="1"{% if SFS_LOG_ALL_CHECKS %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_all_checks" value="0"{% if not SFS_LOG_ALL_CHECKS %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_debug_log_all">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOG_ALL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOG_ALL_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_debug_log_all" value="1"{% if SFS_DEBUG_LOG_ALL %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_debug_log_all" value="0"{% if not SFS_DEBUG_LOG_ALL %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_debug_localhost_only">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOCALHOST_ONLY') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOCALHOST_ONLY_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_debug_localhost_only" value="1"{% if SFS_DEBUG_LOCALHOST_ONLY %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_debug_localhost_only" value="0"{% if not SFS_DEBUG_LOCALHOST_ONLY %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_log_enabled">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_enabled" value="1"{% if ANTISPAMGUARD_SFS_LOG_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_enabled" value="0"{% if not ANTISPAMGUARD_SFS_LOG_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_log_only_blocked">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_only_blocked" value="1"{% if ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_only_blocked" value="0"{% if not ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+        </div>
+        <div class="asg-panel"><h2>🛡️ {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_WHITELIST') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_WHITELIST_EXPLAIN') }}</p>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_whitelist_ips">{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_IPS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_IPS_EXPLAIN') }}</span></dt>
+                <dd><textarea id="antispamguard_sfs_whitelist_ips" name="antispamguard_sfs_whitelist_ips" rows="5" cols="50">{{ SFS_WHITELIST_IPS }}</textarea></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_whitelist_emails">{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_EMAILS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_EMAILS_EXPLAIN') }}</span></dt>
+                <dd><textarea id="antispamguard_sfs_whitelist_emails" name="antispamguard_sfs_whitelist_emails" rows="5" cols="50">{{ SFS_WHITELIST_EMAILS }}</textarea></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_whitelist_usernames">{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_USERNAMES') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_WHITELIST_USERNAMES_EXPLAIN') }}</span></dt>
+                <dd><textarea id="antispamguard_sfs_whitelist_usernames" name="antispamguard_sfs_whitelist_usernames" rows="5" cols="50">{{ SFS_WHITELIST_USERNAMES }}</textarea></dd>
+            </dl>
+        </div>
+        <div class="asg-panel"><h2>🧪 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_TEST') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_TEST_EXPLAIN') }}</p>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_test_type">{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_TYPE') ~ lang('COLON') }}</label></dt>
+                <dd>
+                    <select id="antispamguard_sfs_test_type" name="antispamguard_sfs_test_type">
+                        <option value="ip">IP</option>
+                        <option value="email">Email</option>
+                        <option value="username">Username</option>
+                    </select>
+                </dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_test_value">{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_VALUE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_VALUE_EXPLAIN') }}</span></dt>
+                <dd><input type="text" id="antispamguard_sfs_test_value" name="antispamguard_sfs_test_value" value="" size="40"></dd>
+            </dl>
+
+            <div class="asg-actions">
+                <input class="button2" type="submit" name="test_sfs_lookup" value="{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_RUN') }}" data-ajax="false">
+            </div>
+
+            {% if S_SFS_TEST_DONE %}
+            <div class="successbox notice">
+                <h3>{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_RESULT') }}</h3>
+                <p><strong>{{ SFS_TEST_RESULT }}</strong></p>
+                <p>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_TYPE') }}: <strong>{{ SFS_TEST_TYPE }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_VALUE') }}: <strong>{{ SFS_TEST_VALUE }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_CACHED') }}: <strong>{{ SFS_TEST_CACHED }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_LISTED_FIELD') }}: <strong>{{ SFS_TEST_LISTED }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_CONFIDENCE') }}: <strong>{{ SFS_TEST_CONFIDENCE }}</strong><br>
+                    {{ lang('ACP_ANTISPAMGUARD_SFS_TEST_FREQUENCY') }}: <strong>{{ SFS_TEST_FREQUENCY }}</strong>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="asg-panel"><h2>📨 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_SUBMIT') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_SUBMIT_EXPLAIN') }}</p>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_submit_ip">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_IP') ~ lang('COLON') }}</label></dt>
+                <dd><input type="text" id="antispamguard_sfs_submit_ip" name="antispamguard_sfs_submit_ip" value="" size="40"></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_submit_email">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EMAIL') ~ lang('COLON') }}</label></dt>
+                <dd><input type="text" id="antispamguard_sfs_submit_email" name="antispamguard_sfs_submit_email" value="" size="40"></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_submit_username">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_USERNAME') ~ lang('COLON') }}</label></dt>
+                <dd><input type="text" id="antispamguard_sfs_submit_username" name="antispamguard_sfs_submit_username" value="" size="40"></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_submit_evidence">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_EXPLAIN') }}</span></dt>
+                <dd><textarea id="antispamguard_sfs_submit_evidence" name="antispamguard_sfs_submit_evidence" rows="4" cols="50"></textarea></dd>
+            </dl>
+
+            <div class="asg-actions">
+                <input class="button2" type="submit" name="submit_sfs_spammer" value="{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_RUN') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_CONFIRM')|e('js') }}');"{% if not SFS_API_KEY_CONFIGURED %} disabled="disabled"{% endif %}>
+            </div>
+        </div>
+        <div class="asg-panel"><h2>🧹 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_MAINTENANCE') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_MAINTENANCE_EXPLAIN') }}</p>
+
+            <dl>
+                <dt><label>{{ lang('ACP_ANTISPAMGUARD_SFS_CACHE_TOTAL') ~ lang('COLON') }}</label></dt>
+                <dd><strong>{{ SFS_CACHE_TOTAL }}</strong></dd>
+            </dl>
+
+            <dl>
+                <dt><label>{{ lang('ACP_ANTISPAMGUARD_SFS_CACHE_EXPIRED') ~ lang('COLON') }}</label></dt>
+                <dd><strong>{{ SFS_CACHE_EXPIRED }}</strong></dd>
+            </dl>
+
+            <dl>
+                <dt><label>{{ lang('ACP_ANTISPAMGUARD_SFS_LOGS_TOTAL') ~ lang('COLON') }}</label></dt>
+                <dd><strong>{{ SFS_LOGS_TOTAL }}</strong></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_cleanup_interval">{{ lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_INTERVAL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_INTERVAL_EXPLAIN') }}</span></dt>
+                <dd><input type="number" id="antispamguard_sfs_cleanup_interval" name="antispamguard_sfs_cleanup_interval" value="{{ SFS_CLEANUP_INTERVAL }}" min="3600"></dd>
+            </dl>
+
+            <dl>
+                <dt><label for="antispamguard_sfs_log_retention_days">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_RETENTION_DAYS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_RETENTION_DAYS_EXPLAIN') }}</span></dt>
+                <dd><input type="number" id="antispamguard_sfs_log_retention_days" name="antispamguard_sfs_log_retention_days" value="{{ SFS_LOG_RETENTION_DAYS }}" min="0"></dd>
+            </dl>
+
+            <dl>
+                <dt><label>{{ lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_LAST_GC') ~ lang('COLON') }}</label></dt>
+                <dd><strong>{{ SFS_CLEANUP_LAST_GC }}</strong></dd>
+            </dl>
+
+            <div class="asg-actions">
+                <input class="button1" type="submit" name="run_sfs_cleanup_now" value="{{ lang('ACP_ANTISPAMGUARD_RUN_SFS_CLEANUP_NOW') }}" data-ajax="false">
+                <input class="button2" type="submit" name="clear_sfs_expired_cache" value="{{ lang('ACP_ANTISPAMGUARD_CLEAR_SFS_EXPIRED_CACHE') }}" data-ajax="false">
+                <input class="button2" type="submit" name="clear_sfs_cache" value="{{ lang('ACP_ANTISPAMGUARD_CLEAR_SFS_CACHE') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_CONFIRM_CLEAR_SFS_CACHE')|e('js') }}');">
+                <input class="button2" type="submit" name="clear_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_CLEAR_SFS_LOGS') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_CONFIRM_CLEAR_SFS_LOGS')|e('js') }}');">
+            </div>
         </div>
         <div class="asg-panel"><h2>🧾 {{ lang('ACP_ANTISPAMGUARD_PANEL_MAINTENANCE') }}</h2>
             <dl><dt><label for="antispamguard_log_retention_enabled">{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_log_retention_enabled" value="1"{% if ANTISPAMGUARD_LOG_RETENTION_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_log_retention_enabled" value="0"{% if not ANTISPAMGUARD_LOG_RETENTION_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
@@ -114,7 +424,9 @@
                 <tr><th>{{ lang('ACP_ANTISPAMGUARD_VERSION') }}</th><td>{{ ANTISPAMGUARD_VERSION }}</td></tr>
                 <tr><th>{{ lang('ACP_ANTISPAMGUARD_PHP_VERSION') }}</th><td>{{ ANTISPAMGUARD_PHP_VERSION }}</td></tr>
                 <tr><th>{{ lang('ACP_ANTISPAMGUARD_GLOBAL_STATUS') }}</th><td>{{ ANTISPAMGUARD_GLOBAL_STATUS }}</td></tr>
+                <tr><th>{{ lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_ENABLE') }}</th><td>{{ ANTISPAMGUARD_REGISTER_NOTICE_STATUS }}</td></tr>
                 <tr><th>{{ lang('ACP_ANTISPAMGUARD_SIMULATION_MODE') }}</th><td>{{ ANTISPAMGUARD_SIMULATION_STATUS }}</td></tr>
+                <tr><th>{{ lang('ACP_ANTISPAMGUARD_SFS_API_KEY_CONFIGURED') }}</th><td>{{ SFS_DIAG_API_KEY_CONFIGURED }}</td></tr>
             </tbody></table>
         </div>
 
@@ -182,6 +494,48 @@
         <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_STATS_30D') }}</span><strong>{{ ANTISPAMGUARD_STATS_30D }}</strong></div>
     </div>
 
+
+
+    <h2>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_STATS_TITLE') }}</h2>
+    <p>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_STATS_EXPLAIN') }}</p>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_TOTAL') }}</span><strong>{{ ANTISPAMGUARD_STATS_IP_REP_TOTAL }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_BLOCKED') }}</span><strong>{{ ANTISPAMGUARD_STATS_IP_REP_BLOCKED }}</strong></div>
+    </div>
+
+    <h2>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_TITLE') }}</h2>
+    <p>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_EXPLAIN') }}</p>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_COMBINED') }}</span><strong>{{ ANTISPAMGUARD_STATS_TIMESTAMP_COMBINED }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_GENERIC') }}</span><strong>{{ ANTISPAMGUARD_STATS_TIMESTAMP_TOTAL }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_TOO_FAST') }}</span><strong>{{ ANTISPAMGUARD_STATS_TIMESTAMP_TOO_FAST }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_TIMESTAMP_STATS_EXPIRED') }}</span><strong>{{ ANTISPAMGUARD_STATS_TIMESTAMP_EXPIRED }}</strong></div>
+    </div>
+
+    <h2>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_TITLE') }}</h2>
+    <p>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_EXPLAIN') }}</p>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_TOTAL_LOGS') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_TOTAL_LOGS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_BLOCKED_LOGS') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_BLOCKED_LOGS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_SUSPECT_LOGS') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_SUSPECT_LOGS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_BLOCK_RATE') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_BLOCK_RATE }}%</strong></div>
+    </div>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_24H') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_24H }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_7D') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_7D }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_STRONG_HITS') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_STRONG_HITS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_CACHE_POSITIVE') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_CACHE_POSITIVE }}</strong></div>
+    </div>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_CACHE_TOTAL') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_CACHE_TOTAL }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_SFS_STATS_CACHE_EXPIRED') }}</span><strong>{{ ANTISPAMGUARD_SFS_STATS_CACHE_EXPIRED }}</strong></div>
+    </div>
+
     {% if S_HAS_STATS %}
     <div class="asg-grid-2">
         <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_STATS_TOP_REASON') }}</span><strong>{{ ANTISPAMGUARD_STATS_TOP_REASON }}</strong><p>{{ lang('ACP_ANTISPAMGUARD_STATS_BLOCKS', ANTISPAMGUARD_STATS_TOP_REASON_TOTAL) }}</p></div>
@@ -235,16 +589,21 @@
             <option value=""{% if FILTER_REASON == '' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
             <option value="honeypot"{% if FILTER_REASON == 'honeypot' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_HONEYPOT') }}</option>
             <option value="timestamp"{% if FILTER_REASON == 'timestamp' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TIMESTAMP') }}</option>
+            <option value="timestamp_too_fast"{% if FILTER_REASON == 'timestamp_too_fast' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST') }}</option>
+            <option value="timestamp_expired"{% if FILTER_REASON == 'timestamp_expired' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TIMESTAMP_EXPIRED') }}</option>
             <option value="content_filter"{% if FILTER_REASON == 'content_filter' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_CONTENT_FILTER') }}</option>
             <option value="too_many_urls"{% if FILTER_REASON == 'too_many_urls' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TOO_MANY_URLS') }}</option>
             <option value="ip_rate_limit"{% if FILTER_REASON == 'ip_rate_limit' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_IP_RATE_LIMIT') }}</option>
+            <option value="ip_reputation"{% if FILTER_REASON == 'ip_reputation' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_IP_REPUTATION') }}</option>
             <option value="ip_blacklist"{% if FILTER_REASON == 'ip_blacklist' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST') }}</option>
+            <option value="sfs_reputation"{% if FILTER_REASON == 'sfs_reputation' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION') }}</option>
 <option value="simulation_honeypot"{% if FILTER_REASON == 'simulation_honeypot' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_HONEYPOT') }}</option>
 <option value="simulation_timestamp"{% if FILTER_REASON == 'simulation_timestamp' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP') }}</option>
 <option value="simulation_content_filter"{% if FILTER_REASON == 'simulation_content_filter' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_CONTENT_FILTER') }}</option>
 <option value="simulation_too_many_urls"{% if FILTER_REASON == 'simulation_too_many_urls' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_TOO_MANY_URLS') }}</option>
 <option value="simulation_ip_rate_limit"{% if FILTER_REASON == 'simulation_ip_rate_limit' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_RATE_LIMIT') }}</option>
 <option value="simulation_ip_blacklist"{% if FILTER_REASON == 'simulation_ip_blacklist' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_BLACKLIST') }}</option>
+<option value="simulation_sfs_reputation"{% if FILTER_REASON == 'simulation_sfs_reputation' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_SFS_REPUTATION') }}</option>
 <option value="simulation_multiple"{% if FILTER_REASON == 'simulation_multiple' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_SIMULATION_MULTIPLE') }}</option>
 
         </select>
@@ -303,6 +662,89 @@
     {% else %}
     <p><strong>{{ lang('ACP_ANTISPAMGUARD_NO_LOGS') }}</strong></p>
     {% endif %}
+
+    <hr>
+
+    <h2>{{ lang('ACP_ANTISPAMGUARD_SFS_LOGS') }}</h2>
+    <p>{{ lang('ACP_ANTISPAMGUARD_SFS_LOGS_EXPLAIN') }}</p>
+
+    <fieldset>
+        <legend>{{ lang('ACP_ANTISPAMGUARD_SFS_FILTERS') }}</legend>
+        <dl>
+            <dt><label for="sfs_filter_action">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_ACTION') ~ lang('COLON') }}</label></dt>
+            <dd>
+                <select name="sfs_filter_action" id="sfs_filter_action">
+                    <option value="">{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
+                    <option value="block"{% if SFS_FILTER_ACTION == 'block' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_BLOCK') }}</option>
+                    <option value="soft"{% if SFS_FILTER_ACTION == 'soft' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_SOFT') }}</option>
+                    <option value="log_only"{% if SFS_FILTER_ACTION == 'log_only' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_LOG_ONLY') }}</option>
+                    <option value="whitelist"{% if SFS_FILTER_ACTION == 'whitelist' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_WHITELIST') }}</option>
+                    <option value="disabled"{% if SFS_FILTER_ACTION == 'disabled' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_DISABLED') }}</option>
+                </select>
+            </dd>
+        </dl>
+        <dl>
+            <dt><label for="sfs_filter_blocked">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_BLOCKED') ~ lang('COLON') }}</label></dt>
+            <dd>
+                <select name="sfs_filter_blocked" id="sfs_filter_blocked">
+                    <option value="">{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
+                    <option value="1"{% if SFS_FILTER_BLOCKED == '1' %} selected="selected"{% endif %}>{{ lang('YES') }}</option>
+                    <option value="0"{% if SFS_FILTER_BLOCKED == '0' %} selected="selected"{% endif %}>{{ lang('NO') }}</option>
+                </select>
+                <input class="button2" type="submit" value="{{ lang('ACP_ANTISPAMGUARD_APPLY_FILTERS') }}">
+            </dd>
+        </dl>
+    </fieldset>
+
+    {% if S_HAS_SFS_LOGS %}
+    <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}</strong></p>
+    {% if SFS_FILTER_ACTION or SFS_FILTER_BLOCKED %}
+    <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</strong></p>
+    {% endif %}
+
+    <div class="asg-actions">
+        <input class="button2" type="submit" name="export_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS') }}" data-ajax="false">
+        <br><small>{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS_EXPLAIN') }}</small>
+    </div>
+
+    <table class="table1 zebra-table">
+        <thead>
+            <tr>
+                <th>{{ lang('ACP_ANTISPAMGUARD_LOG_TIME') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SOURCE') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_LOG_USERNAME') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_LOG_EMAIL') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_LISTED_COUNT') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_STRONG_HIT') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCKED') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_SHORT') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_MATCHED') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_DETAILS') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sfs in sfs_logs %}
+            <tr>
+                <td>{{ sfs.TIME }}</td>
+                <td>{{ sfs.SOURCE }}</td>
+                <td>{{ sfs.IP }}</td>
+                <td>{{ sfs.USERNAME }}</td>
+                <td>{{ sfs.EMAIL }}</td>
+                <td>{{ sfs.LISTED_COUNT }}</td>
+                <td>{{ sfs.STRONG_HIT }}</td>
+                <td>{{ sfs.BLOCKED }}</td>
+                <td>{{ sfs.ACTION_MODE }}</td>
+                <td>{{ sfs.MATCHED }}</td>
+                <td>{{ sfs.DETAILS }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p><strong>{{ lang('ACP_ANTISPAMGUARD_NO_SFS_LOGS') }}</strong></p>
+    {% endif %}
+
 </fieldset>
 {{ S_FORM_TOKEN }}
 </form>

@@ -1,4 +1,63 @@
 services:
+    mundophpbb.antispamguard.sfs_cache:
+        class: mundophpbb\antispamguard\service\sfs_cache
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.stopforumspam_client:
+        class: mundophpbb\antispamguard\service\stopforumspam_client
+        arguments:
+            - '@mundophpbb.antispamguard.sfs_cache'
+            - '@config'
+
+    mundophpbb.antispamguard.sfs_log:
+        class: mundophpbb\antispamguard\service\sfs_log
+        arguments:
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.sfs_decision:
+        class: mundophpbb\antispamguard\service\sfs_decision
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.stopforumspam_client'
+            - '@mundophpbb.antispamguard.sfs_log'
+
+    mundophpbb.antispamguard.decision_engine:
+        class: mundophpbb\antispamguard\service\decision_engine
+        arguments:
+            - '@config'
+
+    mundophpbb.antispamguard.activity_tracker:
+        class: mundophpbb\antispamguard\service\activity_tracker
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.ip_reputation:
+        class: mundophpbb\antispamguard\service\ip_reputation
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.ip_rate_limit:
+        class: mundophpbb\antispamguard\service\ip_rate_limit
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.alerts:
+        class: mundophpbb\antispamguard\service\alerts
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+
     mundophpbb.antispamguard.listener:
         class: mundophpbb\antispamguard\event\listener
         arguments:
@@ -8,6 +67,9 @@ services:
             - '@user'
             - '@dbal.conn'
             - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.sfs_decision'
+            - '@mundophpbb.antispamguard.ip_reputation'
+            - '@mundophpbb.antispamguard.ip_rate_limit'
         tags:
             - { name: event.listener }
 
@@ -17,5 +79,48 @@ services:
             - '@config'
             - '@dbal.conn'
             - '%core.table_prefix%'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.prune_logs]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.sfs_cleanup:
+        class: mundophpbb\antispamguard\cron\task\sfs_cleanup
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.sfs_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.ip_reputation_cleanup:
+        class: mundophpbb\antispamguard\cron\task\ip_reputation_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.ip_reputation'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.ip_reputation_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.ip_rate_limit_cleanup:
+        class: mundophpbb\antispamguard\cron\task\ip_rate_limit_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.ip_rate_limit'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.ip_rate_limit_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.slowspam_cleanup:
+        class: mundophpbb\antispamguard\cron\task\slowspam_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.activity_tracker'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.slowspam_cleanup]]
         tags:
             - { name: cron.task }

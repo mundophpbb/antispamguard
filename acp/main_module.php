@@ -48,6 +48,277 @@ class main_module
             trigger_error($user->lang('ACP_ANTISPAMGUARD_SETTINGS_IMPORTED', $result['count']) . adm_back_link($this->u_action));
         }
 
+        if ($request->is_set_post('prune_ip_reputation'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $ip_reputation = $phpbb_container->get('mundophpbb.antispamguard.ip_reputation');
+            $removed_scores = $ip_reputation->prune();
+            $config->set('antispamguard_ip_reputation_cleanup_last_gc', time(), false);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_IP_REPUTATION_PRUNE_DONE', $removed_scores) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('prune_ip_rate_limit'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $ip_rate_limit = $phpbb_container->get('mundophpbb.antispamguard.ip_rate_limit');
+            $removed_rates = $ip_rate_limit->prune();
+            $config->set('antispamguard_ip_rate_limit_cleanup_last_gc', time(), false);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_PRUNE_DONE', $removed_rates) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('reset_ip_rate_limit'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $ip_rate_limit = $phpbb_container->get('mundophpbb.antispamguard.ip_rate_limit');
+            $removed_rates = $ip_rate_limit->reset_all();
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_IP_RATE_LIMIT_RESET_DONE', $removed_rates) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('reset_ip_reputation'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $ip_reputation = $phpbb_container->get('mundophpbb.antispamguard.ip_reputation');
+            $removed_scores = $ip_reputation->reset_all();
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_IP_REPUTATION_RESET_DONE', $removed_scores) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('run_sfs_cleanup_now'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $now = time();
+
+            $sql = 'DELETE FROM ' . $table_prefix . 'antispamguard_sfs_cache
+                WHERE expires_at <= ' . (int) $now;
+            $db->sql_query($sql);
+            $removed_cache = (int) $db->sql_affectedrows();
+
+            $retention_days = isset($config['antispamguard_sfs_log_retention_days']) ? (int) $config['antispamguard_sfs_log_retention_days'] : 90;
+            $removed_logs = 0;
+
+            if ($retention_days > 0)
+            {
+                $cutoff = $now - ($retention_days * 86400);
+
+                $sql = 'DELETE FROM ' . $table_prefix . 'antispamguard_sfs_log
+                    WHERE created_at < ' . (int) $cutoff;
+                $db->sql_query($sql);
+                $removed_logs = (int) $db->sql_affectedrows();
+            }
+
+            $config->set('antispamguard_sfs_cleanup_last_gc', $now, false);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_RAN', $removed_cache, $removed_logs) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('clear_sfs_expired_cache'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $sql = 'DELETE FROM ' . $table_prefix . 'antispamguard_sfs_cache
+                WHERE expires_at <= ' . time();
+            $db->sql_query($sql);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_EXPIRED_CACHE_CLEARED') . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('clear_sfs_cache'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $db->sql_query('DELETE FROM ' . $table_prefix . 'antispamguard_sfs_cache');
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_CACHE_CLEARED') . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('clear_sfs_logs'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $db->sql_query('DELETE FROM ' . $table_prefix . 'antispamguard_sfs_log');
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_LOGS_CLEARED') . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('export_sfs_logs'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $this->export_sfs_logs_csv($db, $user, $table_prefix, $request);
+            return;
+        }
+
+        if ($request->is_set_post('remove_sfs_api_key'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $config->set('antispamguard_sfs_api_key', '', true);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_API_KEY_REMOVED') . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('submit_sfs_spammer'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $submit_ip = trim($request->variable('antispamguard_sfs_submit_ip', ''));
+            $submit_email = trim($request->variable('antispamguard_sfs_submit_email', '', true));
+            $submit_username = trim($request->variable('antispamguard_sfs_submit_username', '', true));
+            $submit_evidence = trim($request->variable('antispamguard_sfs_submit_evidence', '', true));
+
+            $sfs_client = $phpbb_container->get('mundophpbb.antispamguard.stopforumspam_client');
+            $submit_result = $sfs_client->submit_spammer($submit_ip, $submit_email, $submit_username, $submit_evidence);
+
+            if (empty($submit_result['success']))
+            {
+                trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS') . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('export_ip_reputation'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $this->export_ip_reputation_csv($db, $user, $table_prefix);
+            return;
+        }
+
+        if ($request->is_set_post('export_ip_rate_limit'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $this->export_ip_rate_limit_csv($db, $user, $table_prefix);
+            return;
+        }
+
+        if ($request->is_set_post('export_config_inventory'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $this->export_config_inventory_csv($db, $user);
+            return;
+        }
+
+        if ($request->is_set_post('export_slowspam_activity'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $this->export_slowspam_activity_csv($db, $user, $table_prefix);
+            return;
+        }
+
+        if ($request->is_set_post('prune_slowspam_activity'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $activity_tracker = $phpbb_container->get('mundophpbb.antispamguard.activity_tracker');
+            $removed_activity = $activity_tracker->prune();
+            $config->set('antispamguard_slowspam_cleanup_last_gc', time(), false);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SLOWSPAM_PRUNE_DONE', $removed_activity) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('mark_alerts_read'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $alerts = $phpbb_container->get('mundophpbb.antispamguard.alerts');
+            $marked = $alerts->mark_all_read();
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_ALERTS_MARKED_READ', $marked) . adm_back_link($this->u_action));
+        }
+
+        if ($request->is_set_post('prune_alerts'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $alerts = $phpbb_container->get('mundophpbb.antispamguard.alerts');
+            $removed = $alerts->prune();
+            $config->set('antispamguard_alerts_last_gc', time(), false);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_ALERTS_PRUNED', $removed) . adm_back_link($this->u_action));
+        }
+
         if ($mode === 'stats')
         {
             $this->show_stats($db, $template, $table_prefix);
@@ -64,6 +335,126 @@ class main_module
         {
             $this->show_about($db, $template, $user, $config, $table_prefix);
             return;
+        }
+
+        if ($request->is_set_post('test_sfs_lookup'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            global $phpbb_container;
+
+            $test_type = $request->variable('antispamguard_sfs_test_type', 'ip');
+            $test_value = trim($request->variable('antispamguard_sfs_test_value', '', true));
+
+            $allowed_types = array('ip', 'email', 'username');
+
+            if (!in_array($test_type, $allowed_types, true) || $test_value === '')
+            {
+                trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_TEST_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $sfs_client = $phpbb_container->get('mundophpbb.antispamguard.stopforumspam_client');
+            $sfs_result = $sfs_client->check($test_type, $test_value);
+
+            if (!$sfs_result)
+            {
+                $template->assign_vars(array(
+                    'S_SFS_TEST_DONE' => true,
+                    'SFS_TEST_TYPE' => $test_type,
+                    'SFS_TEST_VALUE' => $test_value,
+                    'SFS_TEST_CACHED' => $user->lang('NO'),
+                    'SFS_TEST_LISTED' => $user->lang('NO'),
+                    'SFS_TEST_CONFIDENCE' => 0,
+                    'SFS_TEST_FREQUENCY' => 0,
+                    'SFS_TEST_RESULT' => $user->lang('ACP_ANTISPAMGUARD_SFS_TEST_ERROR'),
+                ));
+            }
+            else
+            {
+                $template->assign_vars(array(
+                    'S_SFS_TEST_DONE' => true,
+                    'SFS_TEST_TYPE' => $test_type,
+                    'SFS_TEST_VALUE' => $test_value,
+                    'SFS_TEST_CACHED' => !empty($sfs_result['cached']) ? $user->lang('YES') : $user->lang('NO'),
+                    'SFS_TEST_LISTED' => !empty($sfs_result['is_listed']) ? $user->lang('YES') : $user->lang('NO'),
+                    'SFS_TEST_CONFIDENCE' => isset($sfs_result['confidence']) ? $sfs_result['confidence'] : 0,
+                    'SFS_TEST_FREQUENCY' => isset($sfs_result['frequency']) ? $sfs_result['frequency'] : 0,
+                    'SFS_TEST_RESULT' => !empty($sfs_result['is_listed']) ? $user->lang('ACP_ANTISPAMGUARD_SFS_TEST_LISTED') : $user->lang('ACP_ANTISPAMGUARD_SFS_TEST_CLEAN'),
+                ));
+            }
+        }
+
+        if ($request->is_set_post('test_ip_whitelist'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $test_ip = trim($request->variable('antispamguard_ip_whitelist_test', ''));
+            $whitelist = $request->variable('antispamguard_ip_whitelist', '', true);
+            $mode = $request->variable('antispamguard_ip_whitelist_mode', isset($config['antispamguard_ip_whitelist_mode']) ? $config['antispamguard_ip_whitelist_mode'] : 'partial');
+
+            if ($whitelist === '' && !empty($config['antispamguard_ip_whitelist']))
+            {
+                $whitelist = (string) $config['antispamguard_ip_whitelist'];
+            }
+
+            if ($whitelist === '' && !empty($config['antispamguard_trusted_ip_whitelist']))
+            {
+                $whitelist = (string) $config['antispamguard_trusted_ip_whitelist'];
+            }
+
+            $match = $this->test_ip_whitelist_match($test_ip, $whitelist);
+
+            $template->assign_vars(array(
+                'S_IP_WHITELIST_TEST_DONE' => true,
+                'IP_WHITELIST_TEST_IP' => $test_ip,
+                'IP_WHITELIST_TEST_MATCHED' => $match['matched'] ? $user->lang('YES') : $user->lang('NO'),
+                'IP_WHITELIST_TEST_ENTRY' => $match['entry'],
+                'IP_WHITELIST_TEST_MODE' => ($mode === 'total') ? $user->lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_TOTAL') : $user->lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_PARTIAL'),
+                'IP_WHITELIST_TEST_RESULT' => $match['matched'] ? $user->lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_MATCH') : $user->lang('ACP_ANTISPAMGUARD_IP_WHITELIST_TEST_NO_MATCH'),
+            ));
+        }
+
+        if ($request->is_set_post('test_sfs_and_log'))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $test_ip = trim($request->variable('antispamguard_sfs_test_ip', ''));
+            $test_email = trim($request->variable('antispamguard_sfs_test_email', ''));
+            $test_username = trim($request->variable('antispamguard_sfs_test_username', '', true));
+
+            if ($test_ip === '')
+            {
+                $test_ip = !empty($user->ip) ? (string) $user->ip : '';
+            }
+
+            global $phpbb_container;
+
+            $sfs_decision = $phpbb_container->get('mundophpbb.antispamguard.sfs_decision');
+            $decision = $sfs_decision->should_block($test_ip, $test_email, $test_username, 'manual_acp_test', true);
+
+            $template->assign_vars(array(
+                'S_SFS_MANUAL_TEST_DONE' => true,
+                'SFS_MANUAL_TEST_IP' => $test_ip,
+                'SFS_MANUAL_TEST_EMAIL' => $test_email,
+                'SFS_MANUAL_TEST_USERNAME' => $test_username,
+                'SFS_MANUAL_TEST_LISTED_COUNT' => isset($decision['listed_count']) ? (int) $decision['listed_count'] : 0,
+                'SFS_MANUAL_TEST_STRONG_HIT' => !empty($decision['strong_hit']) ? $user->lang('YES') : $user->lang('NO'),
+                'SFS_MANUAL_TEST_BLOCK' => !empty($decision['block']) ? $user->lang('YES') : $user->lang('NO'),
+                'SFS_MANUAL_TEST_ACTION_MODE' => isset($decision['action_mode']) ? $this->format_sfs_action_mode($decision['action_mode'], $user) : '',
+                'SFS_MANUAL_TEST_LOGGED' => (!empty($decision['log_written']) || !empty($decision['logged'])),
+                'SFS_MANUAL_TEST_LOG_ID' => isset($decision['log_id']) ? (int) $decision['log_id'] : 0,
+                'SFS_MANUAL_TEST_LOG_STATUS' => (!empty($decision['log_written']) || !empty($decision['logged'])) ? $user->lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST_LOGGED') : $user->lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST_NOT_LOGGED'),
+                'SFS_MANUAL_TEST_STATUS' => isset($decision['status']) ? $this->format_sfs_status($decision['status'], $user) : '',
+            ));
         }
 
         if ($request->is_set_post('submit'))
@@ -83,7 +474,17 @@ class main_module
             $max_seconds = max($min_seconds + 1, $request->variable('antispamguard_max_seconds', 1800));
 
             $config->set('antispamguard_enabled', $request->variable('antispamguard_enabled', 0));
+            $config->set('antispamguard_register_notice_enabled', $request->variable('antispamguard_register_notice_enabled', 0));
+            $config->set('antispamguard_register_notice_text', $this->sanitize_register_notice_text($request->variable('antispamguard_register_notice_text', '', true), $user));
             $config->set('antispamguard_hp_name', $field_name);
+            $config->set('antispamguard_hp_dynamic_enabled', $request->variable('antispamguard_hp_dynamic_enabled', 1));
+            $hp_dynamic_prefix = trim($request->variable('antispamguard_hp_dynamic_prefix', 'asg_hp'));
+            if ($hp_dynamic_prefix === '' || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]{1,20}$/', $hp_dynamic_prefix))
+            {
+                trigger_error($user->lang('ACP_ANTISPAMGUARD_INVALID_DYNAMIC_PREFIX') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+            $config->set('antispamguard_hp_dynamic_prefix', $hp_dynamic_prefix);
+            $config->set('antispamguard_hp_camouflage_enabled', $request->variable('antispamguard_hp_camouflage_enabled', 1));
             $config->set('antispamguard_protect_posts', $request->variable('antispamguard_protect_posts', 0));
             $config->set('antispamguard_protect_contact', $request->variable('antispamguard_protect_contact', 0));
             $config->set('antispamguard_protect_pm', $request->variable('antispamguard_protect_pm', 0));
@@ -93,6 +494,12 @@ class main_module
             $config->set('antispamguard_blocked_keywords', $this->normalize_blocked_keywords($request->variable('antispamguard_blocked_keywords', '', true)));
             $config->set('antispamguard_max_urls', max(0, $request->variable('antispamguard_max_urls', 0)));
             $config->set('antispamguard_ip_whitelist', $this->normalize_ip_list($request->variable('antispamguard_ip_whitelist', '', true)));
+            $ip_whitelist_mode = $request->variable('antispamguard_ip_whitelist_mode', 'partial');
+            if (!in_array($ip_whitelist_mode, array('partial', 'total'), true))
+            {
+                $ip_whitelist_mode = 'partial';
+            }
+            $config->set('antispamguard_ip_whitelist_mode', $ip_whitelist_mode);
             $config->set('antispamguard_ip_blacklist', $this->normalize_ip_list($request->variable('antispamguard_ip_blacklist', '', true)));
             $config->set('antispamguard_rate_limit_enabled', $request->variable('antispamguard_rate_limit_enabled', 0));
             $config->set('antispamguard_rate_limit_max_attempts', max(1, $request->variable('antispamguard_rate_limit_max_attempts', 5)));
@@ -103,15 +510,196 @@ class main_module
             $config->set('antispamguard_log_retention_days', max(1, $request->variable('antispamguard_log_retention_days', 30)));
             $config->set('antispamguard_min_seconds', $min_seconds);
             $config->set('antispamguard_max_seconds', $max_seconds);
+            $config->set('antispamguard_max_form_age', max(0, $request->variable('antispamguard_max_form_age', 3600)));
+            $config->set('antispamguard_ip_reputation_enabled', $request->variable('antispamguard_ip_reputation_enabled', 1));
+            $config->set('antispamguard_ip_reputation_threshold', max(1, $request->variable('antispamguard_ip_reputation_threshold', 5)));
+            $config->set('antispamguard_ip_reputation_decay_interval', max(0, $request->variable('antispamguard_ip_reputation_decay_interval', 600)));
+            $config->set('antispamguard_ip_reputation_ttl', max(3600, $request->variable('antispamguard_ip_reputation_ttl', 86400)));
+            $config->set('antispamguard_ip_reputation_cleanup_interval', max(3600, $request->variable('antispamguard_ip_reputation_cleanup_interval', 86400)));
+            $config->set('antispamguard_ip_reputation_weight_honeypot', max(0, $request->variable('antispamguard_ip_reputation_weight_honeypot', 3)));
+            $config->set('antispamguard_ip_reputation_weight_timestamp_fast', max(0, $request->variable('antispamguard_ip_reputation_weight_timestamp_fast', 2)));
+            $config->set('antispamguard_ip_reputation_weight_timestamp_expired', max(0, $request->variable('antispamguard_ip_reputation_weight_timestamp_expired', 1)));
+            $config->set('antispamguard_ip_reputation_weight_sfs', max(0, $request->variable('antispamguard_ip_reputation_weight_sfs', 5)));
+            $config->set('antispamguard_ip_reputation_weight_rate_limit', max(0, $request->variable('antispamguard_ip_reputation_weight_rate_limit', 3)));
+            $config->set('antispamguard_ip_rate_limit_enabled', $request->variable('antispamguard_ip_rate_limit_enabled', 1));
+            $config->set('antispamguard_ip_rate_limit_window', max(1, $request->variable('antispamguard_ip_rate_limit_window', 60)));
+            $config->set('antispamguard_ip_rate_limit_max_hits', max(1, $request->variable('antispamguard_ip_rate_limit_max_hits', 5)));
+            $config->set('antispamguard_ip_rate_limit_cleanup_interval', max(300, $request->variable('antispamguard_ip_rate_limit_cleanup_interval', 3600)));
+            $ip_rate_limit_action = $request->variable('antispamguard_ip_rate_limit_action', 'block');
+            if (!in_array($ip_rate_limit_action, array('block', 'score', 'log_only'), true))
+            {
+                $ip_rate_limit_action = 'block';
+            }
+            $config->set('antispamguard_ip_rate_limit_action', $ip_rate_limit_action);
+            $config->set('antispamguard_decision_engine_enabled', $request->variable('antispamguard_decision_engine_enabled', 1));
+            $config->set('antispamguard_decision_score_log', max(0, $request->variable('antispamguard_decision_score_log', 30)));
+            $config->set('antispamguard_decision_score_block', max(1, $request->variable('antispamguard_decision_score_block', 60)));
+            $config->set('antispamguard_decision_weight_honeypot', max(0, $request->variable('antispamguard_decision_weight_honeypot', 100)));
+            $config->set('antispamguard_decision_weight_timestamp_fast', max(0, $request->variable('antispamguard_decision_weight_timestamp_fast', 30)));
+            $config->set('antispamguard_decision_weight_timestamp_expired', max(0, $request->variable('antispamguard_decision_weight_timestamp_expired', 15)));
+            $config->set('antispamguard_decision_weight_rate_limit', max(0, $request->variable('antispamguard_decision_weight_rate_limit', 40)));
+            $config->set('antispamguard_decision_weight_sfs', max(0, $request->variable('antispamguard_decision_weight_sfs', 50)));
+            $config->set('antispamguard_decision_weight_ip_reputation', max(0, $request->variable('antispamguard_decision_weight_ip_reputation', 1)));
+            $config->set('antispamguard_slowspam_enabled', $request->variable('antispamguard_slowspam_enabled', 1));
+            $config->set('antispamguard_slowspam_window', max(60, $request->variable('antispamguard_slowspam_window', 1800)));
+            $config->set('antispamguard_slowspam_threshold', max(1, $request->variable('antispamguard_slowspam_threshold', 8)));
+            $config->set('antispamguard_slowspam_prune_after', max(3600, $request->variable('antispamguard_slowspam_prune_after', 86400)));
+            $config->set('antispamguard_slowspam_cleanup_interval', max(3600, $request->variable('antispamguard_slowspam_cleanup_interval', 86400)));
+            $config->set('antispamguard_alerts_enabled', $request->variable('antispamguard_alerts_enabled', 1));
+            $config->set('antispamguard_alerts_retention', max(3600, $request->variable('antispamguard_alerts_retention', 604800)));
+            $config->set('antispamguard_decision_weight_slowspam', max(0, $request->variable('antispamguard_decision_weight_slowspam', 35)));
+            $config->set('antispamguard_trusted_ip_whitelist', $request->variable('antispamguard_trusted_ip_whitelist', '', true));
+            $config->set('antispamguard_sfs_enabled', $request->variable('antispamguard_sfs_enabled', 0));
+            $config->set('antispamguard_sfs_log_enabled', $request->variable('antispamguard_sfs_log_enabled', 0));
+            $config->set('antispamguard_sfs_log_only_blocked', $request->variable('antispamguard_sfs_log_only_blocked', 0));
+            $config->set('antispamguard_sfs_min_confidence', max(0, min(100, $request->variable('antispamguard_sfs_min_confidence', 50))));
+            $config->set('antispamguard_sfs_min_frequency', max(1, $request->variable('antispamguard_sfs_min_frequency', 3)));
+            $config->set('antispamguard_sfs_block_multiple_hits', $request->variable('antispamguard_sfs_block_multiple_hits', 0));
+            $config->set('antispamguard_sfs_cleanup_interval', max(3600, $request->variable('antispamguard_sfs_cleanup_interval', 86400)));
+            $config->set('antispamguard_sfs_log_retention_days', max(0, $request->variable('antispamguard_sfs_log_retention_days', 90)));
+            $config->set('antispamguard_sfs_whitelist_ips', $request->variable('antispamguard_sfs_whitelist_ips', '', true));
+            $config->set('antispamguard_sfs_whitelist_emails', $request->variable('antispamguard_sfs_whitelist_emails', '', true));
+            $config->set('antispamguard_sfs_whitelist_usernames', $request->variable('antispamguard_sfs_whitelist_usernames', '', true));
+            $sfs_action_mode = $request->variable('antispamguard_sfs_action_mode', 'block');
+            if (!in_array($sfs_action_mode, array('block', 'soft', 'log_only'), true))
+            {
+                $sfs_action_mode = 'block';
+            }
+            $config->set('antispamguard_sfs_action_mode', $sfs_action_mode);
 
+            $sfs_api_key = trim($request->variable('antispamguard_sfs_api_key', '', true));
+            if ($sfs_api_key !== '')
+            {
+                $config->set('antispamguard_sfs_api_key', $this->sanitize_secret($sfs_api_key, 191), true);
+            }
+
+            // AntiSpam Guard 3.x settings hardening
+            $config->set('antispamguard_sfs_debug_log_all', $request->variable('antispamguard_sfs_debug_log_all', 0));
+            $config->set('antispamguard_sfs_debug_localhost_only', $request->variable('antispamguard_sfs_debug_localhost_only', 1));
+            $config->set('antispamguard_sfs_log_all_checks', $request->variable('antispamguard_sfs_log_all_checks', 1));
+            $config->set('antispamguard_sfs_cache_ttl', max(60, $request->variable('antispamguard_sfs_cache_ttl', 86400)));
+            $config->set('antispamguard_autoban_enabled', $request->variable('antispamguard_autoban_enabled', 0));
+            $config->set('antispamguard_autoban_threshold', max(1, $request->variable('antispamguard_autoban_threshold', 120)));
+            $config->set('antispamguard_autoban_duration', max(60, $request->variable('antispamguard_autoban_duration', 86400)));
+            $config->set('antispamguard_shadowban_enabled', $request->variable('antispamguard_shadowban_enabled', 0));
+            $config->set('antispamguard_shadowban_threshold', max(1, $request->variable('antispamguard_shadowban_threshold', 80)));
             trigger_error($user->lang('ACP_ANTISPAMGUARD_SAVED') . adm_back_link($this->u_action));
         }
 
+        $sfs_cache_total = 0;
+        $sfs_cache_expired = 0;
+        $sfs_logs_total = 0;
+
+        $sql = 'SELECT COUNT(cache_id) AS total_cache
+            FROM ' . $table_prefix . 'antispamguard_sfs_cache';
+        $result = $db->sql_query($sql);
+        $sfs_cache_total = (int) $db->sql_fetchfield('total_cache');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(cache_id) AS expired_cache
+            FROM ' . $table_prefix . 'antispamguard_sfs_cache
+            WHERE expires_at <= ' . time();
+        $result = $db->sql_query($sql);
+        $sfs_cache_expired = (int) $db->sql_fetchfield('expired_cache');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(log_id) AS total_logs
+            FROM ' . $table_prefix . 'antispamguard_sfs_log';
+        $result = $db->sql_query($sql);
+        $sfs_logs_total = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
+
+        $ip_reputation_total = 0;
+        $ip_reputation_blocked = 0;
+
+        $sql = 'SELECT COUNT(score_id) AS total_scores
+            FROM ' . $table_prefix . 'antispamguard_ip_score';
+        $result = $db->sql_query($sql);
+        $ip_reputation_total = (int) $db->sql_fetchfield('total_scores');
+        $db->sql_freeresult($result);
+
+        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
+        $sql = 'SELECT COUNT(score_id) AS blocked_scores
+            FROM ' . $table_prefix . 'antispamguard_ip_score
+            WHERE score >= ' . (int) $ip_reputation_threshold;
+        $result = $db->sql_query($sql);
+        $ip_reputation_blocked = (int) $db->sql_fetchfield('blocked_scores');
+        $db->sql_freeresult($result);
+
+        $ip_reputation_expired = 0;
+        $sql = 'SELECT COUNT(score_id) AS expired_scores
+            FROM ' . $table_prefix . 'antispamguard_ip_score
+            WHERE expires_at <= ' . time();
+        $result = $db->sql_query($sql);
+        $ip_reputation_expired = (int) $db->sql_fetchfield('expired_scores');
+        $db->sql_freeresult($result);
+
+        $ip_rate_total = 0;
+        $sql = 'SELECT COUNT(rate_id) AS total_rates
+            FROM ' . $table_prefix . 'antispamguard_ip_rate';
+        $result = $db->sql_query($sql);
+        $ip_rate_total = (int) $db->sql_fetchfield('total_rates');
+        $db->sql_freeresult($result);
+
+        $ip_rate_expired = 0;
+        $sql = 'SELECT COUNT(rate_id) AS expired_rates
+            FROM ' . $table_prefix . 'antispamguard_ip_rate
+            WHERE expires_at <= ' . time();
+        $result = $db->sql_query($sql);
+        $ip_rate_expired = (int) $db->sql_fetchfield('expired_rates');
+        $db->sql_freeresult($result);
+
+        $register_notice_text = isset($config['antispamguard_register_notice_text']) ? (string) $config['antispamguard_register_notice_text'] : '';
+        if (trim($register_notice_text) === '')
+        {
+            $register_notice_text = $this->get_default_register_notice_text($user);
+        }
+        $register_notice_text = $this->sanitize_register_notice_text($register_notice_text, $user);
+
         $template->assign_vars(array(
             'S_SETTINGS' => true,
+            'SFS_DEBUG_LOG_ALL' => !empty($config['antispamguard_sfs_debug_log_all']),
+            'SFS_DEBUG_LOCALHOST_ONLY' => !isset($config['antispamguard_sfs_debug_localhost_only']) || !empty($config['antispamguard_sfs_debug_localhost_only']),
+            'SFS_LOG_ALL_CHECKS' => !isset($config['antispamguard_sfs_log_all_checks']) || !empty($config['antispamguard_sfs_log_all_checks']),
+            'SFS_CACHE_TTL' => isset($config['antispamguard_sfs_cache_ttl']) ? (int) $config['antispamguard_sfs_cache_ttl'] : 86400,
+            'AUTOBAN_ENABLED' => !empty($config['antispamguard_autoban_enabled']),
+            'AUTOBAN_THRESHOLD' => isset($config['antispamguard_autoban_threshold']) ? (int) $config['antispamguard_autoban_threshold'] : 120,
+            'AUTOBAN_DURATION' => isset($config['antispamguard_autoban_duration']) ? (int) $config['antispamguard_autoban_duration'] : 86400,
+            'SHADOWBAN_ENABLED' => !empty($config['antispamguard_shadowban_enabled']),
+            'SHADOWBAN_THRESHOLD' => isset($config['antispamguard_shadowban_threshold']) ? (int) $config['antispamguard_shadowban_threshold'] : 80,
+            'DECISION_ENGINE_ENABLED' => !isset($config['antispamguard_decision_engine_enabled']) || !empty($config['antispamguard_decision_engine_enabled']),
+            'DECISION_SCORE_LOG' => isset($config['antispamguard_decision_score_log']) ? (int) $config['antispamguard_decision_score_log'] : 30,
+            'DECISION_SCORE_BLOCK' => isset($config['antispamguard_decision_score_block']) ? (int) $config['antispamguard_decision_score_block'] : 60,
+            'DECISION_WEIGHT_HONEYPOT' => isset($config['antispamguard_decision_weight_honeypot']) ? (int) $config['antispamguard_decision_weight_honeypot'] : 100,
+            'DECISION_WEIGHT_TIMESTAMP_FAST' => isset($config['antispamguard_decision_weight_timestamp_fast']) ? (int) $config['antispamguard_decision_weight_timestamp_fast'] : 30,
+            'DECISION_WEIGHT_TIMESTAMP_EXPIRED' => isset($config['antispamguard_decision_weight_timestamp_expired']) ? (int) $config['antispamguard_decision_weight_timestamp_expired'] : 15,
+            'DECISION_WEIGHT_RATE_LIMIT' => isset($config['antispamguard_decision_weight_rate_limit']) ? (int) $config['antispamguard_decision_weight_rate_limit'] : 40,
+            'DECISION_WEIGHT_SFS' => isset($config['antispamguard_decision_weight_sfs']) ? (int) $config['antispamguard_decision_weight_sfs'] : 50,
+            'DECISION_WEIGHT_IP_REPUTATION' => isset($config['antispamguard_decision_weight_ip_reputation']) ? (int) $config['antispamguard_decision_weight_ip_reputation'] : 1,
+            'DECISION_WEIGHT_SLOWSPAM' => isset($config['antispamguard_decision_weight_slowspam']) ? (int) $config['antispamguard_decision_weight_slowspam'] : 35,
+            'SLOWSPAM_ENABLED' => !isset($config['antispamguard_slowspam_enabled']) || !empty($config['antispamguard_slowspam_enabled']),
+            'SLOWSPAM_WINDOW' => isset($config['antispamguard_slowspam_window']) ? (int) $config['antispamguard_slowspam_window'] : 1800,
+            'SLOWSPAM_THRESHOLD' => isset($config['antispamguard_slowspam_threshold']) ? (int) $config['antispamguard_slowspam_threshold'] : 8,
+            'SLOWSPAM_PRUNE_AFTER' => isset($config['antispamguard_slowspam_prune_after']) ? (int) $config['antispamguard_slowspam_prune_after'] : 86400,
+            'SLOWSPAM_CLEANUP_INTERVAL' => isset($config['antispamguard_slowspam_cleanup_interval']) ? (int) $config['antispamguard_slowspam_cleanup_interval'] : 86400,
+            'ALERTS_ENABLED' => !isset($config['antispamguard_alerts_enabled']) || !empty($config['antispamguard_alerts_enabled']),
+            'ALERTS_RETENTION' => isset($config['antispamguard_alerts_retention']) ? (int) $config['antispamguard_alerts_retention'] : 604800,
             'U_ACTION' => $this->u_action,
+            'IP_WHITELIST_MODE' => isset($config['antispamguard_ip_whitelist_mode']) ? $config['antispamguard_ip_whitelist_mode'] : 'partial',
+            'TRUSTED_IP_WHITELIST' => isset($config['antispamguard_ip_whitelist']) ? $config['antispamguard_ip_whitelist'] : (isset($config['antispamguard_trusted_ip_whitelist']) ? $config['antispamguard_trusted_ip_whitelist'] : ''),
+            'SFS_CACHE_TOTAL' => $sfs_cache_total,
+            'SFS_CACHE_EXPIRED' => $sfs_cache_expired,
+            'SFS_LOGS_TOTAL' => $sfs_logs_total,
+            'SFS_CLEANUP_INTERVAL' => isset($config['antispamguard_sfs_cleanup_interval']) ? (int) $config['antispamguard_sfs_cleanup_interval'] : 86400,
+            'SFS_LOG_RETENTION_DAYS' => isset($config['antispamguard_sfs_log_retention_days']) ? (int) $config['antispamguard_sfs_log_retention_days'] : 90,
+            'SFS_CLEANUP_LAST_GC' => !empty($config['antispamguard_sfs_cleanup_last_gc']) ? $user->format_date((int) $config['antispamguard_sfs_cleanup_last_gc']) : $user->lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_NEVER'),
             'ANTISPAMGUARD_ENABLED' => !empty($config['antispamguard_enabled']),
+            'ANTISPAMGUARD_REGISTER_NOTICE_ENABLED' => !empty($config['antispamguard_register_notice_enabled']),
+            'ANTISPAMGUARD_REGISTER_NOTICE_TEXT' => $register_notice_text,
             'ANTISPAMGUARD_HP_NAME' => isset($config['antispamguard_hp_name']) ? $config['antispamguard_hp_name'] : 'homepage',
+            'ANTISPAMGUARD_HP_DYNAMIC_ENABLED' => !isset($config['antispamguard_hp_dynamic_enabled']) || !empty($config['antispamguard_hp_dynamic_enabled']),
+            'ANTISPAMGUARD_HP_DYNAMIC_PREFIX' => isset($config['antispamguard_hp_dynamic_prefix']) ? $config['antispamguard_hp_dynamic_prefix'] : 'asg_hp',
+            'ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLED' => !isset($config['antispamguard_hp_camouflage_enabled']) || !empty($config['antispamguard_hp_camouflage_enabled']),
             'ANTISPAMGUARD_PROTECT_POSTS' => !empty($config['antispamguard_protect_posts']),
             'ANTISPAMGUARD_PROTECT_CONTACT' => !empty($config['antispamguard_protect_contact']),
             'ANTISPAMGUARD_PROTECT_PM' => !empty($config['antispamguard_protect_pm']),
@@ -133,7 +721,58 @@ class main_module
             'ANTISPAMGUARD_MIN_SECONDS' => isset($config['antispamguard_min_seconds']) ? (int) $config['antispamguard_min_seconds'] : 3,
             'ANTISPAMGUARD_MAX_SECONDS' => isset($config['antispamguard_max_seconds']) ? (int) $config['antispamguard_max_seconds'] : 1800,
             'ANTISPAMGUARD_IMPORT_SETTINGS' => '',
+            'ANTISPAMGUARD_SFS_ENABLED' => !empty($config['antispamguard_sfs_enabled']),
+            'SFS_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? (string) $config['antispamguard_sfs_action_mode'] : 'block',
+            'SFS_API_KEY_CONFIGURED' => !empty($config['antispamguard_sfs_api_key']),
+            'SFS_API_KEY_MASKED' => !empty($config['antispamguard_sfs_api_key']) ? $this->mask_secret((string) $config['antispamguard_sfs_api_key']) : '',
+            'ANTISPAMGUARD_SFS_LOG_ENABLED' => !isset($config['antispamguard_sfs_log_enabled']) || !empty($config['antispamguard_sfs_log_enabled']),
+            'ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED' => !empty($config['antispamguard_sfs_log_only_blocked']),
+            'ANTISPAMGUARD_SFS_MIN_CONFIDENCE' => isset($config['antispamguard_sfs_min_confidence']) ? (int) $config['antispamguard_sfs_min_confidence'] : 50,
+            'ANTISPAMGUARD_SFS_MIN_FREQUENCY' => isset($config['antispamguard_sfs_min_frequency']) ? (int) $config['antispamguard_sfs_min_frequency'] : 3,
+            'ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS' => !isset($config['antispamguard_sfs_block_multiple_hits']) || !empty($config['antispamguard_sfs_block_multiple_hits']),
         ));
+    }
+
+    protected function get_default_register_notice_text($user = null)
+    {
+        if ($user !== null)
+        {
+            return (string) $user->lang('ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT');
+        }
+
+        return 'Este fórum usa proteção antispam automática para reduzir cadastros abusivos e proteger a comunidade.';
+    }
+
+    protected function sanitize_register_notice_text($value, $user = null)
+    {
+        $value = trim(strip_tags((string) $value));
+        $value = preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $value);
+        $value = preg_replace('/\s+/u', ' ', $value);
+
+        if ($value === '')
+        {
+            $value = $this->get_default_register_notice_text($user);
+        }
+
+        return $this->truncate_for_storage($value, 255);
+    }
+
+    protected function truncate_for_storage($value, $max_length)
+    {
+        $value = (string) $value;
+        $max_length = (int) $max_length;
+
+        if ($max_length <= 0)
+        {
+            return '';
+        }
+
+        if (function_exists('utf8_strlen') && function_exists('utf8_substr'))
+        {
+            return \utf8_strlen($value) > $max_length ? \utf8_substr($value, 0, $max_length) : $value;
+        }
+
+        return strlen($value) > $max_length ? substr($value, 0, $max_length) : $value;
     }
 
     protected function normalize_blocked_keywords($raw_keywords)
@@ -213,10 +852,38 @@ class main_module
         return implode(',', $group_ids);
     }
 
+    protected function sanitize_secret($value, $max_length)
+    {
+        $value = trim((string) $value);
+        $value = preg_replace('/[\x00-\x20\x7F]/', '', $value);
+
+        return $this->truncate_for_storage($value, (int) $max_length);
+    }
+
+    protected function mask_secret($value)
+    {
+        $value = trim((string) $value);
+        $length = strlen($value);
+
+        if ($length === 0)
+        {
+            return '';
+        }
+
+        if ($length <= 4)
+        {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', max(4, $length - 4)) . substr($value, -4);
+    }
+
     protected function get_settings_keys()
     {
         return array(
             'antispamguard_enabled',
+            'antispamguard_register_notice_enabled',
+            'antispamguard_register_notice_text',
             'antispamguard_hp_name',
             'antispamguard_protect_posts',
             'antispamguard_protect_contact',
@@ -240,11 +907,33 @@ class main_module
         );
     }
 
+    protected function get_extension_version($config = null)
+    {
+        $composer_file = dirname(__DIR__) . '/composer.json';
+
+        if (is_file($composer_file) && is_readable($composer_file))
+        {
+            $composer = json_decode((string) file_get_contents($composer_file), true);
+
+            if (is_array($composer) && !empty($composer['version']))
+            {
+                return (string) $composer['version'];
+            }
+        }
+
+        if ($config !== null && isset($config['antispamguard_version']) && (string) $config['antispamguard_version'] !== '')
+        {
+            return (string) $config['antispamguard_version'];
+        }
+
+        return 'unknown';
+    }
+
     protected function export_settings_json($config)
     {
         $data = array(
             'extension' => 'mundophpbb/antispamguard',
-            'version' => isset($config['antispamguard_version']) ? $config['antispamguard_version'] : '2.1.0',
+            'version' => $this->get_extension_version($config),
             'exported_at' => gmdate('c'),
             'settings' => array(),
         );
@@ -311,6 +1000,10 @@ class main_module
                     $value = $this->normalize_group_ids($value);
                 break;
 
+                case 'antispamguard_register_notice_text':
+                    $value = $this->sanitize_register_notice_text($value, null);
+                break;
+
                 case 'antispamguard_blocked_keywords':
                     $value = $this->normalize_blocked_keywords($value);
                 break;
@@ -345,6 +1038,7 @@ class main_module
                 break;
 
                 case 'antispamguard_enabled':
+                case 'antispamguard_register_notice_enabled':
                 case 'antispamguard_protect_posts':
                 case 'antispamguard_protect_contact':
                 case 'antispamguard_protect_pm':
@@ -401,6 +1095,8 @@ class main_module
 
         $required_configs = array(
             'antispamguard_enabled',
+            'antispamguard_register_notice_enabled',
+            'antispamguard_register_notice_text',
             'antispamguard_hp_name',
             'antispamguard_min_seconds',
             'antispamguard_max_seconds',
@@ -425,9 +1121,29 @@ class main_module
         $cron_last = !empty($config['antispamguard_cron_last_prune']) ? $user->format_date((int) $config['antispamguard_cron_last_prune']) : $user->lang('ACP_ANTISPAMGUARD_CRON_NEVER');
         $retention_enabled = !empty($config['antispamguard_log_retention_enabled']);
 
+        $sfs_diag_cache_total = 0;
+        $sfs_diag_logs_total = 0;
+
+        $sql = 'SELECT COUNT(cache_id) AS total_cache
+            FROM ' . $table_prefix . 'antispamguard_sfs_cache';
+        $result = $db->sql_query($sql);
+        $sfs_diag_cache_total = (int) $db->sql_fetchfield('total_cache');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(log_id) AS total_logs
+            FROM ' . $table_prefix . 'antispamguard_sfs_log';
+        $result = $db->sql_query($sql);
+        $sfs_diag_logs_total = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
+
         $template->assign_vars(array(
             'S_ABOUT' => true,
-            'ANTISPAMGUARD_VERSION' => '2.4.0',
+            'SFS_DIAG_ENABLED' => !empty($config['antispamguard_sfs_enabled']),
+            'SFS_DIAG_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? $config['antispamguard_sfs_action_mode'] : 'block',
+            'SFS_DIAG_CACHE_TOTAL' => $sfs_diag_cache_total,
+            'SFS_DIAG_LOGS_TOTAL' => $sfs_diag_logs_total,
+            'SFS_DIAG_API_KEY_CONFIGURED' => !empty($config['antispamguard_sfs_api_key']) ? $user->lang('YES') : $user->lang('NO'),
+            'ANTISPAMGUARD_VERSION' => $this->get_extension_version($config),
             'ANTISPAMGUARD_PHP_VERSION' => PHP_VERSION,
             'ANTISPAMGUARD_TABLE_STATUS' => $table_ok ? $user->lang('ACP_ANTISPAMGUARD_STATUS_OK') : $user->lang('ACP_ANTISPAMGUARD_STATUS_ERROR'),
             'ANTISPAMGUARD_TABLE_NAME' => $table,
@@ -439,6 +1155,7 @@ class main_module
             'ANTISPAMGUARD_CRON_LAST_PRUNE_ABOUT' => $cron_last,
             'ANTISPAMGUARD_RETENTION_STATUS' => $retention_enabled ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
             'ANTISPAMGUARD_GLOBAL_STATUS' => !empty($config['antispamguard_enabled']) ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
+            'ANTISPAMGUARD_REGISTER_NOTICE_STATUS' => !empty($config['antispamguard_register_notice_enabled']) ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
             'ANTISPAMGUARD_SIMULATION_STATUS' => !empty($config['antispamguard_simulation_mode']) ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
             'ANTISPAMGUARD_REGISTER_STATUS' => !empty($config['antispamguard_enabled']) ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
             'ANTISPAMGUARD_POST_STATUS' => !empty($config['antispamguard_protect_posts']) ? $user->lang('ACP_ANTISPAMGUARD_ENABLED') : $user->lang('ACP_ANTISPAMGUARD_DISABLED'),
@@ -462,6 +1179,65 @@ class main_module
         $top_reason = $this->get_top_stat($db, $table, 'reason', 'unknown', $user);
         $top_form = $this->get_top_stat($db, $table, 'form_type', 'register', $user);
 
+        $timestamp_total = $this->count_logs($db, $table, "reason = 'timestamp'");
+        $timestamp_too_fast = $this->count_logs($db, $table, "reason = 'timestamp_too_fast'");
+        $timestamp_expired = $this->count_logs($db, $table, "reason = 'timestamp_expired'");
+        $timestamp_combined = $timestamp_total + $timestamp_too_fast + $timestamp_expired;
+
+        $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
+        $ip_rep_total = 0;
+        $ip_rep_blocked = 0;
+        $ip_rep_threshold = isset($this->config['antispamguard_ip_reputation_threshold']) ? (int) $this->config['antispamguard_ip_reputation_threshold'] : 5;
+
+        $sql = 'SELECT COUNT(score_id) AS total_scores
+            FROM ' . $ip_rep_table;
+        $result = $db->sql_query($sql);
+        $ip_rep_total = (int) $db->sql_fetchfield('total_scores');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(score_id) AS blocked_scores
+            FROM ' . $ip_rep_table . '
+            WHERE score >= ' . (int) $ip_rep_threshold;
+        $result = $db->sql_query($sql);
+        $ip_rep_blocked = (int) $db->sql_fetchfield('blocked_scores');
+        $db->sql_freeresult($result);
+
+        $sfs_log_table = $table_prefix . 'antispamguard_sfs_log';
+        $sfs_cache_table = $table_prefix . 'antispamguard_sfs_cache';
+
+        $sfs_total_logs = $this->count_logs($db, $sfs_log_table);
+        $sfs_blocked_logs = $this->count_logs($db, $sfs_log_table, 'blocked = 1');
+        $sfs_suspect_logs = $this->count_logs($db, $sfs_log_table, 'blocked = 0');
+        $sfs_strong_hits = $this->count_logs($db, $sfs_log_table, 'strong_hit = 1');
+        $sfs_24h = $this->count_logs($db, $sfs_log_table, 'created_at >= ' . (int) ($now - 86400));
+        $sfs_7d = $this->count_logs($db, $sfs_log_table, 'created_at >= ' . (int) ($now - 604800));
+
+        $sfs_cache_total = 0;
+        $sfs_cache_positive = 0;
+        $sfs_cache_expired = 0;
+
+        $sql = 'SELECT COUNT(cache_id) AS total_cache
+            FROM ' . $sfs_cache_table;
+        $result = $db->sql_query($sql);
+        $sfs_cache_total = (int) $db->sql_fetchfield('total_cache');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(cache_id) AS positive_cache
+            FROM ' . $sfs_cache_table . '
+            WHERE is_listed = 1';
+        $result = $db->sql_query($sql);
+        $sfs_cache_positive = (int) $db->sql_fetchfield('positive_cache');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT COUNT(cache_id) AS expired_cache
+            FROM ' . $sfs_cache_table . '
+            WHERE expires_at <= ' . (int) $now;
+        $result = $db->sql_query($sql);
+        $sfs_cache_expired = (int) $db->sql_fetchfield('expired_cache');
+        $db->sql_freeresult($result);
+
+        $sfs_block_rate = ($sfs_total_logs > 0) ? (int) round(($sfs_blocked_logs / $sfs_total_logs) * 100) : 0;
+
         $this->assign_group_stats($db, $template, $table, 'form_type', 'stats_forms', 'register', $total_logs, $user);
         $this->assign_group_stats($db, $template, $table, 'reason', 'stats_reasons', 'unknown', $total_logs, $user);
         $this->assign_daily_stats($db, $template, $table, 7);
@@ -477,6 +1253,23 @@ class main_module
             'ANTISPAMGUARD_STATS_TOP_REASON_TOTAL' => $top_reason['total'],
             'ANTISPAMGUARD_STATS_TOP_FORM' => $top_form['label'],
             'ANTISPAMGUARD_STATS_TOP_FORM_TOTAL' => $top_form['total'],
+            'ANTISPAMGUARD_STATS_TIMESTAMP_TOTAL' => $timestamp_total,
+            'ANTISPAMGUARD_STATS_TIMESTAMP_TOO_FAST' => $timestamp_too_fast,
+            'ANTISPAMGUARD_STATS_TIMESTAMP_EXPIRED' => $timestamp_expired,
+            'ANTISPAMGUARD_STATS_TIMESTAMP_COMBINED' => $timestamp_combined,
+            'ANTISPAMGUARD_STATS_IP_REP_TOTAL' => $ip_rep_total,
+            'ANTISPAMGUARD_STATS_IP_REP_BLOCKED' => $ip_rep_blocked,
+            'ANTISPAMGUARD_SFS_STATS_TOTAL_LOGS' => $sfs_total_logs,
+            'ANTISPAMGUARD_SFS_STATS_BLOCKED_LOGS' => $sfs_blocked_logs,
+            'ANTISPAMGUARD_SFS_STATS_SUSPECT_LOGS' => $sfs_suspect_logs,
+            'ANTISPAMGUARD_SFS_STATS_STRONG_HITS' => $sfs_strong_hits,
+            'ANTISPAMGUARD_SFS_STATS_24H' => $sfs_24h,
+            'ANTISPAMGUARD_SFS_STATS_7D' => $sfs_7d,
+            'ANTISPAMGUARD_SFS_STATS_CACHE_TOTAL' => $sfs_cache_total,
+            'ANTISPAMGUARD_SFS_STATS_CACHE_POSITIVE' => $sfs_cache_positive,
+            'ANTISPAMGUARD_SFS_STATS_CACHE_EXPIRED' => $sfs_cache_expired,
+            'ANTISPAMGUARD_SFS_STATS_BLOCK_RATE' => $sfs_block_rate,
+            'S_HAS_SFS_STATS' => ($sfs_total_logs > 0 || $sfs_cache_total > 0),
             'S_HAS_STATS' => ($total_logs > 0),
         ));
     }
@@ -590,6 +1383,8 @@ class main_module
 
         $filter_form = $request->variable('filter_form', '');
         $filter_reason = $request->variable('filter_reason', '');
+        $sfs_filter_action = $request->variable('sfs_filter_action', '');
+        $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
         $start = max(0, $request->variable('start', 0));
         $per_page = 25;
 
@@ -598,9 +1393,19 @@ class main_module
             $filter_form = '';
         }
 
-        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_multiple'), true))
+        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'simulation_multiple'), true))
         {
             $filter_reason = '';
+        }
+
+        if (!in_array($sfs_filter_action, array('', 'block', 'soft', 'log_only', 'whitelist', 'disabled'), true))
+        {
+            $sfs_filter_action = '';
+        }
+
+        if (!in_array($sfs_filter_blocked, array('', '1', '0'), true))
+        {
+            $sfs_filter_blocked = '';
         }
 
         if ($request->is_set_post('export_csv'))
@@ -730,6 +1535,114 @@ class main_module
         }
         $db->sql_freeresult($result);
 
+        $sfs_table = $table_prefix . 'antispamguard_sfs_log';
+        $total_sfs_logs = 0;
+        $total_sfs_logs_filtered = 0;
+        $has_sfs_logs = false;
+        $sfs_rows_rendered = 0;
+        $sfs_where = array();
+
+        if ($sfs_filter_blocked !== '')
+        {
+            $sfs_where[] = 'blocked = ' . (int) $sfs_filter_blocked;
+        }
+
+        $sfs_where_sql = !empty($sfs_where) ? ' WHERE ' . implode(' AND ', $sfs_where) : '';
+
+        $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table;
+        $result = $db->sql_query($sql);
+        $total_sfs_logs = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT *
+            FROM ' . $sfs_table . $sfs_where_sql . '
+            ORDER BY created_at DESC';
+        $result = $db->sql_query_limit($sql, 250);
+
+        while ($sfs_row = $db->sql_fetchrow($result))
+        {
+            $details = json_decode($sfs_row['details_json'], true);
+            if (!is_array($details))
+            {
+                $details = array();
+            }
+
+            $detail_parts = array();
+            $decision_meta = isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
+            $action_mode = isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block';
+            $matched = !empty($decision_meta['matched']);
+
+            if ($sfs_filter_action !== '' && $action_mode !== $sfs_filter_action)
+            {
+                continue;
+            }
+
+            $total_sfs_logs_filtered++;
+
+            if ($sfs_rows_rendered >= 25)
+            {
+                continue;
+            }
+
+            $has_sfs_logs = true;
+            $sfs_rows_rendered++;
+
+            foreach ($details as $detail_type => $detail_data)
+            {
+                if ($detail_type === '_decision' || !is_array($detail_data))
+                {
+                    continue;
+                }
+
+                $detail_parts[] = strtoupper($detail_type) . ': '
+                    . 'confidence=' . (isset($detail_data['confidence']) ? $detail_data['confidence'] : 0)
+                    . ', frequency=' . (isset($detail_data['frequency']) ? $detail_data['frequency'] : 0)
+                    . ', cached=' . (!empty($detail_data['cached']) ? $user->lang('YES') : $user->lang('NO'));
+            }
+
+            $template->assign_block_vars('sfs_logs', array(
+                'ID' => (int) $sfs_row['log_id'],
+                'TIME' => $user->format_date((int) $sfs_row['created_at']),
+                'SOURCE' => $sfs_row['check_source'],
+                'IP' => $sfs_row['user_ip'],
+                'USERNAME' => $sfs_row['username'],
+                'EMAIL' => $sfs_row['user_email'],
+                'LISTED_COUNT' => (int) $sfs_row['listed_count'],
+                'STRONG_HIT' => !empty($sfs_row['strong_hit']) ? $user->lang('YES') : $user->lang('NO'),
+                'BLOCKED' => !empty($sfs_row['blocked']) ? $user->lang('YES') : $user->lang('NO'),
+                'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
+                'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
+                'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+            ));
+        }
+        $db->sql_freeresult($result);
+
+        $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
+        $has_ip_reputation = false;
+        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
+
+        $sql = 'SELECT *
+            FROM ' . $ip_rep_table . '
+            ORDER BY score DESC, last_update DESC';
+        $result = $db->sql_query_limit($sql, 25);
+
+        while ($ip_rep_row = $db->sql_fetchrow($result))
+        {
+            $has_ip_reputation = true;
+
+            $template->assign_block_vars('ip_reputation_rows', array(
+                'IP' => $ip_rep_row['ip'],
+                'SCORE' => (int) $ip_rep_row['score'],
+                'HITS' => (int) $ip_rep_row['hits'],
+                'LAST_REASON' => $this->format_ip_reputation_reason($ip_rep_row['last_reason'], $user),
+                'FIRST_SEEN' => !empty($ip_rep_row['first_seen']) ? $user->format_date((int) $ip_rep_row['first_seen']) : '',
+                'LAST_UPDATE' => !empty($ip_rep_row['last_update']) ? $user->format_date((int) $ip_rep_row['last_update']) : '',
+                'EXPIRES_AT' => !empty($ip_rep_row['expires_at']) ? $user->format_date((int) $ip_rep_row['expires_at']) : '',
+                'S_BLOCKED' => ((int) $ip_rep_row['score'] >= $ip_reputation_threshold),
+            ));
+        }
+        $db->sql_freeresult($result);
+
         $base_url = $this->u_action . $filter_params;
         $pagination = $this->build_pagination($base_url, $total_logs, $per_page, $start);
         $page_number = $this->build_page_number($user, $total_logs, $per_page, $start);
@@ -737,7 +1650,13 @@ class main_module
         $template->assign_vars(array(
             'S_LOGS' => true,
             'S_HAS_LOGS' => $has_logs,
-            'S_FILTER_ACTIVE' => ($filter_form !== '' || $filter_reason !== ''),
+            'S_HAS_SFS_LOGS' => $has_sfs_logs,
+            'S_HAS_IP_REPUTATION' => $has_ip_reputation,
+            'TOTAL_SFS_LOGS' => $total_sfs_logs,
+            'TOTAL_SFS_LOGS_FILTERED' => $total_sfs_logs_filtered,
+            'SFS_FILTER_ACTION' => $sfs_filter_action,
+            'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
+            'S_FILTER_ACTIVE' => ($filter_form !== '' || $filter_reason !== '' || $sfs_filter_action !== '' || $sfs_filter_blocked !== ''),
             'U_ACTION' => $this->u_action,
             'FILTER_FORM' => $filter_form,
             'FILTER_REASON' => $filter_reason,
@@ -769,12 +1688,19 @@ class main_module
                 'too_many_urls' => 'ACP_ANTISPAMGUARD_REASON_TOO_MANY_URLS',
                 'ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_IP_RATE_LIMIT',
                 'ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST',
+                'ip_reputation' => 'ACP_ANTISPAMGUARD_REASON_IP_REPUTATION',
+                'combined_decision' => 'ACP_ANTISPAMGUARD_REASON_COMBINED_DECISION',
+                'slow_spam' => 'ACP_ANTISPAMGUARD_REASON_SLOW_SPAM',
+                'sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
                 'simulation_honeypot' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_HONEYPOT',
                 'simulation_timestamp' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP',
+                'simulation_timestamp_too_fast' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP_TOO_FAST',
+                'simulation_timestamp_expired' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP_EXPIRED',
                 'simulation_content_filter' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_CONTENT_FILTER',
                 'simulation_too_many_urls' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TOO_MANY_URLS',
                 'simulation_ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_RATE_LIMIT',
                 'simulation_ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_BLACKLIST',
+                'simulation_sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_SFS_REPUTATION',
                 'simulation_multiple' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_MULTIPLE',
                 'unknown' => 'ACP_ANTISPAMGUARD_REASON_UNKNOWN',
             ),
@@ -904,4 +1830,416 @@ class main_module
 
         return implode(' ', $links);
     }
+    protected function test_ip_whitelist_match($ip, $list)
+    {
+        $ip = trim((string) $ip);
+
+        if ($ip === '' || trim((string) $list) === '')
+        {
+            return array('matched' => false, 'entry' => '');
+        }
+
+        $entries = preg_split('/\r\n|\r|\n/', (string) $list);
+
+        foreach ($entries as $entry)
+        {
+            $entry = trim($entry);
+
+            if ($entry === '' || strpos($entry, '#') === 0)
+            {
+                continue;
+            }
+
+            if ($this->test_ip_entry_matches($ip, $entry))
+            {
+                return array('matched' => true, 'entry' => $entry);
+            }
+        }
+
+        return array('matched' => false, 'entry' => '');
+    }
+
+    protected function test_ip_entry_matches($ip, $entry)
+    {
+        if ($entry === $ip)
+        {
+            return true;
+        }
+
+        if (strpos($entry, '*') !== false)
+        {
+            $pattern = '/^' . str_replace('\\*', '.*', preg_quote($entry, '/')) . '$/i';
+
+            return (bool) preg_match($pattern, $ip);
+        }
+
+        if (strpos($entry, '/') !== false)
+        {
+            return $this->test_ip_cidr_matches($ip, $entry);
+        }
+
+        return false;
+    }
+
+    protected function test_ip_cidr_matches($ip, $cidr)
+    {
+        $parts = explode('/', $cidr, 2);
+
+        if (count($parts) !== 2)
+        {
+            return false;
+        }
+
+        $subnet = trim($parts[0]);
+        $bits = (int) trim($parts[1]);
+
+        $ip_bin = @inet_pton($ip);
+        $subnet_bin = @inet_pton($subnet);
+
+        if ($ip_bin === false || $subnet_bin === false || strlen($ip_bin) !== strlen($subnet_bin))
+        {
+            return false;
+        }
+
+        $length = strlen($ip_bin);
+        $max_bits = $length * 8;
+
+        if ($bits < 0 || $bits > $max_bits)
+        {
+            return false;
+        }
+
+        $full_bytes = (int) floor($bits / 8);
+        $remaining_bits = $bits % 8;
+
+        if ($full_bytes > 0 && substr($ip_bin, 0, $full_bytes) !== substr($subnet_bin, 0, $full_bytes))
+        {
+            return false;
+        }
+
+        if ($remaining_bits === 0)
+        {
+            return true;
+        }
+
+        $mask = (0xff << (8 - $remaining_bits)) & 0xff;
+
+        return ((ord($ip_bin[$full_bytes]) & $mask) === (ord($subnet_bin[$full_bytes]) & $mask));
+    }
+
+    protected function export_config_inventory_csv(\phpbb\db\driver\driver_interface $db, \phpbb\user $user)
+    {
+        $filename = 'antispamguard_config_inventory_' . gmdate('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, array(
+            'config_name',
+            'config_value',
+            'is_dynamic',
+        ));
+
+        $sql = "SELECT config_name, config_value, is_dynamic
+            FROM " . CONFIG_TABLE . "
+            WHERE config_name LIKE 'antispamguard_%'
+            ORDER BY config_name ASC";
+        $result = $db->sql_query($sql);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            $config_value = $row['config_value'];
+            if ($row['config_name'] === 'antispamguard_sfs_api_key')
+            {
+                $config_value = ((string) $config_value !== '') ? '[redacted:' . $this->mask_secret((string) $config_value) . ']' : '';
+            }
+
+            fputcsv($output, array(
+                $row['config_name'],
+                $config_value,
+                (int) $row['is_dynamic'],
+            ));
+        }
+
+        $db->sql_freeresult($result);
+        fclose($output);
+        garbage_collection();
+        exit_handler();
+    }
+
+    protected function export_slowspam_activity_csv(\phpbb\db\driver\driver_interface $db, \phpbb\user $user, $table_prefix)
+    {
+        $filename = 'antispamguard_slowspam_activity_' . gmdate('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, array(
+            'activity_id',
+            'ip',
+            'user_id',
+            'action_type',
+            'created_at',
+        ));
+
+        $sql = 'SELECT *
+            FROM ' . $table_prefix . 'antispamguard_activity_log
+            ORDER BY created_at DESC';
+        $result = $db->sql_query_limit($sql, 5000);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            fputcsv($output, array(
+                (int) $row['activity_id'],
+                $row['ip'],
+                (int) $row['user_id'],
+                $row['action_type'],
+                !empty($row['created_at']) ? $user->format_date((int) $row['created_at']) : '',
+            ));
+        }
+
+        $db->sql_freeresult($result);
+        fclose($output);
+        garbage_collection();
+        exit_handler();
+    }
+
+    protected function export_ip_rate_limit_csv(\phpbb\db\driver\driver_interface $db, \phpbb\user $user, $table_prefix)
+    {
+        $filename = 'antispamguard_ip_rate_limit_' . gmdate('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        // UTF-8 BOM for spreadsheet compatibility.
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, array(
+            'ip',
+            'hits',
+            'first_hit',
+            'last_hit',
+            'expires_at',
+            'expired',
+        ));
+
+        $now = time();
+
+        $sql = 'SELECT *
+            FROM ' . $table_prefix . 'antispamguard_ip_rate
+            ORDER BY hits DESC, last_hit DESC';
+        $result = $db->sql_query_limit($sql, 5000);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            fputcsv($output, array(
+                $row['ip'],
+                (int) $row['hits'],
+                !empty($row['first_hit']) ? $user->format_date((int) $row['first_hit']) : '',
+                !empty($row['last_hit']) ? $user->format_date((int) $row['last_hit']) : '',
+                !empty($row['expires_at']) ? $user->format_date((int) $row['expires_at']) : '',
+                ((int) $row['expires_at'] <= $now) ? 1 : 0,
+            ));
+        }
+
+        $db->sql_freeresult($result);
+        fclose($output);
+        garbage_collection();
+        exit_handler();
+    }
+
+    protected function export_ip_reputation_csv(\phpbb\db\driver\driver_interface $db, \phpbb\user $user, $table_prefix)
+    {
+        $filename = 'antispamguard_ip_reputation_' . gmdate('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, array(
+            'ip',
+            'score',
+            'hits',
+            'last_reason',
+            'first_seen',
+            'last_update',
+            'expires_at',
+            'blocked_by_threshold',
+        ));
+
+        $threshold_sql = 'SELECT config_value
+            FROM ' . CONFIG_TABLE . "
+            WHERE config_name = 'antispamguard_ip_reputation_threshold'";
+        $threshold_result = $db->sql_query($threshold_sql);
+        $threshold = (int) $db->sql_fetchfield('config_value');
+        $db->sql_freeresult($threshold_result);
+
+        if ($threshold <= 0)
+        {
+            $threshold = 5;
+        }
+
+        $sql = 'SELECT *
+            FROM ' . $table_prefix . 'antispamguard_ip_score
+            ORDER BY score DESC, last_update DESC';
+        $result = $db->sql_query_limit($sql, 5000);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            fputcsv($output, array(
+                $row['ip'],
+                (int) $row['score'],
+                (int) $row['hits'],
+                $row['last_reason'],
+                !empty($row['first_seen']) ? $user->format_date((int) $row['first_seen']) : '',
+                !empty($row['last_update']) ? $user->format_date((int) $row['last_update']) : '',
+                !empty($row['expires_at']) ? $user->format_date((int) $row['expires_at']) : '',
+                ((int) $row['score'] >= $threshold) ? 1 : 0,
+            ));
+        }
+
+        $db->sql_freeresult($result);
+        fclose($output);
+        garbage_collection();
+        exit_handler();
+    }
+
+    protected function format_ip_reputation_reason($reason, \phpbb\user $user)
+    {
+        $map = array(
+            'honeypot' => 'ACP_ANTISPAMGUARD_REASON_HONEYPOT',
+            'timestamp' => 'ACP_ANTISPAMGUARD_REASON_TIMESTAMP',
+            'timestamp_too_fast' => 'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST',
+            'timestamp_expired' => 'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_EXPIRED',
+            'content_filter' => 'ACP_ANTISPAMGUARD_REASON_CONTENT_FILTER',
+            'too_many_urls' => 'ACP_ANTISPAMGUARD_REASON_TOO_MANY_URLS',
+            'ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_IP_RATE_LIMIT',
+            'ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST',
+            'ip_reputation' => 'ACP_ANTISPAMGUARD_REASON_IP_REPUTATION',
+            'sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
+        );
+
+        if (isset($map[$reason]) && isset($user->lang[$map[$reason]]))
+        {
+            return $user->lang($map[$reason]);
+        }
+
+        return (string) $reason;
+    }
+
+    protected function format_sfs_action_mode($mode, \phpbb\user $user)
+    {
+        switch ($mode)
+        {
+            case 'soft':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_ACTION_SOFT');
+            case 'log_only':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_ACTION_LOG_ONLY');
+            case 'disabled':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_ACTION_DISABLED');
+            case 'whitelist':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_ACTION_WHITELIST');
+            case 'block':
+            default:
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_ACTION_BLOCK');
+        }
+    }
+
+    protected function format_sfs_status($status, \phpbb\user $user)
+    {
+        switch ($status)
+        {
+            case 'sfs_disabled':
+            case 'sfs_disabled_manual_check':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_DISABLED');
+            case 'whitelisted':
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_WHITELISTED');
+            case 'checked':
+            default:
+                return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_CHECKED');
+        }
+    }
+
+    protected function export_sfs_logs_csv(\phpbb\db\driver\driver_interface $db, \phpbb\user $user, $table_prefix, \phpbb\request\request_interface $request)
+    {
+        $filename = 'antispamguard_sfs_logs_' . gmdate('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        // UTF-8 BOM for better spreadsheet compatibility.
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, array(
+            'log_id',
+            'created_at',
+            'source',
+            'ip',
+            'username',
+            'email',
+            'listed_count',
+            'strong_hit',
+            'blocked',
+            'action_mode',
+            'matched',
+            'details',
+        ));
+
+        $sql = 'SELECT *
+            FROM ' . $table_prefix . 'antispamguard_sfs_log
+            ORDER BY created_at DESC';
+        $result = $db->sql_query_limit($sql, 1000);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            $details = json_decode($row['details_json'], true);
+            $decision_meta = is_array($details) && isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
+            $action_mode = isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block';
+            $matched = !empty($decision_meta['matched']) ? 1 : 0;
+
+            fputcsv($output, array(
+                (int) $row['log_id'],
+                $user->format_date((int) $row['created_at']),
+                $row['check_source'],
+                $row['user_ip'],
+                $row['username'],
+                $row['user_email'],
+                (int) $row['listed_count'],
+                !empty($row['strong_hit']) ? 1 : 0,
+                !empty($row['blocked']) ? 1 : 0,
+                $action_mode,
+                $matched,
+                $row['details_json'],
+            ));
+        }
+
+        $db->sql_freeresult($result);
+        fclose($output);
+        garbage_collection();
+        exit_handler();
+    }
+
+
 }
