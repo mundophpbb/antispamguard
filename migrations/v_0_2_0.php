@@ -28,7 +28,7 @@ class v_0_2_0 extends \phpbb\db\migration\migration
                         'user_ip'    => array('VCHAR:40', ''),
                         'username'   => array('VCHAR:255', ''),
                         'email'      => array('VCHAR:255', ''),
-                        'reason'     => array('VCHAR:50', ''),
+                        'reason'     => array('VCHAR:191', ''),
                         'user_agent' => array('VCHAR:255', ''),
                     ),
                     'PRIMARY_KEY' => 'log_id',
