@@ -16,4 +16,6 @@ $lang = array_merge($lang, array(
     'ANTISPAMGUARD_BLOCKED_TIME' => 'Your submission could not be accepted at this time.',
     'ANTISPAMGUARD_BLOCKED_RATE_LIMIT' => 'Too many attempts were detected from your IP. Please wait a few minutes and try again.',
     'ANTISPAMGUARD_BLOCKED_IP' => 'The submission could not be accepted from this IP address.',
+    'ANTISPAMGUARD_BLOCKED_SFS' => 'Your action was blocked by external anti-spam reputation checks.',
+    'ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'This forum uses automatic anti-spam protection to reduce abusive registrations and protect the community.',
 ));
