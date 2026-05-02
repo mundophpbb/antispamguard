@@ -1,0 +1,17 @@
+{% if ANTISPAMGUARD_ENABLED %}
+<div class="antispamguard-field" aria-hidden="true">
+    <label for="{{ ANTISPAMGUARD_HP_NAME }}">{{ lang('ANTISPAMGUARD_HP_LABEL') }}</label>
+    <input type="text" id="{{ ANTISPAMGUARD_HP_NAME }}" name="{{ ANTISPAMGUARD_HP_NAME }}" value="" tabindex="-1" autocomplete="off">
+</div>
+<input type="hidden" name="antispamguard_ts" value="{{ ANTISPAMGUARD_TS }}">
+<style>
+.antispamguard-field {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+}
+</style>
+{% endif %}
