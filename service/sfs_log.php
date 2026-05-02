@@ -42,9 +42,38 @@ class sfs_log
             'created_at' => time(),
         );
 
+        $existing_log_id = $this->recent_duplicate_log_exists($data);
+        if ($existing_log_id)
+        {
+            return (int) $existing_log_id;
+        }
+
         $sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
         $this->db->sql_query($sql);
 
         return (int) $this->db->sql_nextid();
+    }
+
+    protected function recent_duplicate_log_exists(array $data)
+    {
+        $window_start = max(0, (int) $data['created_at'] - 5);
+
+        $sql = 'SELECT log_id
+            FROM ' . $this->table . '
+            WHERE created_at >= ' . (int) $window_start . "
+                AND check_source = '" . $this->db->sql_escape($data['check_source']) . "'
+                AND user_ip = '" . $this->db->sql_escape($data['user_ip']) . "'
+                AND user_email = '" . $this->db->sql_escape($data['user_email']) . "'
+                AND username = '" . $this->db->sql_escape($data['username']) . "'
+                AND listed_count = " . (int) $data['listed_count'] . "
+                AND strong_hit = " . (int) $data['strong_hit'] . "
+                AND blocked = " . (int) $data['blocked'] . "
+                AND details_json = '" . $this->db->sql_escape($data['details_json']) . "'
+            ORDER BY log_id DESC";
+        $result = $this->db->sql_query_limit($sql, 1);
+        $log_id = (int) $this->db->sql_fetchfield('log_id');
+        $this->db->sql_freeresult($result);
+
+        return $log_id;
     }
 }

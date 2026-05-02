@@ -1029,8 +1029,9 @@ $slow_spam_reason = $this->check_slow_spam();
     protected function write_log($reason, $form_type = 'register')
     {
         $table = $this->table_prefix . 'antispamguard_log';
+        $now = time();
         $sql_ary = array(
-            'log_time'   => time(),
+            'log_time'   => $now,
             'user_ip'    => (string) $this->user->ip,
             'username'   => $this->truncate_for_storage($this->request->variable('username', '', true), 255),
             'email'      => $this->truncate_for_storage($this->request->variable('email', '', true), 255),
@@ -1039,8 +1040,36 @@ $slow_spam_reason = $this->check_slow_spam();
             'user_agent' => $this->truncate_for_storage($this->request->server('HTTP_USER_AGENT', ''), 255),
         );
 
+        // phpBB can execute more than one validation path for some submissions
+        // (notably the contact form). Avoid storing the same block twice when
+        // the identical request reaches the logger again during the same pass.
+        if ($this->recent_duplicate_log_exists($table, $sql_ary, $now))
+        {
+            return;
+        }
+
         $sql = 'INSERT INTO ' . $table . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
         $this->db->sql_query($sql);
+    }
+
+    protected function recent_duplicate_log_exists($table, array $log_row, $now)
+    {
+        $window_start = max(0, (int) $now - 5);
+
+        $sql = 'SELECT log_id
+            FROM ' . $table . "
+            WHERE log_time >= " . (int) $window_start . "
+                AND user_ip = '" . $this->db->sql_escape($log_row['user_ip']) . "'
+                AND username = '" . $this->db->sql_escape($log_row['username']) . "'
+                AND email = '" . $this->db->sql_escape($log_row['email']) . "'
+                AND form_type = '" . $this->db->sql_escape($log_row['form_type']) . "'
+                AND reason = '" . $this->db->sql_escape($log_row['reason']) . "'
+                AND user_agent = '" . $this->db->sql_escape($log_row['user_agent']) . "'";
+        $result = $this->db->sql_query_limit($sql, 1);
+        $duplicate = (bool) $this->db->sql_fetchfield('log_id');
+        $this->db->sql_freeresult($result);
+
+        return $duplicate;
     }
 
     protected function normalize_log_reason($reason)
