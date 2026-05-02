@@ -811,6 +811,8 @@ class main_module
     {
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
+        $sfs_start = max(0, $request->variable('sfs_start', 0));
+        $sfs_per_page = 25;
 
         if (!in_array($sfs_filter_action, array('', 'block', 'soft', 'log_only', 'whitelist', 'disabled'), true))
         {
@@ -840,9 +842,28 @@ class main_module
         $total_sfs_logs_filtered = 0;
         $has_sfs_logs = false;
         $sfs_rows_rendered = 0;
+        $sfs_seen_filtered = 0;
 
-        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
-        $result = $db->sql_query_limit($sql, 250);
+        if ($sfs_filter_action === '')
+        {
+            $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+            $result = $db->sql_query($sql);
+            $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+            $db->sql_freeresult($result);
+
+            if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
+            {
+                $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
+            }
+
+            $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
+            $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
+        }
+        else
+        {
+            $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
+            $result = $db->sql_query($sql);
+        }
 
         while ($sfs_row = $db->sql_fetchrow($result))
         {
@@ -862,15 +883,30 @@ class main_module
                 continue;
             }
 
-            $total_sfs_logs_filtered++;
-
-            if ($sfs_rows_rendered >= 25)
+            if ($sfs_filter_action !== '')
             {
+                $total_sfs_logs_filtered++;
+
+                if ($sfs_seen_filtered < $sfs_start)
+                {
+                    $sfs_seen_filtered++;
+                    continue;
+                }
+            }
+
+            if ($sfs_rows_rendered >= $sfs_per_page)
+            {
+                if ($sfs_filter_action === '')
+                {
+                    break;
+                }
+
                 continue;
             }
 
             $has_sfs_logs = true;
             $sfs_rows_rendered++;
+            $sfs_seen_filtered++;
 
             foreach ($details as $detail_type => $detail_data)
             {
@@ -902,12 +938,29 @@ class main_module
         }
         $db->sql_freeresult($result);
 
+        $filter_params = '';
+        if ($sfs_filter_action !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_action=' . urlencode($sfs_filter_action);
+        }
+        if ($sfs_filter_blocked !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_blocked=' . urlencode($sfs_filter_blocked);
+        }
+
+        $base_url = $this->u_action . $filter_params;
+        $sfs_pagination = $this->build_pagination($base_url, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start, 'sfs_start');
+        $sfs_page_number = $this->build_page_number($user, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start);
+
         $template->assign_vars(array(
             'S_HAS_SFS_LOGS' => $has_sfs_logs,
             'TOTAL_SFS_LOGS' => $total_sfs_logs,
             'TOTAL_SFS_LOGS_FILTERED' => $total_sfs_logs_filtered,
             'SFS_FILTER_ACTION' => $sfs_filter_action,
             'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
+            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== ''),
+            'SFS_PAGINATION' => $sfs_pagination,
+            'SFS_PAGE_NUMBER' => $sfs_page_number,
         ));
     }
     protected function get_default_register_notice_text($user = null)
@@ -1723,10 +1776,13 @@ class main_module
         $db->sql_freeresult($result);
 
         $sfs_table = $table_prefix . 'antispamguard_sfs_log';
+        $sfs_start = max(0, $request->variable('sfs_start', 0));
+        $sfs_per_page = 25;
         $total_sfs_logs = 0;
         $total_sfs_logs_filtered = 0;
         $has_sfs_logs = false;
         $sfs_rows_rendered = 0;
+        $sfs_seen_filtered = 0;
         $sfs_where = array();
 
         if ($sfs_filter_blocked !== '')
@@ -1741,10 +1797,32 @@ class main_module
         $total_sfs_logs = (int) $db->sql_fetchfield('total_logs');
         $db->sql_freeresult($result);
 
-        $sql = 'SELECT *
-            FROM ' . $sfs_table . $sfs_where_sql . '
-            ORDER BY created_at DESC';
-        $result = $db->sql_query_limit($sql, 250);
+        if ($sfs_filter_action === '')
+        {
+            $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+            $result = $db->sql_query($sql);
+            $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+            $db->sql_freeresult($result);
+
+            if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
+            {
+                $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
+            }
+
+            $sql = 'SELECT *
+                FROM ' . $sfs_table . $sfs_where_sql . '
+                ORDER BY created_at DESC';
+            $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
+        }
+        else
+        {
+            // action_mode is stored inside details_json, so it must be filtered in PHP.
+            // Iterate the result set once to count accurately and render the requested page.
+            $sql = 'SELECT *
+                FROM ' . $sfs_table . $sfs_where_sql . '
+                ORDER BY created_at DESC';
+            $result = $db->sql_query($sql);
+        }
 
         while ($sfs_row = $db->sql_fetchrow($result))
         {
@@ -1764,15 +1842,30 @@ class main_module
                 continue;
             }
 
-            $total_sfs_logs_filtered++;
-
-            if ($sfs_rows_rendered >= 25)
+            if ($sfs_filter_action !== '')
             {
+                $total_sfs_logs_filtered++;
+
+                if ($sfs_seen_filtered < $sfs_start)
+                {
+                    $sfs_seen_filtered++;
+                    continue;
+                }
+            }
+
+            if ($sfs_rows_rendered >= $sfs_per_page)
+            {
+                if ($sfs_filter_action === '')
+                {
+                    break;
+                }
+
                 continue;
             }
 
             $has_sfs_logs = true;
             $sfs_rows_rendered++;
+            $sfs_seen_filtered++;
 
             foreach ($details as $detail_type => $detail_data)
             {
@@ -1804,6 +1897,11 @@ class main_module
         }
         $db->sql_freeresult($result);
 
+        if ($sfs_filter_action !== '' && $sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
+        {
+            $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
+        }
+
         $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
         $has_ip_reputation = false;
         $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
@@ -1833,6 +1931,8 @@ class main_module
         $base_url = $this->u_action . $filter_params;
         $pagination = $this->build_pagination($base_url, $total_logs, $per_page, $start);
         $page_number = $this->build_page_number($user, $total_logs, $per_page, $start);
+        $sfs_pagination = $this->build_pagination($base_url, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start, 'sfs_start');
+        $sfs_page_number = $this->build_page_number($user, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start);
 
         $template->assign_vars(array(
             'S_LOGS' => true,
@@ -1851,6 +1951,8 @@ class main_module
             'TOTAL_LOGS' => $total_logs,
             'PAGE_NUMBER' => $page_number,
             'PAGINATION' => $pagination,
+            'SFS_PAGINATION' => $sfs_pagination,
+            'SFS_PAGE_NUMBER' => $sfs_page_number,
             'ANTISPAMGUARD_LOG_RETENTION_DAYS' => isset($GLOBALS['config']['antispamguard_log_retention_days']) ? (int) $GLOBALS['config']['antispamguard_log_retention_days'] : 30,
         ));
     }
@@ -1989,7 +2091,7 @@ class main_module
         return $user->lang('PAGE_OF', $current_page, $total_pages);
     }
 
-    protected function build_pagination($base_url, $total_logs, $per_page, $start)
+    protected function build_pagination($base_url, $total_logs, $per_page, $start, $start_param = 'start')
     {
         if ($total_logs <= $per_page)
         {
@@ -1998,22 +2100,66 @@ class main_module
 
         $total_pages = (int) ceil($total_logs / $per_page);
         $current_page = (int) floor($start / $per_page) + 1;
+        $current_page = max(1, min($current_page, $total_pages));
         $links = array();
+        $separator = (strpos($base_url, '?') === false) ? '?' : '&amp;';
 
-        for ($page = 1; $page <= $total_pages; $page++)
+        $make_url = function ($page) use ($base_url, $separator, $per_page, $start_param)
         {
             $page_start = ($page - 1) * $per_page;
+            return $base_url . $separator . rawurlencode($start_param) . '=' . $page_start;
+        };
+
+        if ($current_page > 1)
+        {
+            $links[] = '<a class="asg-page-prev" href="' . $make_url($current_page - 1) . '">&lsaquo;</a>';
+        }
+
+        $pages = array(1, $total_pages, $current_page - 1, $current_page, $current_page + 1);
+
+        if ($current_page <= 3)
+        {
+            $pages[] = 2;
+            $pages[] = 3;
+        }
+
+        if ($current_page >= ($total_pages - 2))
+        {
+            $pages[] = $total_pages - 1;
+            $pages[] = $total_pages - 2;
+        }
+
+        $pages = array_unique(array_filter($pages, function ($page) use ($total_pages)
+        {
+            return $page >= 1 && $page <= $total_pages;
+        }));
+
+        sort($pages);
+
+        $previous_page = 0;
+
+        foreach ($pages as $page)
+        {
+            if ($previous_page && $page > ($previous_page + 1))
+            {
+                $links[] = '<span class="asg-page-gap">&hellip;</span>';
+            }
 
             if ($page === $current_page)
             {
-                $links[] = '<strong>' . $page . '</strong>';
+                $links[] = '<span class="asg-page-current">' . $page . '</span>';
             }
             else
             {
-                $separator = (strpos($base_url, '?') === false) ? '?' : '&amp;';
-                $url = $base_url . $separator . 'start=' . $page_start;
-                $links[] = '<a href="' . $url . '">' . $page . '</a>';
+                $links[] = '<a href="' . $make_url($page) . '">' . $page . '</a>';
             }
+
+            $previous_page = $page;
+        }
+
+        if ($current_page < $total_pages)
+        {
+            $links[] = '<a class="asg-page-next" href="' . $make_url($current_page + 1) . '">&rsaquo;</a>';
         }
 
         return implode(' ', $links);

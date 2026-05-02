@@ -555,10 +555,18 @@
     </fieldset>
 
     {% if S_HAS_SFS_LOGS %}
-    <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}</strong></p>
-    {% if SFS_FILTER_ACTION or SFS_FILTER_BLOCKED %}
-    <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</strong></p>
-    {% endif %}
+    <div class="asg-pagination">
+        <span class="asg-pagination-summary">
+            {{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}
+            {% if S_SFS_FILTER_ACTIVE %}<span class="asg-pagination-filtered">{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</span>{% endif %}
+        </span>
+        {% if SFS_PAGINATION %}
+        <span class="asg-pagination-pages">
+            <span class="asg-pagination-label">{{ SFS_PAGE_NUMBER }}</span>
+            {{ SFS_PAGINATION }}
+        </span>
+        {% endif %}
+    </div>
 
     <div class="asg-actions">
         <input class="button2" type="submit" name="export_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS') }}" data-ajax="false">
@@ -599,6 +607,19 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <div class="asg-pagination">
+        <span class="asg-pagination-summary">
+            {{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}
+            {% if S_SFS_FILTER_ACTIVE %}<span class="asg-pagination-filtered">{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</span>{% endif %}
+        </span>
+        {% if SFS_PAGINATION %}
+        <span class="asg-pagination-pages">
+            <span class="asg-pagination-label">{{ SFS_PAGE_NUMBER }}</span>
+            {{ SFS_PAGINATION }}
+        </span>
+        {% endif %}
+    </div>
     {% else %}
     <p><strong>{{ lang('ACP_ANTISPAMGUARD_NO_SFS_LOGS') }}</strong></p>
     {% endif %}
@@ -656,9 +677,14 @@
     </fieldset>
 
     {% if S_HAS_LOGS %}
-    <div class="pagination">
-        {{ lang('ACP_ANTISPAMGUARD_TOTAL_LOGS', TOTAL_LOGS) }}
-        {% if PAGINATION %} &bull; {{ PAGE_NUMBER }} &bull; {{ PAGINATION }}{% endif %}
+    <div class="asg-pagination">
+        <span class="asg-pagination-summary">{{ lang('ACP_ANTISPAMGUARD_TOTAL_LOGS', TOTAL_LOGS) }}</span>
+        {% if PAGINATION %}
+        <span class="asg-pagination-pages">
+            <span class="asg-pagination-label">{{ PAGE_NUMBER }}</span>
+            {{ PAGINATION }}
+        </span>
+        {% endif %}
     </div>
 
     <table class="table1 zebra-table">
@@ -690,9 +716,14 @@
         </tbody>
     </table>
 
-    <div class="pagination">
-        {{ lang('ACP_ANTISPAMGUARD_TOTAL_LOGS', TOTAL_LOGS) }}
-        {% if PAGINATION %} &bull; {{ PAGE_NUMBER }} &bull; {{ PAGINATION }}{% endif %}
+    <div class="asg-pagination">
+        <span class="asg-pagination-summary">{{ lang('ACP_ANTISPAMGUARD_TOTAL_LOGS', TOTAL_LOGS) }}</span>
+        {% if PAGINATION %}
+        <span class="asg-pagination-pages">
+            <span class="asg-pagination-label">{{ PAGE_NUMBER }}</span>
+            {{ PAGINATION }}
+        </span>
+        {% endif %}
     </div>
 
     <fieldset class="display-actions">
@@ -735,10 +766,18 @@
         </fieldset>
 
         {% if S_HAS_SFS_LOGS %}
-        <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}</strong></p>
-        {% if S_SFS_FILTER_ACTIVE %}
-        <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</strong></p>
-        {% endif %}
+        <div class="asg-pagination">
+            <span class="asg-pagination-summary">
+                {{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}
+                {% if S_SFS_FILTER_ACTIVE %}<span class="asg-pagination-filtered">{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</span>{% endif %}
+            </span>
+            {% if SFS_PAGINATION %}
+            <span class="asg-pagination-pages">
+                <span class="asg-pagination-label">{{ SFS_PAGE_NUMBER }}</span>
+                {{ SFS_PAGINATION }}
+            </span>
+            {% endif %}
+        </div>
 
         <table class="table1 zebra-table">
             <thead>
@@ -774,6 +813,19 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <div class="asg-pagination">
+            <span class="asg-pagination-summary">
+                {{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS', TOTAL_SFS_LOGS) }}
+                {% if S_SFS_FILTER_ACTIVE %}<span class="asg-pagination-filtered">{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_LOGS_FILTERED', TOTAL_SFS_LOGS_FILTERED) }}</span>{% endif %}
+            </span>
+            {% if SFS_PAGINATION %}
+            <span class="asg-pagination-pages">
+                <span class="asg-pagination-label">{{ SFS_PAGE_NUMBER }}</span>
+                {{ SFS_PAGINATION }}
+            </span>
+            {% endif %}
+        </div>
         {% else %}
         <p><strong>{{ lang('ACP_ANTISPAMGUARD_NO_SFS_LOGS') }}</strong></p>
         {% endif %}
