@@ -145,7 +145,7 @@ Para uma configuração equilibrada:
 
 ### 📌 Status
 
-Versão atual: **2.4.1**  
+Versão atual: **3.3.18**  
 Status: pronto para uso em produção.
 
 ---
@@ -291,7 +291,7 @@ For a balanced configuration:
 
 ### 📌 Status
 
-Current version: **2.4.1**  
+Current version: **3.3.18**  
 Status: production-ready.
 
 ---
