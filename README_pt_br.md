@@ -1,153 +1,143 @@
-# ??? AntiSpam Guard
+# AntiSpam Guard
 
-## ???? Portugu�s
+## O que é?
 
-### ? O que �?
-O **AntiSpam Guard** � uma extens�o para phpBB que protege seu f�rum contra spam de forma **invis�vel**, sem uso de CAPTCHA tradicional.
+O **AntiSpam Guard** é uma extensão para phpBB desenvolvida pela **Mundophpbb** para proteger fóruns contra spam de forma invisível, sem depender de CAPTCHA tradicional.
 
-Ele utiliza t�cnicas modernas como HoneyPot, an�lise de comportamento, filtros de conte�do e controle por IP.
-
----
-
-### ?? Pra que serve?
-Evitar:
-
-- registros automatizados
-- posts de spam
-- mensagens privadas maliciosas
-- abuso em formul�rios de contato
-
-Tudo isso sem impactar usu�rios reais.
+A extensão combina HoneyPot, análise de tempo, controle por IP, filtros de conteúdo, integração com StopForumSpam, logs, estatísticas e diagnóstico no ACP.
 
 ---
 
-### ?? Como funciona?
+## Para que serve?
 
-A extens�o utiliza m�ltiplas camadas de prote��o:
+O AntiSpam Guard ajuda a evitar:
 
-- ?? HoneyPot (campo invis�vel)
-- ?? An�lise de tempo de envio
-- ?? Controle por IP (whitelist/blacklist)
-- ?? Filtro de conte�do (palavras e URLs)
-- ??? Modo discreto
-- ?? Modo simula��o
-- ?? Logs e estat�sticas
-- ?? Limpeza autom�tica via cron
+- registros automatizados;
+- postagens de spam;
+- mensagens privadas maliciosas;
+- abuso no formulário de contato;
+- envios rápidos demais ou suspeitos;
+- excesso de URLs;
+- IPs bloqueados ou abusivos;
+- remetentes suspeitos identificados pelo StopForumSpam.
 
----
-
-### ?? Recursos
-
-- Prote��o em:
-  - Registro
-  - Postagens
-  - Mensagens privadas
-  - Formul�rio de contato
-
-- Dashboard visual no ACP
-- Exporta��o CSV
-- Configura��o avan�ada
-- Multil�ngue
+Tudo isso com o menor impacto possível para usuários reais.
 
 ---
 
-### ??? Instala��o
+## Como funciona?
+
+A extensão utiliza múltiplas camadas de proteção:
+
+- **HoneyPot:** adiciona um campo invisível aos formulários para capturar bots que preenchem todos os campos.
+- **Análise de tempo:** detecta envios rápidos demais ou fora do intervalo configurado.
+- **Controle por IP:** permite whitelist, blacklist, CIDR e limite por IP.
+- **Filtro de conteúdo:** bloqueia termos suspeitos e limita URLs.
+- **StopForumSpam:** consulta IP, e-mail e/ou nome de usuário em base externa anti-spam.
+- **Modo discreto:** oculta o motivo real do bloqueio.
+- **Modo simulação:** registra o que seria bloqueado sem impedir o envio.
+- **Logs e estatísticas:** registra eventos, permite filtros, exportação CSV e análise no ACP.
+- **Limpeza automática:** remove logs antigos via cron do phpBB conforme a retenção configurada.
+
+---
+
+## StopForumSpam
+
+A integração com **StopForumSpam** possui página própria no ACP e log separado.
+
+A partir da versão **3.3.19**, os logs do StopForumSpam aparecem em dois locais:
+
+- na página própria do **StopForumSpam**;
+- na página **Logs de bloqueio**.
+
+Também há filtros e exportação CSV específicos para os registros do StopForumSpam.
+
+---
+
+## Recursos
+
+- Proteção no registro;
+- proteção em postagens, respostas e edições;
+- proteção em mensagens privadas;
+- proteção no formulário de contato;
+- HoneyPot configurável;
+- análise de tempo mínimo e máximo;
+- filtro de palavras e termos suspeitos;
+- limite de URLs;
+- whitelist e blacklist de IPs;
+- rate limit por IP;
+- integração com StopForumSpam;
+- logs próprios do StopForumSpam;
+- logs do StopForumSpam na página própria e em **Logs de bloqueio**;
+- filtros e exportação CSV dos logs do StopForumSpam;
+- envio manual ao StopForumSpam pelo ACP, com preenchimento a partir dos logs SFS e auditoria interna;
+- dashboard visual no ACP;
+- filtros e paginação de logs;
+- exclusão individual, em massa e por filtro;
+- exportação CSV;
+- importação/exportação de configurações;
+- estatísticas visuais;
+- diagnóstico da instalação;
+- limpeza automática via cron;
+- suporte multilíngue;
+- suporte a permissões ACP.
+
+---
+
+## Instalação
 
 1. Envie os arquivos para:
-   `/ext/mundophpbb/antispamguard`
-2. Ative no ACP
-3. Configure conforme necess�rio
+
+```text
+/ext/mundophpbb/antispamguard
+```
+
+2. Acesse o ACP do phpBB.
+3. Vá em **Personalizar > Gerenciar extensões**.
+4. Ative **AntiSpam Guard**.
+5. Configure conforme necessário.
 
 ---
 
-### ?? Recomenda��o
+## Atualização
 
-Para melhor prote��o:
-
-- ative HoneyPot + tempo m�nimo
-- utilize limite por IP
-- teste com modo simula��o antes
-
----
-
-### ?? Status
-
-Vers�o atual: **2.4.1**  
-Pronto para produ��o.
+1. Desative a extensão no ACP sem apagar dados, salvo se desejar remover tudo.
+2. Substitua os arquivos da extensão.
+3. Ative novamente ou execute a atualização pelo ACP.
+4. Limpe o cache do phpBB.
+5. Verifique a aba **Sobre / Diagnóstico**.
+6. Após atualizar para a versão **3.3.23**, confirme se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
 
 ---
 
-## ???? English
+## Recomendação inicial
 
-### ? What is it?
-**AntiSpam Guard** is a phpBB extension that protects your forum against spam using **invisible techniques**, without traditional CAPTCHA.
+Para melhor proteção:
 
-It uses modern methods like HoneyPot, behavioral analysis, content filtering, and IP control.
-
----
-
-### ?? What is it for?
-To prevent:
-
-- automated registrations
-- spam posts
-- malicious private messages
-- abuse in contact forms
-
-All without affecting real users.
+- ative HoneyPot;
+- ative análise de tempo;
+- use um tempo mínimo moderado;
+- mantenha os logs ativos no início;
+- teste novas regras com modo simulação;
+- ative o StopForumSpam em modo de teste ou somente log antes de aplicar bloqueios definitivos;
+- configure retenção automática de logs.
 
 ---
 
-### ?? How does it work?
+## Requisitos
 
-The extension combines multiple protection layers:
-
-- ?? HoneyPot (hidden field)
-- ?? Submission timing analysis
-- ?? IP control (whitelist/blacklist)
-- ?? Content filtering (words & URLs)
-- ??? Silent mode
-- ?? Simulation mode
-- ?? Logs and statistics
-- ?? Automatic cleanup via cron
+- phpBB 3.3.0 ou superior;
+- PHP 7.1.3 ou superior.
 
 ---
 
-### ?? Features
+## Status
 
-- Protection for:
-  - Registration
-  - Posts
-  - Private messages
-  - Contact form
-
-- ACP dashboard
-- CSV export
-- Advanced configuration
-- Multilingual
+Versão atual: **3.3.23**  
+Status: pronto para uso em produção.
 
 ---
 
-### ??? Installation
+## Licença
 
-1. Upload to:
-   `/ext/mundophpbb/antispamguard`
-2. Enable in ACP
-3. Configure as needed
-
----
-
-### ?? Recommendation
-
-For best protection:
-
-- enable HoneyPot + time check
-- use IP limits
-- test using simulation mode first
-
----
-
-### ?? Status
-
-Current version: **2.4.1**  
-Production-ready.
+GPL-2.0-only

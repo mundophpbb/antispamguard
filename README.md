@@ -58,7 +58,7 @@ Permite bloquear termos suspeitos e limitar a quantidade de URLs por envio.
 
 Permite consultar dados do **StopForumSpam** para avaliar IP, e-mail e/ou nome de usuário durante as verificações anti-spam.
 
-A integração possui página própria no ACP e registra suas ações em log separado. A partir da versão **3.3.18**, esses registros também aparecem na página **Logs de bloqueio**, além da página própria do StopForumSpam.
+A integração possui página própria no ACP e registra suas ações em log separado. A partir da versão **3.3.19**, esses registros também aparecem na página **Logs de bloqueio**, além da página própria do StopForumSpam.
 
 #### Modo discreto
 
@@ -131,7 +131,7 @@ A extensão pode limpar logs antigos automaticamente via cron do phpBB, usando a
 3. Ative novamente ou execute a atualização pelo ACP.
 4. Limpe o cache do phpBB.
 5. Verifique a aba **Sobre / Diagnóstico**.
-6. Após atualizar para a versão **3.3.18**, confira se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
+6. Após atualizar para a versão **3.3.23**, confira se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
 
 ---
 
@@ -158,7 +158,7 @@ Para uma configuração equilibrada:
 
 ### Status
 
-Versão atual: **3.3.18**  
+Versão atual: **3.3.23**  
 Status: pronto para uso em produção.
 
 ---
@@ -217,7 +217,7 @@ Allows blocking suspicious terms and limiting the number of URLs per submission.
 
 Allows checking **StopForumSpam** data to evaluate IP address, email address, and/or username during anti-spam checks.
 
-The integration has its own ACP page and stores its actions in a dedicated log. Since version **3.3.18**, these records are also displayed on the **Blocking logs** page, in addition to the dedicated StopForumSpam page.
+The integration has its own ACP page and stores its actions in a dedicated log. Since version **3.3.19**, these records are also displayed on the **Blocking logs** page, in addition to the dedicated StopForumSpam page.
 
 #### Silent mode
 
@@ -253,6 +253,7 @@ The extension can automatically prune old logs through phpBB cron using the rete
 - dedicated StopForumSpam logs;
 - StopForumSpam logs visible on the dedicated page and on **Blocking logs**;
 - StopForumSpam log filters and CSV export;
+- manual StopForumSpam submission audit;
 - silent mode;
 - simulation mode;
 - ACP logs;
@@ -290,7 +291,7 @@ The extension can automatically prune old logs through phpBB cron using the rete
 3. Enable it again or run the update through the ACP.
 4. Clear the phpBB cache.
 5. Check the **About / Diagnostics** tab.
-6. After updating to version **3.3.18**, confirm that StopForumSpam logs appear both on the dedicated page and on **Blocking logs**.
+6. After updating to version **3.3.23**, confirm that StopForumSpam logs appear both on the dedicated page and on **Blocking logs**.
 
 ---
 
@@ -317,7 +318,7 @@ For a balanced configuration:
 
 ### Status
 
-Current version: **3.3.18**  
+Current version: **3.3.23**  
 Status: production-ready.
 
 ---

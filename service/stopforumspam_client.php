@@ -206,7 +206,7 @@ class stopforumspam_client
                 'http' => array(
                     'method' => 'GET',
                     'timeout' => $this->timeout,
-                    'header' => "User-Agent: AntiSpamGuard/3.3.11\r\n",
+                    'header' => "User-Agent: AntiSpamGuard/3.3.22\r\n",
                 ),
             ));
 
@@ -237,7 +237,7 @@ class stopforumspam_client
                     'timeout' => $this->timeout,
                     'header' => "Content-Type: application/x-www-form-urlencoded\r\n" .
                         "Content-Length: " . strlen($body) . "\r\n" .
-                        "User-Agent: AntiSpamGuard/3.3.11\r\n",
+                        "User-Agent: AntiSpamGuard/3.3.22\r\n",
                     'content' => $body,
                 ),
             ));
