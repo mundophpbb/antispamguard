@@ -278,7 +278,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_SFS_WHITELIST_USERNAMES_EXPLAIN' => 'Un nom d’utilisateur par ligne. Correspondance exacte sans tenir compte de la casse requise.',
 
     'ACP_ANTISPAMGUARD_SFS_ACTION_MODE' => 'Mode d’action SFS',
-    'ACP_ANTISPAMGUARD_SFS_ACTION_MODE_EXPLAIN' => 'Définit quoi faire lorsque StopForumSpam correspond aux règles de décision. Soft enregistre la suspicion sans bloquer ; journal uniquement ne fait qu’auditer.',
+    'ACP_ANTISPAMGUARD_SFS_ACTION_MODE_EXPLAIN' => 'Définit l\'action à effectuer lorsque StopForumSpam atteint les règles de décision. Le mode Soft enregistre comme suspect sans bloquer ; le mode Log only se contente d\'auditer.
+    <a href="https://www.stopforumspam.com/" target="_blank" rel="noopener">Obtenir la clé API</a>',
     'ACP_ANTISPAMGUARD_SFS_ACTION_BLOCK' => 'Bloquer',
     'ACP_ANTISPAMGUARD_SFS_ACTION_SOFT' => 'Blocage souple (enregistrer la suspicion, autoriser)',
     'ACP_ANTISPAMGUARD_SFS_ACTION_LOG_ONLY' => 'Journal uniquement',

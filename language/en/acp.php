@@ -278,7 +278,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_SFS_WHITELIST_USERNAMES_EXPLAIN' => 'One username per line. Exact case-insensitive match required.',
 
     'ACP_ANTISPAMGUARD_SFS_ACTION_MODE' => 'SFS action mode',
-    'ACP_ANTISPAMGUARD_SFS_ACTION_MODE_EXPLAIN' => 'Defines what to do when StopForumSpam matches the decision rules. Soft records suspicion without blocking; log only audits only.',
+    'ACP_ANTISPAMGUARD_SFS_ACTION_MODE_EXPLAIN' => 'Defines what to do when StopForumSpam meets the decision rules. Soft registers as suspicious without blocking; log only just audits.
+    <a href="https://www.stopforumspam.com/" target="_blank" rel="noopener">Get API Key</a>',
     'ACP_ANTISPAMGUARD_SFS_ACTION_BLOCK' => 'Block',
     'ACP_ANTISPAMGUARD_SFS_ACTION_SOFT' => 'Soft block (record suspicion, allow)',
     'ACP_ANTISPAMGUARD_SFS_ACTION_LOG_ONLY' => 'Log only',
