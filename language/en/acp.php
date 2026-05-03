@@ -535,5 +535,24 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Plain text only, no HTML. Limit: 255 characters. If empty, the default text will be used.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'This forum uses automatic anti-spam protection to reduce abusive registrations and protect the community.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Weight applied to IP reputation when the score source is StopForumSpam.',
+
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Fields were filled from a StopForumSpam log. Review the data before submitting.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_FROM_LOG' => 'Confirmed spammer from AntiSpam Guard SFS log #%1$d. Source: %2$s. Log date: %3$s.',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_ACTION' => 'Report',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG' => 'Use for SFS report',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS_LOGGED' => 'Spammer submitted to StopForumSpam. Internal audit log ID: %d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED_STATUS' => 'Could not submit to StopForumSpam. Status: %1$s. Internal audit log ID: %2$d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS' => 'StopForumSpam submission audit',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS_EXPLAIN' => 'Last manual submission attempts sent to StopForumSpam. This internal audit helps administrators track who submitted what and whether SFS accepted it.',
+    'ACP_ANTISPAMGUARD_TOTAL_SFS_SUBMISSION_LOGS' => array(
+        0 => 'No StopForumSpam submission logs',
+        1 => '%d StopForumSpam submission log',
+        2 => '%d StopForumSpam submission logs',
+    ),
+    'ACP_ANTISPAMGUARD_NO_SFS_SUBMISSION_LOGS' => 'No StopForumSpam submissions have been audited yet.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_ADMIN' => 'Administrator',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_STATUS' => 'Status',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_RESPONSE' => 'Response',
+
     'ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN' => 'Weight used by the decision engine when StopForumSpam contributes to the final score.',
 ));

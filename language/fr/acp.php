@@ -535,5 +535,24 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Texte brut uniquement, sans HTML. Limite : 255 caractères. Si vide, le texte par défaut sera utilisé.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'Ce forum utilise une protection anti-spam automatique pour réduire les inscriptions abusives et protéger la communauté.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Poids appliqué à la réputation IP lorsque la source du score est StopForumSpam.',
+
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Les champs ont été remplis depuis un log StopForumSpam. Vérifiez les données avant l’envoi.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_FROM_LOG' => 'Spammeur confirmé depuis le log SFS AntiSpam Guard n°%1$d. Source : %2$s. Date du log : %3$s.',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_ACTION' => 'Signaler',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG' => 'Utiliser pour un signalement SFS',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS_LOGGED' => 'Spammeur soumis à StopForumSpam. ID du log interne d’audit : %d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED_STATUS' => 'Impossible de soumettre à StopForumSpam. Statut : %1$s. ID du log interne d’audit : %2$d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS' => 'Audit des soumissions StopForumSpam',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS_EXPLAIN' => 'Dernières tentatives de soumission manuelle envoyées à StopForumSpam. Cet audit interne aide les administrateurs à suivre qui a soumis quoi et si SFS l’a accepté.',
+    'ACP_ANTISPAMGUARD_TOTAL_SFS_SUBMISSION_LOGS' => array(
+        0 => 'Aucun log de soumission StopForumSpam',
+        1 => '%d log de soumission StopForumSpam',
+        2 => '%d logs de soumission StopForumSpam',
+    ),
+    'ACP_ANTISPAMGUARD_NO_SFS_SUBMISSION_LOGS' => 'Aucune soumission à StopForumSpam n’a encore été auditée.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_ADMIN' => 'Administrateur',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_STATUS' => 'Statut',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_RESPONSE' => 'Réponse',
+
     'ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN' => 'Poids utilisé par le moteur de décision lorsque StopForumSpam contribue au score final.',
 ));

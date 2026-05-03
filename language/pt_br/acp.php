@@ -535,5 +535,24 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Texto simples, sem HTML. Limite de 255 caracteres. Se ficar vazio, será usado o texto padrão.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'Este fórum usa proteção antispam automática para reduzir cadastros abusivos e proteger a comunidade.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Peso aplicado à reputação de IP quando a origem do ponto é StopForumSpam.',
+
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Os campos foram preenchidos a partir de um log StopForumSpam. Revise os dados antes de enviar.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_FROM_LOG' => 'Spammer confirmado a partir do log SFS AntiSpam Guard #%1$d. Origem: %2$s. Data do log: %3$s.',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_ACTION' => 'Denunciar',
+    'ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG' => 'Usar em denúncia SFS',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS_LOGGED' => 'Spammer enviado ao StopForumSpam. ID do log interno de auditoria: %d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED_STATUS' => 'Não foi possível enviar ao StopForumSpam. Status: %1$s. ID do log interno de auditoria: %2$d.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS' => 'Auditoria de envios StopForumSpam',
+    'ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS_EXPLAIN' => 'Últimas tentativas de envio manual ao StopForumSpam. Esta auditoria interna ajuda os administradores a acompanhar quem enviou o quê e se o SFS aceitou.',
+    'ACP_ANTISPAMGUARD_TOTAL_SFS_SUBMISSION_LOGS' => array(
+        0 => 'Nenhum log de envio StopForumSpam',
+        1 => '%d log de envio StopForumSpam',
+        2 => '%d logs de envio StopForumSpam',
+    ),
+    'ACP_ANTISPAMGUARD_NO_SFS_SUBMISSION_LOGS' => 'Nenhum envio ao StopForumSpam foi auditado ainda.',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_ADMIN' => 'Administrador',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_STATUS' => 'Status',
+    'ACP_ANTISPAMGUARD_SFS_SUBMIT_RESPONSE' => 'Resposta',
+
     'ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN' => 'Peso usado pelo motor de decisão quando o StopForumSpam contribui para a pontuação final.',
 ));
