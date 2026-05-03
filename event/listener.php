@@ -1042,7 +1042,7 @@ $slow_spam_reason = $this->check_slow_spam();
 
         // phpBB can execute more than one validation path for some submissions
         // (notably the contact form). Avoid storing the same block twice when
-        // the identical request reaches the logger again during the same pass.
+        // the same request reaches the logger again during the same pass.
         if ($this->recent_duplicate_log_exists($table, $sql_ary, $now))
         {
             return;
@@ -1054,22 +1054,73 @@ $slow_spam_reason = $this->check_slow_spam();
 
     protected function recent_duplicate_log_exists($table, array $log_row, $now)
     {
-        $window_start = max(0, (int) $now - 5);
+        $window_start = max(0, (int) $now - 60);
 
-        $sql = 'SELECT log_id
+        // De-duplicate by request identity, not by the full reason string.
+        // The contact form can hit more than one validation path and produce
+        // near-identical rows with one extra heuristic reason, commonly
+        // slow_spam. Use a wider short window and match the stable request
+        // fields, then merge reasons into the newest row.
+        $identity_sql = array(
+            "user_ip = '" . $this->db->sql_escape($log_row['user_ip']) . "'",
+            "form_type = '" . $this->db->sql_escape($log_row['form_type']) . "'",
+            "user_agent = '" . $this->db->sql_escape($log_row['user_agent']) . "'",
+        );
+
+        if ((string) $log_row['email'] !== '')
+        {
+            $identity_sql[] = "email = '" . $this->db->sql_escape($log_row['email']) . "'";
+        }
+        else
+        {
+            $identity_sql[] = "username = '" . $this->db->sql_escape($log_row['username']) . "'";
+        }
+
+        $sql = 'SELECT log_id, reason
             FROM ' . $table . "
             WHERE log_time >= " . (int) $window_start . "
-                AND user_ip = '" . $this->db->sql_escape($log_row['user_ip']) . "'
-                AND username = '" . $this->db->sql_escape($log_row['username']) . "'
-                AND email = '" . $this->db->sql_escape($log_row['email']) . "'
-                AND form_type = '" . $this->db->sql_escape($log_row['form_type']) . "'
-                AND reason = '" . $this->db->sql_escape($log_row['reason']) . "'
-                AND user_agent = '" . $this->db->sql_escape($log_row['user_agent']) . "'";
+                AND " . implode(' AND ', $identity_sql) . "
+            ORDER BY log_time DESC, log_id DESC";
         $result = $this->db->sql_query_limit($sql, 1);
-        $duplicate = (bool) $this->db->sql_fetchfield('log_id');
+        $row = $this->db->sql_fetchrow($result);
         $this->db->sql_freeresult($result);
 
-        return $duplicate;
+        if (!$row)
+        {
+            return false;
+        }
+
+        $merged_reason = $this->merge_log_reasons($row['reason'], $log_row['reason']);
+
+        if ($merged_reason !== (string) $row['reason'])
+        {
+            $sql = 'UPDATE ' . $table . "
+                SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "'
+                WHERE log_id = " . (int) $row['log_id'];
+            $this->db->sql_query($sql);
+        }
+
+        return true;
+    }
+
+    protected function merge_log_reasons($existing_reason, $new_reason)
+    {
+        $parts = array();
+
+        foreach (array($existing_reason, $new_reason) as $reason)
+        {
+            foreach (explode(',', (string) $reason) as $part)
+            {
+                $part = trim($part);
+
+                if ($part !== '' && !in_array($part, $parts, true))
+                {
+                    $parts[] = $part;
+                }
+            }
+        }
+
+        return implode(',', $parts);
     }
 
     protected function normalize_log_reason($reason)
