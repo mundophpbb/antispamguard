@@ -456,30 +456,69 @@
         </div>
         <div class="asg-panel"><h2>📨 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_SUBMIT') }}</h2>
             <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_SUBMIT_EXPLAIN') }}</p>
+            {% if S_SFS_SUBMIT_PREFILLED %}<p class="asg-alert"><strong>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED') }}</strong></p>{% endif %}
+            <input type="hidden" name="antispamguard_sfs_submit_source" value="{{ SFS_SUBMIT_PREFILL_SOURCE|default('manual_acp')|e }}">
+            <input type="hidden" name="antispamguard_sfs_submit_source_log_id" value="{{ SFS_SUBMIT_PREFILL_SOURCE_LOG_ID|default(0) }}">
 
             <dl>
                 <dt><label for="antispamguard_sfs_submit_ip">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_IP') ~ lang('COLON') }}</label></dt>
-                <dd><input type="text" id="antispamguard_sfs_submit_ip" name="antispamguard_sfs_submit_ip" value="" size="40"></dd>
+                <dd><input type="text" id="antispamguard_sfs_submit_ip" name="antispamguard_sfs_submit_ip" value="{{ SFS_SUBMIT_PREFILL_IP|e }}" size="40"></dd>
             </dl>
 
             <dl>
                 <dt><label for="antispamguard_sfs_submit_email">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EMAIL') ~ lang('COLON') }}</label></dt>
-                <dd><input type="text" id="antispamguard_sfs_submit_email" name="antispamguard_sfs_submit_email" value="" size="40"></dd>
+                <dd><input type="text" id="antispamguard_sfs_submit_email" name="antispamguard_sfs_submit_email" value="{{ SFS_SUBMIT_PREFILL_EMAIL|e }}" size="40"></dd>
             </dl>
 
             <dl>
                 <dt><label for="antispamguard_sfs_submit_username">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_USERNAME') ~ lang('COLON') }}</label></dt>
-                <dd><input type="text" id="antispamguard_sfs_submit_username" name="antispamguard_sfs_submit_username" value="" size="40"></dd>
+                <dd><input type="text" id="antispamguard_sfs_submit_username" name="antispamguard_sfs_submit_username" value="{{ SFS_SUBMIT_PREFILL_USERNAME|e }}" size="40"></dd>
             </dl>
 
             <dl>
                 <dt><label for="antispamguard_sfs_submit_evidence">{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_EXPLAIN') }}</span></dt>
-                <dd><textarea id="antispamguard_sfs_submit_evidence" name="antispamguard_sfs_submit_evidence" rows="4" cols="50"></textarea></dd>
+                <dd><textarea id="antispamguard_sfs_submit_evidence" name="antispamguard_sfs_submit_evidence" rows="4" cols="50">{{ SFS_SUBMIT_PREFILL_EVIDENCE|e }}</textarea></dd>
             </dl>
 
             <div class="asg-actions">
                 <input class="button2" type="submit" name="submit_sfs_spammer" value="{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_RUN') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_CONFIRM')|e('js') }}');"{% if not SFS_API_KEY_CONFIGURED %} disabled="disabled"{% endif %}>
             </div>
+        </div>
+        <div class="asg-panel asg-panel-wide"><h2>🧾 {{ lang('ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS') }}</h2>
+            <p>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMISSION_LOGS_EXPLAIN') }}</p>
+            {% if S_HAS_SFS_SUBMISSION_LOGS %}
+            <p><strong>{{ lang('ACP_ANTISPAMGUARD_TOTAL_SFS_SUBMISSION_LOGS', TOTAL_SFS_SUBMISSION_LOGS) }}</strong></p>
+            <table class="table1 zebra-table">
+                <thead>
+                    <tr>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_LOG_TIME') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_ADMIN') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_LOG_USERNAME') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_LOG_EMAIL') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SOURCE') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_STATUS') }}</th>
+                        <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_RESPONSE') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in sfs_submission_logs %}
+                    <tr>
+                        <td>{{ submission.TIME }}</td>
+                        <td>{{ submission.ADMIN }}</td>
+                        <td>{{ submission.IP }}</td>
+                        <td>{{ submission.USERNAME }}</td>
+                        <td>{{ submission.EMAIL }}</td>
+                        <td>{{ submission.SOURCE }}{% if submission.SOURCE_LOG_ID %} #{{ submission.SOURCE_LOG_ID }}{% endif %}</td>
+                        <td>{{ submission.STATUS }}</td>
+                        <td>{{ submission.RESPONSE }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p><strong>{{ lang('ACP_ANTISPAMGUARD_NO_SFS_SUBMISSION_LOGS') }}</strong></p>
+            {% endif %}
         </div>
         <div class="asg-panel asg-panel-wide"><h2>🧹 {{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_MAINTENANCE') }}</h2>
             <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_SFS_MAINTENANCE_EXPLAIN') }}</p>
@@ -587,6 +626,7 @@
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_SHORT') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_MATCHED') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_DETAILS') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_ACTION') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -603,6 +643,7 @@
                 <td>{{ sfs.ACTION_MODE }}</td>
                 <td>{{ sfs.MATCHED }}</td>
                 <td>{{ sfs.DETAILS }}</td>
+                <td>{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -793,6 +834,7 @@
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_SHORT') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_MATCHED') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_DETAILS') }}</th>
+                    <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_ACTION') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -809,6 +851,7 @@
                     <td>{{ sfs.ACTION_MODE }}</td>
                     <td>{{ sfs.MATCHED }}</td>
                     <td>{{ sfs.DETAILS }}</td>
+                    <td>{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

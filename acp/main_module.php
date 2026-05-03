@@ -216,16 +216,21 @@ class main_module
             $submit_email = trim($request->variable('antispamguard_sfs_submit_email', '', true));
             $submit_username = trim($request->variable('antispamguard_sfs_submit_username', '', true));
             $submit_evidence = trim($request->variable('antispamguard_sfs_submit_evidence', '', true));
+            $submit_source = trim($request->variable('antispamguard_sfs_submit_source', 'manual_acp'));
+            $submit_source_log_id = max(0, $request->variable('antispamguard_sfs_submit_source_log_id', 0));
 
             $sfs_client = $phpbb_container->get('mundophpbb.antispamguard.stopforumspam_client');
             $submit_result = $sfs_client->submit_spammer($submit_ip, $submit_email, $submit_username, $submit_evidence);
 
+            $submit_audit_id = $this->record_sfs_submission($db, $table_prefix, $user, $submit_ip, $submit_email, $submit_username, $submit_evidence, $submit_source, $submit_source_log_id, $submit_result);
+
             if (empty($submit_result['success']))
             {
-                trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED') . adm_back_link($this->u_action), E_USER_WARNING);
+                $status = !empty($submit_result['status']) ? (string) $submit_result['status'] : 'unknown';
+                trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_FAILED_STATUS', $status, $submit_audit_id) . adm_back_link($this->u_action), E_USER_WARNING);
             }
 
-            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS') . adm_back_link($this->u_action));
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_SUCCESS_LOGGED', $submit_audit_id) . adm_back_link($this->u_action));
         }
 
         if ($request->is_set_post('export_ip_reputation'))
@@ -772,6 +777,8 @@ class main_module
         $db->sql_freeresult($result);
 
         $this->assign_sfs_logs($db, $request, $template, $user, $table_prefix);
+        $this->assign_sfs_submission_logs($db, $template, $user, $table_prefix);
+        $sfs_submit_prefill = $this->get_sfs_submit_prefill($db, $request, $user, $table_prefix);
 
         $template->assign_vars(array(
             'S_SFS' => true,
@@ -790,6 +797,13 @@ class main_module
             'SFS_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? (string) $config['antispamguard_sfs_action_mode'] : 'block',
             'SFS_API_KEY_CONFIGURED' => !empty($config['antispamguard_sfs_api_key']),
             'SFS_API_KEY_MASKED' => !empty($config['antispamguard_sfs_api_key']) ? $this->mask_secret((string) $config['antispamguard_sfs_api_key']) : '',
+            'SFS_SUBMIT_PREFILL_IP' => $sfs_submit_prefill['ip'],
+            'SFS_SUBMIT_PREFILL_EMAIL' => $sfs_submit_prefill['email'],
+            'SFS_SUBMIT_PREFILL_USERNAME' => $sfs_submit_prefill['username'],
+            'SFS_SUBMIT_PREFILL_EVIDENCE' => $sfs_submit_prefill['evidence'],
+            'SFS_SUBMIT_PREFILL_SOURCE' => $sfs_submit_prefill['source'],
+            'SFS_SUBMIT_PREFILL_SOURCE_LOG_ID' => $sfs_submit_prefill['source_log_id'],
+            'S_SFS_SUBMIT_PREFILLED' => !empty($sfs_submit_prefill['prefilled']),
             'ANTISPAMGUARD_SFS_LOG_ENABLED' => !isset($config['antispamguard_sfs_log_enabled']) || !empty($config['antispamguard_sfs_log_enabled']),
             'ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED' => !empty($config['antispamguard_sfs_log_only_blocked']),
             'ANTISPAMGUARD_SFS_MIN_CONFIDENCE' => isset($config['antispamguard_sfs_min_confidence']) ? (int) $config['antispamguard_sfs_min_confidence'] : 50,
@@ -934,6 +948,8 @@ class main_module
                 'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
                 'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
                 'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+                'U_REPORT_PREFILL' => $this->append_url_param($this->get_sfs_mode_url(), 'sfs_prefill_log_id', (int) $sfs_row['log_id']),
+                'S_CAN_PREFILL_REPORT' => ($sfs_row['user_ip'] !== '' || $sfs_row['user_email'] !== '' || $sfs_row['username'] !== ''),
             ));
         }
         $db->sql_freeresult($result);
@@ -963,6 +979,137 @@ class main_module
             'SFS_PAGE_NUMBER' => $sfs_page_number,
         ));
     }
+    protected function get_sfs_mode_url()
+    {
+        if (strpos($this->u_action, 'mode=') !== false)
+        {
+            return preg_replace('/mode=[^&;]+/', 'mode=sfs', $this->u_action, 1);
+        }
+
+        return $this->u_action . (strpos($this->u_action, '?') === false ? '?' : '&amp;') . 'mode=sfs';
+    }
+
+    protected function append_url_param($url, $name, $value)
+    {
+        return $url . (strpos($url, '?') === false ? '?' : '&amp;') . urlencode($name) . '=' . urlencode((string) $value);
+    }
+
+    protected function get_sfs_submit_prefill($db, $request, $user, $table_prefix)
+    {
+        $prefill = array(
+            'ip' => '',
+            'email' => '',
+            'username' => '',
+            'evidence' => '',
+            'source' => 'manual_acp',
+            'source_log_id' => 0,
+            'prefilled' => false,
+        );
+
+        $log_id = max(0, $request->variable('sfs_prefill_log_id', 0));
+        if ($log_id <= 0)
+        {
+            return $prefill;
+        }
+
+        $sql = 'SELECT log_id, created_at, check_source, user_ip, user_email, username
+            FROM ' . $table_prefix . 'antispamguard_sfs_log
+            WHERE log_id = ' . (int) $log_id;
+        $result = $db->sql_query_limit($sql, 1);
+        $row = $db->sql_fetchrow($result);
+        $db->sql_freeresult($result);
+
+        if (!$row)
+        {
+            return $prefill;
+        }
+
+        $prefill['ip'] = (string) $row['user_ip'];
+        $prefill['email'] = (string) $row['user_email'];
+        $prefill['username'] = (string) $row['username'];
+        $prefill['source'] = 'sfs_log';
+        $prefill['source_log_id'] = (int) $row['log_id'];
+        $prefill['evidence'] = $user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_FROM_LOG', (int) $row['log_id'], (string) $row['check_source'], $user->format_date((int) $row['created_at']));
+        $prefill['prefilled'] = true;
+
+        return $prefill;
+    }
+
+    protected function record_sfs_submission($db, $table_prefix, $user, $ip, $email, $username, $evidence, $source, $source_log_id, array $result)
+    {
+        $table = $table_prefix . 'antispamguard_sfs_submit_log';
+        $status = !empty($result['success']) ? 'success' : (!empty($result['status']) ? (string) $result['status'] : 'failed');
+        $response_text = '';
+
+        if (!empty($result['response']))
+        {
+            $response_text = (string) $result['response'];
+        }
+        elseif (!empty($result['message']))
+        {
+            $response_text = (string) $result['message'];
+        }
+
+        $data = array(
+            'user_id' => isset($user->data['user_id']) ? (int) $user->data['user_id'] : 0,
+            'admin_username' => isset($user->data['username']) ? (string) $user->data['username'] : '',
+            'admin_ip' => isset($user->ip) ? (string) $user->ip : '',
+            'spammer_ip' => (string) $ip,
+            'spammer_email' => (string) $email,
+            'spammer_username' => (string) $username,
+            'evidence' => (string) $evidence,
+            'source' => (string) $source,
+            'source_log_id' => (int) $source_log_id,
+            'status' => $status,
+            'response_text' => $response_text,
+            'created_at' => time(),
+        );
+
+        $sql = 'INSERT INTO ' . $table . ' ' . $db->sql_build_array('INSERT', $data);
+        $db->sql_query($sql);
+
+        return (int) $db->sql_nextid();
+    }
+
+    protected function assign_sfs_submission_logs($db, $template, $user, $table_prefix)
+    {
+        $table = $table_prefix . 'antispamguard_sfs_submit_log';
+        $has_submission_logs = false;
+        $total_submission_logs = 0;
+
+        $sql = 'SELECT COUNT(submit_id) AS total_logs FROM ' . $table;
+        $result = $db->sql_query($sql);
+        $total_submission_logs = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
+
+        $sql = 'SELECT * FROM ' . $table . '
+            ORDER BY created_at DESC, submit_id DESC';
+        $result = $db->sql_query_limit($sql, 25);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            $has_submission_logs = true;
+            $template->assign_block_vars('sfs_submission_logs', array(
+                'ID' => (int) $row['submit_id'],
+                'TIME' => $user->format_date((int) $row['created_at']),
+                'ADMIN' => (string) $row['admin_username'],
+                'IP' => (string) $row['spammer_ip'],
+                'USERNAME' => (string) $row['spammer_username'],
+                'EMAIL' => (string) $row['spammer_email'],
+                'SOURCE' => (string) $row['source'],
+                'SOURCE_LOG_ID' => (int) $row['source_log_id'],
+                'STATUS' => (string) $row['status'],
+                'RESPONSE' => (string) $row['response_text'],
+            ));
+        }
+        $db->sql_freeresult($result);
+
+        $template->assign_vars(array(
+            'S_HAS_SFS_SUBMISSION_LOGS' => $has_submission_logs,
+            'TOTAL_SFS_SUBMISSION_LOGS' => $total_submission_logs,
+        ));
+    }
+
     protected function get_default_register_notice_text($user = null)
     {
         if ($user !== null)
@@ -1893,6 +2040,8 @@ class main_module
                 'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
                 'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
                 'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+                'U_REPORT_PREFILL' => $this->append_url_param($this->get_sfs_mode_url(), 'sfs_prefill_log_id', (int) $sfs_row['log_id']),
+                'S_CAN_PREFILL_REPORT' => ($sfs_row['user_ip'] !== '' || $sfs_row['user_email'] !== '' || $sfs_row['username'] !== ''),
             ));
         }
         $db->sql_freeresult($result);
