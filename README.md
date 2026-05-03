@@ -131,7 +131,7 @@ A extensão pode limpar logs antigos automaticamente via cron do phpBB, usando a
 3. Ative novamente ou execute a atualização pelo ACP.
 4. Limpe o cache do phpBB.
 5. Verifique a aba **Sobre / Diagnóstico**.
-6. Após atualizar para a versão **3.3.23**, confira se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
+6. Após atualizar para a versão **3.3.26**, confira se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
 
 ---
 
@@ -158,7 +158,7 @@ Para uma configuração equilibrada:
 
 ### Status
 
-Versão atual: **3.3.23**  
+Versão atual: **3.3.26**  
 Status: pronto para uso em produção.
 
 ---
@@ -291,7 +291,7 @@ The extension can automatically prune old logs through phpBB cron using the rete
 3. Enable it again or run the update through the ACP.
 4. Clear the phpBB cache.
 5. Check the **About / Diagnostics** tab.
-6. After updating to version **3.3.23**, confirm that StopForumSpam logs appear both on the dedicated page and on **Blocking logs**.
+6. After updating to version **3.3.26**, confirm that StopForumSpam logs appear both on the dedicated page and on **Blocking logs**.
 
 ---
 
@@ -318,7 +318,7 @@ For a balanced configuration:
 
 ### Status
 
-Current version: **3.3.23**  
+Current version: **3.3.26**  
 Status: production-ready.
 
 ---

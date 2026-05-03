@@ -1,4 +1,27 @@
+# Changelog
+
+## 3.3.26 - Janela ampliada para mesclagem do log principal
+
+- Reforça a detecção de quase duplicados nos Logs de bloqueio.
+- Usa uma janela curta de 60 segundos para caminhos de validação repetidos da mesma submissão.
+- Compara campos estáveis da tentativa e mescla conjuntos de motivos diferentes em vez de criar uma segunda linha visível.
+- Adiciona a migration `v_3_3_26` para mesclar duplicados existentes que escapavam da regra mais restrita da 3.3.25.
+
+## 3.3.25 - Mesclagem de quase duplicados no log principal
+
+- Melhora a deduplicação dos Logs de bloqueio.
+- A deduplicação agora considera a identidade da tentativa, sem exigir que o texto do motivo seja idêntico.
+- Mescla os motivos quando a mesma tentativa é gravada duas vezes com uma heurística adicional, como `slow_spam`.
+- Adiciona a migration `v_3_3_25` para mesclar e limpar linhas quase duplicadas já existentes em `antispamguard_log`.
+- Não requer alterações de template ou idioma.
+
 # Changelog do AntiSpam Guard
+
+## 3.3.24 - Refinamento visual do botão de denúncia StopForumSpam
+
+- Encurtado o texto do botão de denúncia SFS nas tabelas de log.
+- Adicionado tooltip com a descrição completa da ação.
+- Adicionado estilo compacto sem quebra de linha e alinhamento central na coluna de denúncia.
 
 Todas as alterações relevantes do AntiSpam Guard estão documentadas aqui.
 

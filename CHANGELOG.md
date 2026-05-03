@@ -1,4 +1,27 @@
+# Changelog
+
+## 3.3.26 - Wider main log merge window
+
+- Strengthens near-duplicate detection for the main Blocking logs.
+- Uses a 60-second short window for repeated validation paths from the same submission.
+- Matches stable request identity fields and merges differing reason sets instead of creating a second visible row.
+- Adds migration `v_3_3_26` to merge existing near-duplicates that were not caught by the stricter 3.3.25 rule.
+
+## 3.3.25 - Main log near-duplicate merge
+
+- Improves main Blocking logs de-duplication.
+- De-duplicates by request identity instead of requiring an identical reason string.
+- Merges reason lists when the same submission is logged twice with one extra heuristic reason, such as `slow_spam`.
+- Adds migration `v_3_3_25` to merge and clean existing near-duplicate rows in `antispamguard_log`.
+- No template or language changes required.
+
 # AntiSpam Guard Changelog
+
+## 3.3.24 - StopForumSpam report button visual refinement
+
+- Shortened the SFS report action button label in log tables.
+- Added a tooltip with the full description of the action.
+- Added compact no-wrap styling and centered alignment for the report column.
 
 All notable changes to AntiSpam Guard are documented here.
 

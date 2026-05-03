@@ -106,7 +106,7 @@ Também há filtros e exportação CSV específicos para os registros do StopFor
 3. Ative novamente ou execute a atualização pelo ACP.
 4. Limpe o cache do phpBB.
 5. Verifique a aba **Sobre / Diagnóstico**.
-6. Após atualizar para a versão **3.3.23**, confirme se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
+6. Após atualizar para a versão **3.3.26**, confirme se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
 
 ---
 
@@ -133,7 +133,7 @@ Para melhor proteção:
 
 ## Status
 
-Versão atual: **3.3.23**  
+Versão atual: **3.3.26**  
 Status: pronto para uso em produção.
 
 ---
