@@ -141,3 +141,21 @@
         margin-top: 4px;
     }
 }
+
+/* Compact StopForumSpam report action button for wide log tables. */
+.asg-sfs-report-cell {
+    text-align: center;
+    white-space: nowrap;
+    min-width: 78px;
+}
+
+.asg-sfs-report-btn {
+    display: inline-block;
+    box-sizing: border-box;
+    min-width: 70px;
+    padding: 2px 8px !important;
+    line-height: 16px !important;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 11px;
+}

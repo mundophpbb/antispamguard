@@ -643,7 +643,7 @@
                 <td>{{ sfs.ACTION_MODE }}</td>
                 <td>{{ sfs.MATCHED }}</td>
                 <td>{{ sfs.DETAILS }}</td>
-                <td>{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
+                <td class="asg-sfs-report-cell">{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2 asg-sfs-report-btn" href="{{ sfs.U_REPORT_PREFILL }}" title="{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG_TITLE') }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -851,7 +851,7 @@
                     <td>{{ sfs.ACTION_MODE }}</td>
                     <td>{{ sfs.MATCHED }}</td>
                     <td>{{ sfs.DETAILS }}</td>
-                    <td>{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
+                    <td class="asg-sfs-report-cell">{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2 asg-sfs-report-btn" href="{{ sfs.U_REPORT_PREFILL }}" title="{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG_TITLE') }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
