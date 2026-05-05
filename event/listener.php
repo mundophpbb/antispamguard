@@ -106,6 +106,12 @@ class listener implements EventSubscriberInterface
             return;
         }
 
+        if ($this->is_audit_only_reason($reason))
+        {
+            $this->write_log($reason, $form_type);
+            return;
+        }
+
         if (!empty($this->config['antispamguard_simulation_mode']))
         {
             $this->write_log($this->get_simulation_log_reason($reason), $form_type);
@@ -145,6 +151,12 @@ class listener implements EventSubscriberInterface
         $reason = $this->get_submission_block_reason('contact');
         if ($reason === '')
         {
+            return;
+        }
+
+        if ($this->is_audit_only_reason($reason))
+        {
+            $this->write_log($reason, 'contact');
             return;
         }
 
@@ -262,7 +274,11 @@ class listener implements EventSubscriberInterface
 
         if ($reason !== '')
         {
-            if (!empty($this->config['antispamguard_simulation_mode']))
+            if ($this->is_audit_only_reason($reason))
+            {
+                $this->write_log($reason, $form_type);
+            }
+            else if (!empty($this->config['antispamguard_simulation_mode']))
             {
                 $this->write_log($this->get_simulation_log_reason($reason), $form_type);
             }
@@ -370,14 +386,6 @@ $reasons = array();
             $reasons[] = 'sfs_reputation';
         }
 
-        if (!empty($reasons))
-        {
-            foreach ($reasons as $reason)
-            {
-                $this->ip_reputation->add_event((string) $this->user->ip, $reason);
-            }
-        }
-
         if (!empty($this->config['antispamguard_ip_reputation_enabled']))
         {
             $ip_reputation = $this->ip_reputation->get((string) $this->user->ip);
@@ -407,7 +415,30 @@ $slow_spam_reason = $this->check_slow_spam();
         $this->apply_shadowban($reasons);
         $this->apply_autoban($reasons);
 
-        $final_reason = !empty($reasons) ? implode(',', array_unique($reasons)) : '';
+        $reasons = array_unique($reasons);
+
+        if ($this->should_audit_registration_without_blocking($form_type, $reasons))
+        {
+            $reasons[] = 'possible_false_positive';
+            $final_reason = 'audit:' . implode(',', array_unique($reasons));
+        }
+        else
+        {
+            $final_reason = !empty($reasons) ? implode(',', $reasons) : '';
+        }
+
+        if ($final_reason !== '' && !$this->is_audit_only_reason($final_reason))
+        {
+            foreach (explode(',', $this->strip_audit_reason_prefix($final_reason)) as $reason)
+            {
+                $reason = trim($reason);
+
+                if ($reason !== '')
+                {
+                    $this->ip_reputation->add_event((string) $this->user->ip, $reason);
+                }
+            }
+        }
 
         // The regular caller writes to antispamguard_log with the canonical schema.
         // Do not write an extra audit row here: older packages attempted to insert
@@ -416,6 +447,73 @@ $slow_spam_reason = $this->check_slow_spam();
         $this->record_antispam_alerts($final_reason);
 
         return $final_reason;
+    }
+
+
+    protected function is_audit_only_reason($reason)
+    {
+        return strpos((string) $reason, 'audit:') === 0;
+    }
+
+    protected function strip_audit_reason_prefix($reason)
+    {
+        $reason = (string) $reason;
+
+        if ($this->is_audit_only_reason($reason))
+        {
+            return substr($reason, 6);
+        }
+
+        return $reason;
+    }
+
+    protected function should_audit_registration_without_blocking($form_type, array $reasons)
+    {
+        if ((string) $form_type !== 'register')
+        {
+            return false;
+        }
+
+        if (!$this->registration_has_submitted_identity())
+        {
+            return false;
+        }
+
+        // A real registration can be affected by browser autofill/password
+        // managers. If the only effective signals are honeypot/timestamp and
+        // the combined score, keep the event for review instead of blocking.
+        $hard_block_reasons = array(
+            'sfs_reputation',
+            'ip_blacklist',
+            'ip_reputation',
+            'content_filter',
+            'too_many_urls',
+            'ip_rate_limit',
+            'subnet_abuse',
+            'random_gmail',
+            'slow_spam',
+        );
+
+        foreach ($hard_block_reasons as $hard_reason)
+        {
+            if (in_array($hard_reason, $reasons, true))
+            {
+                return false;
+            }
+        }
+
+        $has_honeypot = in_array('honeypot', $reasons, true);
+        $has_timestamp = in_array('timestamp', $reasons, true) || in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp_expired', $reasons, true);
+
+        return $has_honeypot && $has_timestamp;
+    }
+
+    protected function registration_has_submitted_identity()
+    {
+        $username = trim((string) $this->request->variable('username', '', true));
+        $email = trim((string) $this->request->variable('email', '', true));
+
+        return $username !== '' && $email !== '';
     }
 
 
@@ -1078,18 +1176,21 @@ $slow_spam_reason = $this->check_slow_spam();
     {
         $table = $this->table_prefix . 'antispamguard_log';
         $now = time();
+        $audit_only = $this->is_audit_only_reason($reason);
+        $clean_reason = $this->strip_audit_reason_prefix($reason);
+        $log_action = $audit_only ? 'review' : (!empty($this->config['antispamguard_simulation_mode']) ? 'simulation' : 'blocked');
         $sql_ary = array(
             'log_time'   => $now,
             'user_ip'    => (string) $this->user->ip,
             'username'   => $this->truncate_for_storage($this->request->variable('username', '', true), 255),
             'email'      => $this->truncate_for_storage($this->request->variable('email', '', true), 255),
             'form_type'  => $this->truncate_for_storage($form_type, 30),
-            'reason'     => $this->normalize_log_reason($reason),
+            'reason'     => $this->normalize_log_reason($clean_reason),
             'user_agent' => $this->truncate_for_storage($this->request->server('HTTP_USER_AGENT', ''), 255),
-            'risk_score' => $this->calculate_log_score($reason),
-            'risk_level' => $this->get_log_risk_level($reason),
-            'action'     => !empty($this->config['antispamguard_simulation_mode']) ? 'simulation' : 'blocked',
-            'matched_rules' => $this->normalize_log_reason($reason),
+            'risk_score' => $this->calculate_log_score($clean_reason),
+            'risk_level' => $this->get_log_risk_level($clean_reason),
+            'action'     => $log_action,
+            'matched_rules' => $this->normalize_log_reason($clean_reason),
         );
 
         // phpBB can execute more than one validation path for some submissions
@@ -1197,6 +1298,7 @@ $slow_spam_reason = $this->check_slow_spam();
             'content_filter' => 20,
             'too_many_urls' => 20,
             'combined_decision' => 0,
+            'possible_false_positive' => 0,
         );
 
         foreach (explode(',', (string) $reason) as $part)

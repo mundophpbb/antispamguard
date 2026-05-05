@@ -1770,7 +1770,7 @@ class main_module
             $filter_form = '';
         }
 
-        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'subnet_abuse', 'random_gmail', 'simulation_subnet_abuse', 'simulation_random_gmail', 'simulation_multiple'), true))
+        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'subnet_abuse', 'random_gmail', 'simulation_subnet_abuse', 'simulation_random_gmail', 'possible_false_positive', 'simulation_multiple'), true))
         {
             $filter_reason = '';
         }
@@ -2132,6 +2132,7 @@ class main_module
                 'ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_IP_RATE_LIMIT',
                 'subnet_abuse' => 'ACP_ANTISPAMGUARD_REASON_SUBNET_ABUSE',
                 'random_gmail' => 'ACP_ANTISPAMGUARD_REASON_RANDOM_GMAIL',
+                'possible_false_positive' => 'ACP_ANTISPAMGUARD_REASON_POSSIBLE_FALSE_POSITIVE',
                 'ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST',
                 'ip_reputation' => 'ACP_ANTISPAMGUARD_REASON_IP_REPUTATION',
                 'combined_decision' => 'ACP_ANTISPAMGUARD_REASON_COMBINED_DECISION',

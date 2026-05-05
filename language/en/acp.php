@@ -563,3 +563,4 @@ $lang['ACP_ANTISPAMGUARD_REASON_SUBNET_ABUSE'] = 'Subnet abuse';
 $lang['ACP_ANTISPAMGUARD_REASON_RANDOM_GMAIL'] = 'Random Gmail pattern';
 $lang['ACP_ANTISPAMGUARD_REASON_SIMULATION_SUBNET_ABUSE'] = 'Simulation: subnet abuse';
 $lang['ACP_ANTISPAMGUARD_REASON_SIMULATION_RANDOM_GMAIL'] = 'Simulation: random Gmail pattern';
+$lang['ACP_ANTISPAMGUARD_REASON_POSSIBLE_FALSE_POSITIVE'] = 'Registration review / possible false positive';
