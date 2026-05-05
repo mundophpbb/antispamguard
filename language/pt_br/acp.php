@@ -558,3 +558,8 @@ $lang = array_merge($lang, array(
 
     'ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN' => 'Peso usado pelo motor de decisão quando o StopForumSpam contribui para a pontuação final.',
 ));
+// 3.3.27 subnet/risk heuristics
+$lang['ACP_ANTISPAMGUARD_REASON_SUBNET_ABUSE'] = 'Abuso de sub-rede';
+$lang['ACP_ANTISPAMGUARD_REASON_RANDOM_GMAIL'] = 'Padrao Gmail aleatorio';
+$lang['ACP_ANTISPAMGUARD_REASON_SIMULATION_SUBNET_ABUSE'] = 'Simulacao: abuso de sub-rede';
+$lang['ACP_ANTISPAMGUARD_REASON_SIMULATION_RANDOM_GMAIL'] = 'Simulacao: padrao Gmail aleatorio';

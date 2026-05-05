@@ -1770,7 +1770,7 @@ class main_module
             $filter_form = '';
         }
 
-        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'simulation_multiple'), true))
+        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'subnet_abuse', 'random_gmail', 'simulation_subnet_abuse', 'simulation_random_gmail', 'simulation_multiple'), true))
         {
             $filter_reason = '';
         }
@@ -1918,6 +1918,10 @@ class main_module
                 'FORM_TYPE'  => $this->format_log_value(isset($row['form_type']) ? $row['form_type'] : 'register', 'form_type', $user),
                 'REASON'     => $this->format_log_value($row['reason'], 'reason', $user),
                 'USER_AGENT' => $row['user_agent'],
+                'RISK_SCORE' => isset($row['risk_score']) ? (int) $row['risk_score'] : 0,
+                'RISK_LEVEL' => isset($row['risk_level']) ? $row['risk_level'] : '',
+                'ACTION' => isset($row['action']) ? $row['action'] : '',
+                'MATCHED_RULES' => isset($row['matched_rules']) ? $row['matched_rules'] : '',
             ));
         }
         $db->sql_freeresult($result);
@@ -2126,6 +2130,8 @@ class main_module
                 'content_filter' => 'ACP_ANTISPAMGUARD_REASON_CONTENT_FILTER',
                 'too_many_urls' => 'ACP_ANTISPAMGUARD_REASON_TOO_MANY_URLS',
                 'ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_IP_RATE_LIMIT',
+                'subnet_abuse' => 'ACP_ANTISPAMGUARD_REASON_SUBNET_ABUSE',
+                'random_gmail' => 'ACP_ANTISPAMGUARD_REASON_RANDOM_GMAIL',
                 'ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST',
                 'ip_reputation' => 'ACP_ANTISPAMGUARD_REASON_IP_REPUTATION',
                 'combined_decision' => 'ACP_ANTISPAMGUARD_REASON_COMBINED_DECISION',
@@ -2138,6 +2144,8 @@ class main_module
                 'simulation_content_filter' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_CONTENT_FILTER',
                 'simulation_too_many_urls' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TOO_MANY_URLS',
                 'simulation_ip_rate_limit' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_RATE_LIMIT',
+                'simulation_subnet_abuse' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_SUBNET_ABUSE',
+                'simulation_random_gmail' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_RANDOM_GMAIL',
                 'simulation_ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_IP_BLACKLIST',
                 'simulation_sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_SFS_REPUTATION',
                 'simulation_multiple' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_MULTIPLE',
@@ -2186,7 +2194,7 @@ class main_module
 
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, array('log_id', 'log_time', 'user_ip', 'username', 'email', 'form_type', 'reason', 'user_agent'));
+        fputcsv($output, array('log_id', 'log_time', 'user_ip', 'username', 'email', 'form_type', 'reason', 'risk_score', 'risk_level', 'action', 'matched_rules', 'user_agent'));
 
         $sql = 'SELECT * FROM ' . $table . $where_sql . ' ORDER BY log_time DESC';
         $result = $db->sql_query($sql);
@@ -2201,6 +2209,10 @@ class main_module
                 isset($row['email']) ? $row['email'] : '',
                 isset($row['form_type']) ? $row['form_type'] : 'register',
                 isset($row['reason']) ? $row['reason'] : '',
+                isset($row['risk_score']) ? (int) $row['risk_score'] : 0,
+                isset($row['risk_level']) ? $row['risk_level'] : '',
+                isset($row['action']) ? $row['action'] : '',
+                isset($row['matched_rules']) ? $row['matched_rules'] : '',
                 isset($row['user_agent']) ? $row['user_agent'] : '',
             ));
         }

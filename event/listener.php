@@ -333,6 +333,24 @@ $reasons = array();
             }
         }
 
+        if (!empty($this->config['antispamguard_subnet_rate_limit_enabled']))
+        {
+            $subnet_result = $this->ip_rate_limit->hit_subnet((string) $this->user->ip);
+
+            if (!empty($subnet_result['limited']))
+            {
+                if ($subnet_result['action'] === 'block')
+                {
+                    $reasons[] = 'subnet_abuse';
+                }
+                else if ($subnet_result['action'] === 'score')
+                {
+                    $reasons[] = 'subnet_abuse';
+                    $this->ip_reputation->add_event((string) $this->user->ip, 'subnet_abuse');
+                }
+            }
+        }
+
         if (!empty($this->config['antispamguard_content_filter_enabled']))
         {
             $content_reason = $this->detect_suspicious_content($form_type);
@@ -340,6 +358,11 @@ $reasons = array();
             {
                 $reasons[] = $content_reason;
             }
+        }
+
+        if ($this->has_random_gmail_contact_pattern($form_type))
+        {
+            $reasons[] = 'random_gmail';
         }
 
         if ($this->sfs_reputation_is_blocked($form_type))
@@ -395,6 +418,29 @@ $slow_spam_reason = $this->check_slow_spam();
         return $final_reason;
     }
 
+
+    protected function has_random_gmail_contact_pattern($form_type)
+    {
+        if (empty($this->config['antispamguard_random_gmail_enabled']))
+        {
+            return false;
+        }
+
+        if ((string) $form_type !== 'contact')
+        {
+            return false;
+        }
+
+        $email = strtolower(trim((string) $this->request->variable('email', '', true)));
+
+        if ($email === '')
+        {
+            return false;
+        }
+
+        return (bool) preg_match('/^[a-z0-9]{9}@gmail\.com$/', $email);
+    }
+
     protected function sfs_reputation_is_blocked($form_type)
     {
         if (empty($this->config['antispamguard_sfs_enabled']))
@@ -430,7 +476,7 @@ $slow_spam_reason = $this->check_slow_spam();
             return;
         }
 
-        $important = array('combined_decision', 'slow_spam', 'ip_rate_limit', 'sfs_reputation');
+        $important = array('combined_decision', 'slow_spam', 'ip_rate_limit', 'subnet_abuse', 'random_gmail', 'sfs_reputation');
 
         $matched = false;
         foreach ($important as $item)
@@ -453,7 +499,7 @@ $slow_spam_reason = $this->check_slow_spam();
         $user_id = isset($this->user->data['user_id']) ? (int) $this->user->data['user_id'] : 0;
         $username = isset($this->user->data['username']) ? (string) $this->user->data['username'] : '';
 
-        $severity = (strpos((string) $reason, 'combined_decision') !== false || strpos((string) $reason, 'sfs_reputation') !== false) ? 'high' : 'medium';
+        $severity = (strpos((string) $reason, 'combined_decision') !== false || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'subnet_abuse') !== false) ? 'high' : 'medium';
 
         $alerts->add(
             'submission_risk',
@@ -574,6 +620,8 @@ $slow_spam_reason = $this->check_slow_spam();
             'timestamp_too_fast' => in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp', $reasons, true),
             'timestamp_expired' => in_array('timestamp_expired', $reasons, true),
             'rate_limit' => in_array('ip_rate_limit', $reasons, true),
+            'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
+            'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
             'sfs' => in_array('sfs_reputation', $reasons, true),
             'ip_reputation_score' => 0,
@@ -1038,6 +1086,10 @@ $slow_spam_reason = $this->check_slow_spam();
             'form_type'  => $this->truncate_for_storage($form_type, 30),
             'reason'     => $this->normalize_log_reason($reason),
             'user_agent' => $this->truncate_for_storage($this->request->server('HTTP_USER_AGENT', ''), 255),
+            'risk_score' => $this->calculate_log_score($reason),
+            'risk_level' => $this->get_log_risk_level($reason),
+            'action'     => !empty($this->config['antispamguard_simulation_mode']) ? 'simulation' : 'blocked',
+            'matched_rules' => $this->normalize_log_reason($reason),
         );
 
         // phpBB can execute more than one validation path for some submissions
@@ -1095,7 +1147,10 @@ $slow_spam_reason = $this->check_slow_spam();
         if ($merged_reason !== (string) $row['reason'])
         {
             $sql = 'UPDATE ' . $table . "
-                SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "'
+                SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "',
+                    risk_score = " . (int) $this->calculate_log_score($merged_reason) . ",
+                    risk_level = '" . $this->db->sql_escape($this->get_log_risk_level($merged_reason)) . "',
+                    matched_rules = '" . $this->db->sql_escape($this->normalize_log_reason($merged_reason)) . "'
                 WHERE log_id = " . (int) $row['log_id'];
             $this->db->sql_query($sql);
         }
@@ -1121,6 +1176,61 @@ $slow_spam_reason = $this->check_slow_spam();
         }
 
         return implode(',', $parts);
+    }
+
+
+    protected function calculate_log_score($reason)
+    {
+        $score = 0;
+        $weights = array(
+            'honeypot' => 100,
+            'timestamp' => 30,
+            'timestamp_too_fast' => 30,
+            'timestamp_expired' => 15,
+            'slow_spam' => 35,
+            'ip_rate_limit' => 40,
+            'subnet_abuse' => 45,
+            'random_gmail' => 20,
+            'sfs_reputation' => 50,
+            'ip_reputation' => 40,
+            'ip_blacklist' => 100,
+            'content_filter' => 20,
+            'too_many_urls' => 20,
+            'combined_decision' => 0,
+        );
+
+        foreach (explode(',', (string) $reason) as $part)
+        {
+            $part = trim($part);
+            if (strpos($part, 'simulation_') === 0)
+            {
+                $part = substr($part, 11);
+            }
+
+            if (isset($weights[$part]))
+            {
+                $score += (int) $weights[$part];
+            }
+        }
+
+        return min(255, max(0, (int) $score));
+    }
+
+    protected function get_log_risk_level($reason)
+    {
+        $score = $this->calculate_log_score($reason);
+
+        if ($score >= 100 || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'subnet_abuse') !== false)
+        {
+            return 'high';
+        }
+
+        if ($score >= 40)
+        {
+            return 'medium';
+        }
+
+        return 'low';
     }
 
     protected function normalize_log_reason($reason)
@@ -1262,6 +1372,8 @@ $slow_spam_reason = $this->check_slow_spam();
             'timestamp_too_fast' => in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp', $reasons, true),
             'timestamp_expired' => in_array('timestamp_expired', $reasons, true),
             'rate_limit' => in_array('ip_rate_limit', $reasons, true),
+            'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
+            'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
             'sfs' => in_array('sfs_reputation', $reasons, true),
             'ip_reputation_score' => 0,
@@ -1303,6 +1415,8 @@ $slow_spam_reason = $this->check_slow_spam();
             'timestamp_too_fast' => in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp', $reasons, true),
             'timestamp_expired' => in_array('timestamp_expired', $reasons, true),
             'rate_limit' => in_array('ip_rate_limit', $reasons, true),
+            'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
+            'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
             'sfs' => in_array('sfs_reputation', $reasons, true),
             'ip_reputation_score' => 0,
