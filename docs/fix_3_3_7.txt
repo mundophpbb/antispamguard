@@ -1,0 +1,15 @@
+AntiSpam Guard 3.3.7
+
+Fixes the manual StopForumSpam log test.
+
+Problem:
+- When StopForumSpam was disabled, sfs_decision::should_block() returned before calling the SFS logger.
+- The ACP still displayed "The test was written to the SFS log", even when no row was inserted.
+- The returned action mode was "Whitelist", which was misleading for a disabled SFS configuration.
+
+Changes:
+- Manual ACP tests now pass through the SFS lookup and force an audit row, even when live SFS protection is disabled.
+- Force logging now bypasses the normal "SFS log enabled" and "only blocked" filters for the manual test only.
+- The result now reports whether the log was actually written.
+- Disabled SFS is shown as "Disabled" instead of "Whitelist".
+- Added status metadata to the SFS log details JSON.

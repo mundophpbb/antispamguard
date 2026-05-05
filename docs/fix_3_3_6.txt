@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.6 fix
+
+- Fixed ACP manual StopForumSpam test fatal error: main_module now obtains sfs_decision from phpBB container.
+- Added missing service definitions for sfs_log, sfs_decision, IP reputation, IP rate limit, listener and cron tasks.
+- Fixed event listener syntax by moving autoban/shadowban helpers inside the listener class.
+- Kept 3.3.5 SFS cache schema repair for lookup_type/lookup_value/response_json.

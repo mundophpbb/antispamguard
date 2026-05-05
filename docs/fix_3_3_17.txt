@@ -1,0 +1,11 @@
+AntiSpam Guard 3.3.17
+======================
+
+- Reorders ACP modules to keep StopForumSpam immediately after Configuracoes.
+- Desired ACP order:
+  1. Configuracoes
+  2. StopForumSpam
+  3. Logs de bloqueio
+  4. Estatistica
+  5. Sobre / Diagnostico
+- Adds migration v_3_3_17.php to update the existing phpBB module tree without deleting data.

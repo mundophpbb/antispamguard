@@ -1,0 +1,12 @@
+AntiSpam Guard 2.7.12 - StopForumSpam action audit visibility
+
+Base:
+- Built from the last confirmed working package with SFS action mode.
+
+Added:
+- SFS log table now shows action mode and whether the decision rule matched.
+- CSV export now includes action_mode and matched columns.
+- SFS details no longer display internal _decision metadata as a fake lookup type.
+
+No blocking logic changed.
+No new ACP module was created.

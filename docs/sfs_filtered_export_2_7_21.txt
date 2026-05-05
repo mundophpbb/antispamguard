@@ -1,0 +1,9 @@
+AntiSpam Guard 2.7.21 - Filtered SFS CSV export
+
+Added:
+- SFS CSV export now respects active SFS filters:
+  * action mode
+  * blocked yes/no
+- Export still limits to latest 1000 matching rows.
+
+No blocking behavior changed.

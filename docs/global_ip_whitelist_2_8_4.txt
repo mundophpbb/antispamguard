@@ -1,0 +1,10 @@
+AntiSpam Guard 2.8.4 - Global trusted IP whitelist
+
+Added:
+- antispamguard_trusted_ip_whitelist config.
+- ACP textarea for trusted IPs.
+- Listener-level bypass before honeypot, timestamp, SFS and local reputation.
+- Exact IP match and wildcard support with *.
+- Lines beginning with # are ignored.
+
+No existing blocking logic changed for non-whitelisted IPs.

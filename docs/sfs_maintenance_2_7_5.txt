@@ -1,0 +1,24 @@
+AntiSpam Guard - StopForumSpam Maintenance Panel
+
+Base:
+- Built from the last confirmed working ZIP with SFS log panel.
+
+Changed:
+- acp/main_module.php
+  Adds SFS maintenance actions:
+  * clear expired SFS cache
+  * clear all SFS cache
+  * clear SFS logs
+  Adds counters:
+  * total cache entries
+  * expired cache entries
+  * total SFS logs
+
+- adm/style/acp_antispamguard.html
+  Adds StopForumSpam maintenance panel inside the existing Settings page.
+
+- language/pt_br/acp.php and language/en/acp.php
+  Adds labels and confirmation messages.
+
+No ACP module or module migration was created.
+Existing ACP modes are preserved.

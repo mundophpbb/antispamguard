@@ -1,0 +1,6 @@
+AntiSpam Guard 2.8.1 - Local IP reputation audit
+
+Added:
+- Logs tab audit table for local IP reputation.
+- Statistics cards for local reputation total and blocked counts.
+- No blocking behavior changed.

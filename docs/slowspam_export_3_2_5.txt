@@ -1,0 +1,8 @@
+AntiSpam Guard 3.2.5 - Slow spam CSV export
+
+Added:
+- Export button for antispamguard_activity_log.
+- Exports latest 5000 rows.
+- Columns: activity_id, ip, user_id, action_type, created_at.
+
+No layout refactor.

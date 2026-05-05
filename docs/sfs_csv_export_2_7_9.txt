@@ -1,0 +1,11 @@
+AntiSpam Guard 2.7.9 - StopForumSpam CSV Export
+
+Base:
+- Built from the last confirmed working package with SFS statistics.
+
+Added:
+- CSV export button in the existing Logs tab, inside the StopForumSpam logs section.
+- Exports latest 1000 SFS log rows.
+- Includes UTF-8 BOM for spreadsheet compatibility.
+- No new ACP module.
+- No changes to blocking logic.

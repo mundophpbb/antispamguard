@@ -1,0 +1,17 @@
+AntiSpam Guard 3.3.1 - Save settings hardening
+
+Fix:
+- Ensures recently added settings are saved in ACP submit flow.
+- Ensures recently added settings are assigned back to the template.
+- Focus areas:
+  * SFS debug log all
+  * SFS debug localhost only
+  * SFS log all checks
+  * SFS cache TTL
+  * decision engine
+  * autoban
+  * shadowban
+  * slow spam
+  * alerts
+
+No layout refactor.

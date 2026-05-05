@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.13
+- Ajuste visual do aviso antispam na página de registro.
+- Fundo branco.
+- Caixa acompanha o tamanho do texto.
+- Ícone de escudo adicionado.
+- Versão atualizada para 3.3.13.

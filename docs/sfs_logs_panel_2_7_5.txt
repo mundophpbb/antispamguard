@@ -1,0 +1,16 @@
+AntiSpam Guard - StopForumSpam Logs Panel
+
+This package is complete and based on the previously recovered working ZIP.
+
+Changed:
+- acp/main_module.php
+  Adds SFS log loading in the existing Logs mode.
+- adm/style/acp_antispamguard.html
+  Adds a StopForumSpam logs section inside the existing Logs tab.
+- language/pt_br/acp.php
+- language/en/acp.php
+  Adds labels for the SFS logs panel and SFS reasons.
+
+No new ACP module was created.
+No ACP migration was added.
+Existing settings, statistics, logs and about/diagnostics modes are preserved.

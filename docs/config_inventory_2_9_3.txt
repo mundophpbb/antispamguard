@@ -1,0 +1,13 @@
+AntiSpam Guard 2.9.3 - Configuration inventory export
+
+Purpose:
+- Adds a CSV export of all phpBB config rows whose names start with antispamguard_.
+- Useful to verify whether options were removed, hidden or simply not visible in the current ACP layout.
+
+Added:
+- Export configuration inventory button.
+- CSV columns: config_name, config_value, is_dynamic.
+
+No layout refactor.
+No ACP module changes.
+No blocking logic changes.

@@ -1,0 +1,13 @@
+AntiSpam Guard 2.7.13 - StopForumSpam log filters
+
+Base:
+- Built from the last confirmed working package with SFS action audit fix.
+
+Added:
+- SFS log filters inside the existing Logs tab.
+- Filter by action mode: block, soft, log_only, whitelist.
+- Filter by blocked status: yes/no.
+- Shows filtered count when filters are active.
+
+No blocking logic changed.
+No ACP module was created.

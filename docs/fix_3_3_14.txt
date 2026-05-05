@@ -1,0 +1,5 @@
+AntiSpam Guard 3.3.14
+- Ajuste visual flat do aviso antispam na página de registro.
+- Ícone de escudo com cor destacada.
+- Caixa mais moderna, limpa e discreta.
+- Versão atualizada para 3.3.14.

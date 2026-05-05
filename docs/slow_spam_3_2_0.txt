@@ -1,0 +1,12 @@
+AntiSpam Guard 3.2.0 - Slow spam detection
+
+Added:
+- antispamguard_activity_log table
+- service/activity_tracker.php
+- slow spam configs
+- decision engine slow_spam signal and weight
+- conservative listener integration using phpBB container
+- ACP settings panel without layout refactor
+
+No ACP module changes.
+No layout refactor.

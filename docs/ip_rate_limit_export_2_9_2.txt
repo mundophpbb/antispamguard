@@ -1,0 +1,13 @@
+AntiSpam Guard 2.9.2 - IP rate limit CSV export
+
+Base:
+- Built on top of the stable no-layout package.
+
+Added:
+- CSV export for antispamguard_ip_rate.
+- Exports up to 5000 rows.
+- Columns: IP, hits, first hit, last hit, expiration and expired status.
+
+No layout refactor.
+No ACP module changes.
+No blocking logic changes.

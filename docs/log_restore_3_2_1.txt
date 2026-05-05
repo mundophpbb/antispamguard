@@ -1,0 +1,9 @@
+AntiSpam Guard 3.2.1 - Submission audit log restore
+
+Purpose:
+- Restores explicit audit logging after the later decision-engine/shadowban/slow-spam changes.
+
+Behavior:
+- When a submission produces a non-empty anti-spam reason, the listener attempts to write to antispamguard_log.
+- Wrapped in try/catch so a schema mismatch will not break registration.
+- No layout changes.

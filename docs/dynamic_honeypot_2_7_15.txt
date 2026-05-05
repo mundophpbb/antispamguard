@@ -1,0 +1,15 @@
+AntiSpam Guard 2.7.15 - Dynamic honeypot
+
+Base:
+- Built from the last confirmed working package with visible SFS diagnostics.
+
+Added:
+- Dynamic honeypot field name based on the signed timestamp token.
+- ACP switch to enable/disable dynamic honeypot names.
+- ACP field for dynamic honeypot prefix.
+- Migration v_2_7_15.
+
+Behavior:
+- When enabled, field name becomes prefix + HMAC-derived suffix.
+- Server validates the submitted timestamp and computes the expected field name.
+- Static honeypot name remains available as fallback when disabled.

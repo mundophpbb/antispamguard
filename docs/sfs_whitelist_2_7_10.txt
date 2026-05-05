@@ -1,0 +1,15 @@
+AntiSpam Guard 2.7.10 - StopForumSpam whitelist
+
+Base:
+- Built from the last confirmed working package with SFS CSV export.
+
+Added:
+- StopForumSpam-specific whitelist for IPs, emails and usernames.
+- Settings panel inside the existing ACP settings page.
+- SFS decision service checks whitelist before external lookup.
+- Whitelist bypasses only SFS. Other AntiSpam Guard protections remain active.
+
+Matching:
+- One value per line.
+- Exact match.
+- Case-insensitive for email and username because PHP strcasecmp is used for all types.

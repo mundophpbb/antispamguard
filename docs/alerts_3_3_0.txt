@@ -1,0 +1,11 @@
+AntiSpam Guard 3.3.0 - Critical alerts
+
+Added:
+- antispamguard_alerts table
+- service/alerts.php
+- ACP panel for counters, last alerts, mark read and prune
+- alert retention config
+- conservative listener integration for important reasons:
+  combined_decision, slow_spam, ip_rate_limit, sfs_reputation
+
+No layout refactor.

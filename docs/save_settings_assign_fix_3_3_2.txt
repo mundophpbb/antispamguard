@@ -1,0 +1,9 @@
+AntiSpam Guard 3.3.2 - Correct settings assign vars
+
+Fix:
+- SFS debug settings were saved but assigned in the wrong template assign_vars block.
+- This caused ACP radios to appear unsaved after reload.
+- Adds SFS_DEBUG_LOG_ALL and SFS_DEBUG_LOCALHOST_ONLY to the actual Settings assign_vars block.
+- Verifies SFS debug save lines are in the actual submit block.
+
+No layout refactor.

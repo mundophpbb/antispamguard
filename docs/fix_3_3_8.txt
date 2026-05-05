@@ -1,0 +1,12 @@
+AntiSpam Guard 3.3.8
+
+Correcoes:
+- Corrigido erro no cadastro: Unknown column 'ip' in 'field list'.
+- Removida gravacao extra de restore_submission_audit_log(), que tentava inserir colunas inexistentes na tabela phpbb_antispamguard_log.
+- A gravacao normal continua em write_log(), usando as colunas corretas: user_ip, username, email, form_type, reason e user_agent.
+- Adicionada migracao v_3_3_8 para reparar tabelas runtime caso algum pacote anterior tenha deixado colunas faltando:
+  - phpbb_antispamguard_log
+  - phpbb_antispamguard_ip_score
+  - phpbb_antispamguard_ip_rate
+  - phpbb_antispamguard_activity_log
+  - phpbb_antispamguard_alerts

@@ -1,0 +1,8 @@
+AntiSpam Guard 3.3.10
+
+Correção:
+- A tela ACP > Sobre / Diagnóstico não usa mais versão fixa 2.4.0.
+- A versão exibida agora é lida automaticamente de composer.json.
+- Se composer.json não estiver disponível, usa antispamguard_version do banco como fallback.
+- A exportação JSON de configurações também usa a mesma leitura dinâmica.
+- Adicionada migração v_3_3_10 para atualizar antispamguard_version no banco.

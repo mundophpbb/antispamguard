@@ -1,0 +1,17 @@
+AntiSpam Guard 2.7.14 - Translation audit and SFS diagnostics
+Base: 2.7.13 confirmed package.
+Added:
+- Compact StopForumSpam diagnostics panel in existing About/Diagnostics area.
+- Translation parity audit for PT-BR and EN extension keys.
+
+Referenced extension language keys found: 249
+Missing PT-BR after fix: ACP_ANTISPAMGUARD_APPLY_FILTERS
+Missing EN after fix: ACP_ANTISPAMGUARD_APPLY_FILTERS
+
+Keys added in this step:
+- ACP_ANTISPAMGUARD_SFS_DIAG_ACTION_MODE
+- ACP_ANTISPAMGUARD_SFS_DIAG_CACHE_TOTAL
+- ACP_ANTISPAMGUARD_SFS_DIAG_ENABLED
+- ACP_ANTISPAMGUARD_SFS_DIAG_EXPLAIN
+- ACP_ANTISPAMGUARD_SFS_DIAG_LOGS_TOTAL
+- ACP_ANTISPAMGUARD_SFS_DIAG_TITLE

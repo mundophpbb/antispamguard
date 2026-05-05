@@ -1,0 +1,14 @@
+AntiSpam Guard 2.8.5 - Unified IP whitelist
+
+Changes:
+- Unified old IP allowlist and new global trusted IP whitelist.
+- Removed duplicate trusted IP visual panel from ACP.
+- Existing antispamguard_ip_whitelist now supports:
+  * exact IP
+  * CIDR ranges
+  * wildcard patterns with *
+  * # comments
+- Added antispamguard_ip_whitelist_mode:
+  * partial: existing allowlist behavior
+  * total: full bypass before honeypot, timestamp, SFS and local reputation
+- Legacy antispamguard_trusted_ip_whitelist is still read as fallback to avoid data loss.

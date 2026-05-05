@@ -1,0 +1,9 @@
+AntiSpam Guard 3.3.28
+
+Registration false-positive guard.
+
+A confirmed legitimate registration showed that browser autofill/password managers may trigger honeypot + timestamp together.
+
+For registration only, when username and e-mail are submitted and the only effective signals are honeypot/timestamp/combined_decision, the extension now logs the event for review instead of blocking it. Stronger signals such as StopForumSpam, IP reputation, IP blocklist, content filter, rate limit, subnet abuse, random_gmail or slow_spam still allow normal blocking.
+
+The log action for these downgraded events is review and the matched rules include possible_false_positive.

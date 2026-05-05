@@ -1,0 +1,20 @@
+AntiSpam Guard - 2.8.7 + post-2.8.7 functional additions
+
+Base:
+- User-provided 2.8.7 ZIP.
+
+Applied:
+- IP rate limit cleanup cron.
+- Manual prune button for expired rate-limit rows.
+- Expired rate-limit counter.
+- Last cleanup timestamp.
+- Cleanup interval setting.
+- v_2_9_1 migration.
+
+Not applied:
+- ACP layout refactor from 2.9.0/2.9.2/2.9.3.
+- No visual section restructuring.
+- No module/menu changes.
+
+Goal:
+- Preserve the stable 2.8.7 ACP layout and add only the missing functional post-2.8.7 feature.

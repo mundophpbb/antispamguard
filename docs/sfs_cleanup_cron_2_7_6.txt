@@ -1,0 +1,17 @@
+AntiSpam Guard 2.7.6 - StopForumSpam cleanup cron
+
+Base:
+- Built from the last confirmed working package with SFS maintenance fix.
+
+Added:
+- cron/task/sfs_cleanup.php
+- services.yml cron service registration
+- migration v_2_7_6.php
+- ACP fields for cleanup interval, log retention and last automatic cleanup
+
+Behavior:
+- Removes expired StopForumSpam cache entries automatically.
+- Removes StopForumSpam logs older than the retention setting.
+- Default interval: 86400 seconds.
+- Default log retention: 90 days.
+- Cron runs only when StopForumSpam is enabled.

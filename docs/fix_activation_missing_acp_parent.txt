@@ -1,0 +1,12 @@
+Fix: activation after Delete data could fail with:
+Um modulo requerido nao existe: ACP_ANTISPAMGUARD_TITLE
+
+Cause:
+The consolidated migration tried to add ACP child modes under ACP_ANTISPAMGUARD_TITLE
+without recreating the parent ACP category first. After phpBB Delete data, that parent
+category is removed from the modules table.
+
+Change:
+v_3_3_15 now creates the parent category under ACP_CAT_DOT_MODS before adding the
+settings/logs/stats/about modes. v_3_3_16 then adds the StopForumSpam mode and
+v_3_3_17 reorders the menu.

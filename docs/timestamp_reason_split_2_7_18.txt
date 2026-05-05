@@ -1,0 +1,8 @@
+AntiSpam Guard 2.7.18 - Timestamp reason split
+
+Added:
+- timestamp_too_fast reason for forms submitted too quickly.
+- timestamp_expired reason for forms older than max form age.
+- ACP log filter labels for the new reasons.
+
+No blocking behavior changed; only reason granularity improved.

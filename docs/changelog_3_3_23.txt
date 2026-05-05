@@ -1,0 +1,7 @@
+AntiSpam Guard 3.3.23 changelog added.
+
+Files added:
+- CHANGELOG.md
+- CHANGELOG_pt_br.md
+
+The changelog documents the recent 3.3.18 to 3.3.23 maintenance cycle, including StopForumSpam reporting, SFS/manual report usability, deduplication, pagination and ACP repair notes.

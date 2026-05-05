@@ -1,0 +1,18 @@
+AntiSpam Guard 2.8.0 - Local IP reputation
+
+Added:
+- antispamguard_ip_score table.
+- service/ip_reputation.php
+- ACP panel for threshold, decay, TTL and event weights.
+- Reset button for local reputation.
+- Listener integration: suspicious reasons add score; high score adds ip_reputation reason.
+
+Default weights:
+- honeypot: 3
+- timestamp_too_fast: 2
+- timestamp_expired: 1
+- sfs_reputation: 5
+
+Default threshold: 5
+Default decay interval: 600 seconds
+Default TTL: 86400 seconds

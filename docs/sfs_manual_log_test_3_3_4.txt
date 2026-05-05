@@ -1,0 +1,11 @@
+AntiSpam Guard 3.3.4 - Manual SFS log test
+
+Added:
+- ACP panel: Manual SFS log test.
+- Fields: IP, email, username.
+- Button: Test and write log.
+- Calls sfs_decision->should_block(..., 'manual_acp_test', true).
+- Forces SFS log writing even when listed_count = 0.
+- Useful for testing production servers without a real registration.
+
+No layout refactor.

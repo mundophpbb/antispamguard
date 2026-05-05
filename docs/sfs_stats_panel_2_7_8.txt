@@ -1,0 +1,18 @@
+AntiSpam Guard 2.7.8 - StopForumSpam Statistics Panel
+
+Base:
+- Built from the last confirmed working package with the SFS test tool.
+
+Added:
+- SFS statistics section inside the existing Statistics tab.
+- No new ACP module.
+- No changes to protections or blocking logic.
+
+Counters:
+- total SFS logs
+- blocked SFS logs
+- suspicious non-blocked logs
+- block rate
+- last 24h / last 7d
+- strong hits
+- SFS cache totals, positive entries and expired entries

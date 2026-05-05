@@ -1,0 +1,1 @@
+AntiSpam Guard 2.8.3 - exportacao CSV da reputacao local por IP.

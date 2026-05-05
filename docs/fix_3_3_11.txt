@@ -1,0 +1,10 @@
+AntiSpam Guard 3.3.11
+
+- Added optional StopForumSpam API key support.
+- StopForumSpam lookups continue to work without an API key.
+- API key is used only for spammer submission/reporting.
+- API key is masked in ACP and redacted in configuration inventory export.
+- Empty API key field keeps the existing key; a dedicated button removes it.
+- Added manual StopForumSpam submission panel.
+- Submission is manual only by design, to reduce false reports.
+- Added migration v_3_3_11 for API key config and version update.

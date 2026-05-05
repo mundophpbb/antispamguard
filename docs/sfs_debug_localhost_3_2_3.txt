@@ -1,0 +1,16 @@
+AntiSpam Guard 3.2.3 - SFS localhost/debug logging
+
+Purpose:
+- For localhost tests where IP ::1 is not listed in StopForumSpam.
+- Production behavior remains unchanged unless debug is enabled.
+
+Added configs:
+- antispamguard_sfs_debug_log_all = 0
+- antispamguard_sfs_debug_localhost_only = 1
+
+When enabled:
+- SFS logs checks with status checked_not_listed.
+- Details JSON includes debug/debug_status metadata.
+- If localhost_only is enabled, it only applies to 127.0.0.1, ::1 and localhost.
+
+No layout refactor.

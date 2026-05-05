@@ -1,0 +1,10 @@
+AntiSpam Guard 3.3.27
+
+Implemented from the 2026-05-05 log analysis:
+- IPv4 /24 subnet rate tracking using the existing antispamguard_ip_rate table with keys like subnet:91.211.90.0.
+- Default threshold: 10 hits in 10 minutes, action score. In score mode it adds subnet_abuse to the reason list and increases IP reputation.
+- Contact-form random Gmail heuristic for ^[a-z0-9]{9}@gmail\.com$; adds random_gmail as an auxiliary signal.
+- Decision engine weights: subnet_abuse=45, random_gmail=20.
+- Main log risk fields added when the migration runs: risk_score, risk_level, action, matched_rules. CSV export includes these fields.
+
+The subnet rule intentionally defaults to score mode rather than hard block to reduce false-positive risk. Change antispamguard_subnet_rate_limit_action to block only after verifying behavior in production logs.

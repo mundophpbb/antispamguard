@@ -1,0 +1,16 @@
+AntiSpam Guard 2.7.11 - StopForumSpam action mode
+
+Base:
+- Built from the last confirmed working package with SFS whitelist.
+
+Added:
+- SFS action mode setting:
+  * block: current behavior, blocks when SFS decision matches.
+  * soft: records as suspicious but allows the action.
+  * log_only: logs for auditing only.
+- ACP selector inside existing StopForumSpam panel.
+- Decision metadata stored in SFS log details JSON.
+
+No new ACP module was created.
+No database schema change was needed beyond config migration.
+Other AntiSpam Guard protections are unchanged.

@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.20
+
+- Adds duplicate protection to the dedicated StopForumSpam log table.
+- Reuses an existing SFS log row when the same SFS decision is logged again within 5 seconds.
+- Adds migration v_3_3_20 to remove exact duplicate rows already stored in antispamguard_sfs_log.
+- Keeps the StopForumSpam pagination introduced in 3.3.19.

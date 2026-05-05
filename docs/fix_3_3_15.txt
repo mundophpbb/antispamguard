@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.15
+- Ajuste fino do aviso antispam no registro.
+- Ícone de escudo levemente maior.
+- Texto mais elegante e com melhor legibilidade.
+- Alinhamento refinado para combinar melhor com o tema padrão do phpBB.
+- Versão atualizada para 3.3.15.

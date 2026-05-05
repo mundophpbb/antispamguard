@@ -1,0 +1,16 @@
+AntiSpam Guard 2.8.7 - IP rate limit
+
+Added:
+- antispamguard_ip_rate table.
+- service/ip_rate_limit.php.
+- listener integration after timestamp and before content/SFS.
+- ACP settings:
+  * enabled
+  * window
+  * max hits
+  * action: block, score, log_only
+  * reputation weight
+- reset button.
+
+Note:
+- This adds a functional rate limiter. A later ACP refactor can move SFS/rate/reputation into dedicated left-menu modes.

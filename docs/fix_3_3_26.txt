@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.26
+
+- Strengthens main Blocking logs deduplication after real-world contact form testing.
+- Uses a 60-second merge window for near-identical rows with different reason sets.
+- Runtime logger now matches stable submission fields and merges reasons into the existing row.
+- Migration v_3_3_26 merges existing near-duplicates in antispamguard_log.

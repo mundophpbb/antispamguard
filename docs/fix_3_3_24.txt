@@ -1,0 +1,8 @@
+AntiSpam Guard 3.3.24
+
+Visual refinement for StopForumSpam report actions.
+
+- Shortened the SFS report action label in log tables.
+- Added a tooltip with the full action description.
+- Added compact no-wrap styling for the SFS report button.
+- Centered the report action column to avoid broken two-line buttons in ACP tables.

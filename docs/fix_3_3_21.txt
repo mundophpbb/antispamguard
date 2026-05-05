@@ -1,0 +1,10 @@
+AntiSpam Guard 3.3.21
+
+Visual refinement for log pagination.
+
+Changes:
+- Replaces the compact bullet-separated ACP pagination line with a cleaner flex layout.
+- Separates total counters, filtered counters and page navigation visually.
+- Adds styled page buttons, current-page highlight, previous/next links and ellipsis for long pagination ranges.
+- Applies the same layout to general blocking logs and StopForumSpam logs, including the SFS panel shown inside Blocking logs.
+- No database migration is required for this release.

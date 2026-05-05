@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.25
+
+- Fixed near-duplicate entries in the main Blocking logs when the same request is logged twice with different reason sets.
+- Deduplication now matches request identity: IP, username, email, form type and user-agent within a short time window.
+- When reasons differ, they are merged into the existing log row instead of creating a second row.
+- Added migration v_3_3_25 to merge and remove existing near-duplicate rows from antispamguard_log.

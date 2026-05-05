@@ -1,0 +1,7 @@
+AntiSpam Guard 3.3.22
+
+- Adds StopForumSpam manual reporting audit table.
+- Adds internal audit log for manual SFS submissions, including administrator, submitted data, source and SFS response/status.
+- Adds pre-fill action from SFS log rows to the manual StopForumSpam submission form.
+- Keeps submission confirmation before sending data to StopForumSpam.
+- Adds ACP language strings in English, Portuguese and French.

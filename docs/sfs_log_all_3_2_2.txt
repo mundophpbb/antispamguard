@@ -1,0 +1,9 @@
+AntiSpam Guard 3.2.2 - Log all StopForumSpam checks
+
+Fix:
+- SFS logging previously only occurred when listed_count > 0.
+- Localhost IPv6 ::1 normally has listed_count = 0, so no log appeared.
+- This version adds antispamguard_sfs_log_all_checks default enabled.
+- SFS logs now include checked values even when not listed or when the lookup returns no result.
+
+No layout refactor.

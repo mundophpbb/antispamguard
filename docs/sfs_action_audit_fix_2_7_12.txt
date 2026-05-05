@@ -1,0 +1,7 @@
+Fix for StopForumSpam action audit.
+
+Resolved:
+- TypeError in acp/main_module.php
+- format_sfs_action_mode() now type-hints \phpbb\user correctly.
+
+No logic changes.

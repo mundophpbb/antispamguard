@@ -1,0 +1,6 @@
+AntiSpam Guard 2.7.19 - Timestamp statistics split
+
+Added:
+- Statistics cards for timestamp_total, timestamp_too_fast and timestamp_expired.
+- No blocking behavior changed.
+- Existing logs and filters remain unchanged.

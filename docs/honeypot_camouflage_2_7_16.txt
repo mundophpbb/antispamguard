@@ -1,0 +1,6 @@
+AntiSpam Guard 2.7.16 - Honeypot camouflage
+
+Added dynamic class and off-screen CSS style variables for honeypot rendering.
+ACP setting: antispamguard_hp_camouflage_enabled.
+Patched templates:
+- No direct template replacement was needed or found. Listener variables and ACP setting are still available.

@@ -1,0 +1,9 @@
+AntiSpam Guard 3.3.23
+
+Usability fix for StopForumSpam manual reporting.
+
+Changes:
+- The SFS log action button is now shown when an SFS log row contains at least one useful value (IP, email or username).
+- Previously the button required IP, email and username all to be present, which hid the shortcut for contact-form or partial SFS records.
+- The report form still validates the final submission before sending to StopForumSpam, so missing required fields must be completed manually by the administrator.
+- No database migration required.

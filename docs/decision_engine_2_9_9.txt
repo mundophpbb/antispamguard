@@ -1,0 +1,12 @@
+AntiSpam Guard 2.9.9 - Combined decision engine
+
+Added:
+- service/decision_engine.php
+- service registration
+- migration v_2_9_9
+- conservative listener integration through phpBB container
+- ACP settings panel without layout refactor
+
+No auto-ban.
+No ACP module changes.
+No layout refactor.

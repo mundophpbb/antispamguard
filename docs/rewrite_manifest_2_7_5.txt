@@ -1,0 +1,15 @@
+AntiSpam Guard 2.7.5 rebuild from the uploaded stable version.
+
+Preserved from stable:
+- Existing ACP modes: Settings, Stats, Logs, About/Diagnostics.
+- Existing ACP template, layout and all current settings.
+- Existing listener protections: honeypot, timestamp, content filter, IP lists, rate limit, contact, PM and posts.
+- Existing cron task, routing, language files, README files and migrations up to 2.3.5.
+
+Added:
+- StopForumSpam cache table and service.
+- StopForumSpam client with timeout, retry and User-Agent.
+- StopForumSpam decision service with configurable thresholds.
+- StopForumSpam technical log table.
+- StopForumSpam settings panel inside the existing ACP Settings page.
+- SFS block reason integrated into the existing log/reason system.

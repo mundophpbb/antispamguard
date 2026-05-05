@@ -1,0 +1,7 @@
+AntiSpam Guard 2.8.1 fix
+
+Fixed:
+- Undefined method main_module::format_log_reason()
+- Added format_ip_reputation_reason() helper for the IP reputation audit table.
+
+No blocking logic changed.

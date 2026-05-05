@@ -1,0 +1,11 @@
+AntiSpam Guard 3.2.4 - Slow spam cleanup
+
+Added:
+- cron/task/slowspam_cleanup.php
+- service registration
+- manual prune button
+- activity total/expired counters
+- last cleanup timestamp
+- cleanup interval config
+
+No layout refactor.

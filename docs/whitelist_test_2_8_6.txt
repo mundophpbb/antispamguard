@@ -1,0 +1,6 @@
+AntiSpam Guard 2.8.6 - Unified whitelist test tool
+
+Added:
+- ACP test field for unified IP whitelist.
+- Tests exact IP, wildcard and CIDR entries.
+- Shows matching entry and active allowlist mode.

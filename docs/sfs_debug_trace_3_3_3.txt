@@ -1,0 +1,13 @@
+AntiSpam Guard 3.3.3 - SFS debug trace logging fix
+
+Problem:
+- SFS debug settings could be enabled and saved, but no log appeared on localhost.
+- Cause: the main listener could skip the SFS decision path when no blocking reason existed.
+
+Fix:
+- Adds force_sfs_debug_trace() in listener.
+- When SFS is enabled and debug logging is enabled, localhost tests explicitly call sfs_decision->should_block().
+- sfs_decision logs checked_not_listed when debug is enabled.
+- Preserves production behavior: this only runs when debug option is active.
+
+No layout refactor.

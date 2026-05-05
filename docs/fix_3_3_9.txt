@@ -1,0 +1,10 @@
+AntiSpam Guard 3.3.9 - reason column hardening
+
+Correcoes:
+- A coluna reason do log principal agora usa VCHAR:191.
+- A migracao v_3_3_9 altera bancos existentes que ainda estavam com reason em VCHAR:50 ou VCHAR:100.
+- write_log() normaliza motivos combinados e limita o tamanho antes do INSERT.
+- username, email, form_type e user_agent tambem sao limitados antes da gravacao do log.
+
+Erro corrigido:
+- SQL ERROR [ mysqli ] Data too long for column 'reason' at row 1 [1406] no cadastro com StopForumSpam ativo.

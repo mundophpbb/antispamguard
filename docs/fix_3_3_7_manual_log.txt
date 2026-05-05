@@ -1,0 +1,9 @@
+AntiSpam Guard 3.3.7 - Manual SFS log hardening
+
+Correcoes:
+- O teste manual SFS agora grava log quando force_log=true, inclusive quando o SFS global esta desativado.
+- Quando o SFS global esta desativado, o teste manual ainda consulta o StopForumSpam, informa modo Desativado e nunca bloqueia.
+- A configuracao antispamguard_sfs_log_all_checks agora e respeitada pelo motor de decisao.
+- O servico sfs_log retorna o ID do log inserido.
+- O ACP mostra se o log foi realmente gravado e, quando disponivel, o ID do registro.
+- Migracoes v_3_3_6 e v_3_3_7 adicionadas para validar a tabela phpbb_antispamguard_sfs_log, garantir defaults SFS e atualizar a versao interna.

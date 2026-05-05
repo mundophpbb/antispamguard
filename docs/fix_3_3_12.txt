@@ -1,0 +1,12 @@
+AntiSpam Guard 3.3.12
+
+Ajuste: aviso opcional na pagina de registro.
+
+Alteracoes:
+- Adicionada opcao no ACP para exibir/ocultar aviso antispam no cadastro.
+- Adicionado texto editavel do aviso, limitado a texto simples e 255 caracteres.
+- Aviso desativado por padrao para manter o modo silencioso.
+- Template de registro passa a exibir o aviso somente quando ativado.
+- Diagnostico informa o status do aviso.
+- Migracao v_3_3_12 adiciona as novas configuracoes e atualiza a versao.
+- Corrigido helper ausente truncate_for_storage() no ACP, usado pela chave API e pelo aviso.

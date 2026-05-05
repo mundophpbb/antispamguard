@@ -1,0 +1,1 @@
+3.3.18: Repair ACP Extensions tab (ACP_CAT_DOT_MODS) after delete-data/reinstall cycles. Ensures AntiSpamGuard category is under the global Extensions ACP category and rebuilds ACP nested-set values.

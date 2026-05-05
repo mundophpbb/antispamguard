@@ -1,0 +1,9 @@
+AntiSpam Guard 2.7.17 - Timestamp maximum form age
+
+Added:
+- antispamguard_max_form_age config.
+- ACP field for maximum accepted form age.
+- Server-side validation rejects forms older than the configured age.
+- 0 disables max age check.
+
+Default: 3600 seconds.

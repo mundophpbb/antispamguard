@@ -1,0 +1,11 @@
+Fix for SFS maintenance counters.
+
+Resolved:
+- Undefined variable $sfs_cache_total
+- Undefined variable $sfs_cache_expired
+- Undefined variable $sfs_logs_total
+
+Cause:
+- Counter template variables were assigned before they were calculated.
+
+This package is complete and based on the previous SFS maintenance package.

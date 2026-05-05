@@ -1,0 +1,10 @@
+AntiSpam Guard 2.7.20 - Manual StopForumSpam cleanup
+
+Added:
+- ACP button: Run SFS cleanup now.
+- Removes expired SFS cache entries.
+- Removes SFS logs older than configured retention.
+- Updates antispamguard_sfs_cleanup_last_gc.
+- Shows removed cache/log counts.
+
+No blocking behavior changed.

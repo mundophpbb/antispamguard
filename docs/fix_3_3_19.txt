@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.19
+
+- Prevents duplicate rows in the general blocking log when phpBB reaches the logger twice during the same submission.
+- Adds a safe 5-second duplicate guard based on IP, username, email, form type, reason and user agent.
+- Adds SFS pagination variables for the Blocking logs page, using an independent sfs_start parameter.
+- Migration removes exact duplicate rows already stored in antispamguard_log.

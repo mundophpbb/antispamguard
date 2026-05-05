@@ -1,0 +1,13 @@
+AntiSpam Guard 2.7.7 - StopForumSpam Manual Test Tool
+
+Base:
+- Built from the last confirmed working package with SFS cleanup cron.
+
+Added:
+- ACP manual SFS lookup tool inside the existing settings page.
+- Supports ip, email and username.
+- Shows cache status, listed status, confidence and frequency.
+- Uses existing stopforumspam_client service and cache.
+
+No ACP module was created.
+No existing ACP tabs were removed or replaced.
