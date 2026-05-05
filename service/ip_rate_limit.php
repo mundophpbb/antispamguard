@@ -79,6 +79,71 @@ class ip_rate_limit
         );
     }
 
+
+    public function hit_subnet($ip)
+    {
+        $ip = trim((string) $ip);
+
+        if (empty($this->config['antispamguard_subnet_rate_limit_enabled']) || $ip === '')
+        {
+            return $this->empty_subnet_result($ip);
+        }
+
+        $subnet = $this->get_ipv4_subnet24($ip);
+        if ($subnet === '')
+        {
+            return $this->empty_subnet_result($ip);
+        }
+
+        $key = 'subnet:' . $subnet;
+        $now = time();
+        $window = $this->get_subnet_window();
+        $max_hits = $this->get_subnet_max_hits();
+
+        $row = $this->get_row($key);
+
+        if ($row && (int) $row['first_hit'] + $window >= $now)
+        {
+            $hits = ((int) $row['hits']) + 1;
+
+            $data = array(
+                'hits' => $hits,
+                'last_hit' => $now,
+                'expires_at' => $now + $window,
+            );
+
+            $sql = 'UPDATE ' . $this->table . '
+                SET ' . $this->db->sql_build_array('UPDATE', $data) . "
+                WHERE ip = '" . $this->db->sql_escape($key) . "'";
+            $this->db->sql_query($sql);
+        }
+        else
+        {
+            $hits = 1;
+            $this->delete($key);
+
+            $data = array(
+                'ip' => $key,
+                'hits' => $hits,
+                'first_hit' => $now,
+                'last_hit' => $now,
+                'expires_at' => $now + $window,
+            );
+
+            $sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
+            $this->db->sql_query($sql);
+        }
+
+        return array(
+            'subnet' => $subnet,
+            'hits' => $hits,
+            'max_hits' => $max_hits,
+            'window' => $window,
+            'limited' => ($hits > $max_hits),
+            'action' => $this->get_subnet_action(),
+        );
+    }
+
     public function prune()
     {
         $sql = 'DELETE FROM ' . $this->table . '
@@ -129,6 +194,54 @@ class ip_rate_limit
         $action = isset($this->config['antispamguard_ip_rate_limit_action']) ? (string) $this->config['antispamguard_ip_rate_limit_action'] : 'block';
 
         return in_array($action, array('block', 'score', 'log_only'), true) ? $action : 'block';
+    }
+
+
+    protected function get_subnet_window()
+    {
+        return isset($this->config['antispamguard_subnet_rate_limit_window']) ? max(60, (int) $this->config['antispamguard_subnet_rate_limit_window']) : 600;
+    }
+
+    protected function get_subnet_max_hits()
+    {
+        return isset($this->config['antispamguard_subnet_rate_limit_max_hits']) ? max(1, (int) $this->config['antispamguard_subnet_rate_limit_max_hits']) : 10;
+    }
+
+    protected function get_subnet_action()
+    {
+        $action = isset($this->config['antispamguard_subnet_rate_limit_action']) ? (string) $this->config['antispamguard_subnet_rate_limit_action'] : 'score';
+
+        return in_array($action, array('block', 'score', 'log_only'), true) ? $action : 'score';
+    }
+
+    protected function empty_subnet_result($ip)
+    {
+        return array(
+            'subnet' => $this->get_ipv4_subnet24($ip),
+            'hits' => 0,
+            'max_hits' => $this->get_subnet_max_hits(),
+            'window' => $this->get_subnet_window(),
+            'limited' => false,
+            'action' => $this->get_subnet_action(),
+        );
+    }
+
+    protected function get_ipv4_subnet24($ip)
+    {
+        $ip = trim((string) $ip);
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+        {
+            return '';
+        }
+
+        $parts = explode('.', $ip);
+        if (count($parts) !== 4)
+        {
+            return '';
+        }
+
+        return (int) $parts[0] . '.' . (int) $parts[1] . '.' . (int) $parts[2] . '.0';
     }
 
     protected function empty_result()

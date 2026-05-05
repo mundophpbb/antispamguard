@@ -50,6 +50,18 @@ class decision_engine
             $reasons[] = 'ip_rate_limit';
         }
 
+        if (!empty($signals['subnet_abuse']))
+        {
+            $score += $this->weight('subnet_abuse', 45);
+            $reasons[] = 'subnet_abuse';
+        }
+
+        if (!empty($signals['random_gmail']))
+        {
+            $score += $this->weight('random_gmail', 20);
+            $reasons[] = 'random_gmail';
+        }
+
         if (!empty($signals['sfs']))
         {
             $score += $this->weight('sfs', 50);

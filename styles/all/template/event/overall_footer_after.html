@@ -1,4 +1,5 @@
 {% if ANTISPAMGUARD_ENABLED and (ANTISPAMGUARD_PROTECT_CONTACT or ANTISPAMGUARD_PROTECT_PM) %}
+<!-- INCLUDECSS @mundophpbb_antispamguard/antispamguard.css -->
 <script>
 (function() {
     var params = null;
@@ -29,12 +30,6 @@
         var hpWrap = document.createElement('div');
         hpWrap.className = 'antispamguard-field';
         hpWrap.setAttribute('aria-hidden', 'true');
-        hpWrap.style.position = 'absolute';
-        hpWrap.style.left = '-9999px';
-        hpWrap.style.width = '1px';
-        hpWrap.style.height = '1px';
-        hpWrap.style.overflow = 'hidden';
-        hpWrap.style.opacity = '0';
 
         var hpInput = document.createElement('input');
         hpInput.type = 'text';

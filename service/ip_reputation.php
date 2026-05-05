@@ -198,6 +198,10 @@ class ip_reputation
                 return isset($this->config['antispamguard_ip_reputation_weight_sfs']) ? (int) $this->config['antispamguard_ip_reputation_weight_sfs'] : 5;
             case 'ip_rate_limit':
                 return isset($this->config['antispamguard_ip_reputation_weight_rate_limit']) ? (int) $this->config['antispamguard_ip_reputation_weight_rate_limit'] : 3;
+            case 'subnet_abuse':
+                return isset($this->config['antispamguard_ip_reputation_weight_subnet_abuse']) ? (int) $this->config['antispamguard_ip_reputation_weight_subnet_abuse'] : 4;
+            case 'random_gmail':
+                return isset($this->config['antispamguard_ip_reputation_weight_random_gmail']) ? (int) $this->config['antispamguard_ip_reputation_weight_random_gmail'] : 2;
             default:
                 return 1;
         }
