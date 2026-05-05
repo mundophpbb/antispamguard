@@ -159,3 +159,53 @@
     white-space: nowrap;
     font-size: 11px;
 }
+
+/* Compact Statistics layout: reduces vertical scrolling in the ACP statistics tab. */
+.asg-dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 6px;
+    margin: 6px 0 10px;
+}
+.asg-card {
+    padding: 6px 8px;
+    min-height: 0;
+    font-size: 11px;
+    line-height: 1.2;
+}
+.asg-card strong {
+    font-size: 15px;
+    line-height: 18px;
+    margin-top: 2px;
+    word-break: break-word;
+}
+.asg-card p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    line-height: 1.2;
+}
+.asg-grid-2 {
+    gap: 8px;
+    margin-top: 8px;
+}
+.asg-day-chart {
+    height: 105px;
+    padding: 8px;
+    gap: 6px;
+}
+.asg-day-bar {
+    height: 60px;
+}
+.asg-bar-row {
+    margin: 4px 0;
+    gap: 6px;
+}
+@media (min-width: 1200px) {
+    .asg-dashboard {
+        grid-template-columns: repeat(6, minmax(95px, 1fr));
+    }
+}
+@media (max-width: 900px) {
+    .asg-dashboard {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+    }
+}
