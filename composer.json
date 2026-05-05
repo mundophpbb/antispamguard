@@ -3,7 +3,7 @@
     "type": "phpbb-extension",
     "description": "Invisible anti-spam guard for phpBB using HoneyPot, timing, IP controls, content filters and ACP diagnostics.",
     "homepage": "https://www.mundophpbb.com.br",
-    "version": "3.3.27",
+    "version": "3.3.28",
     "time": "2026-05-05",
     "license": "GPL-2.0-only",
     "authors": [
