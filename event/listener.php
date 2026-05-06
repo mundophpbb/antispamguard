@@ -47,7 +47,7 @@ class listener implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return array(
-            'core.user_setup'                       => 'early_ucp_checks',
+            'core.user_setup_after'              => 'early_ucp_checks',
             'core.page_header_after'                => 'assign_template_vars',
             'core.ucp_register_data_before'         => 'validate_registration',
             'core.posting_modify_submission_errors' => 'validate_posting',
