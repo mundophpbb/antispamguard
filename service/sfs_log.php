@@ -38,6 +38,7 @@ class sfs_log
             'listed_count' => isset($decision['listed_count']) ? (int) $decision['listed_count'] : 0,
             'strong_hit' => !empty($decision['strong_hit']) ? 1 : 0,
             'blocked' => !empty($decision['block']) ? 1 : 0,
+            'action_mode' => isset($decision['action_mode']) ? (string) $decision['action_mode'] : 'block',
             'details_json' => json_encode($details),
             'created_at' => time(),
         );
@@ -68,6 +69,7 @@ class sfs_log
                 AND listed_count = " . (int) $data['listed_count'] . "
                 AND strong_hit = " . (int) $data['strong_hit'] . "
                 AND blocked = " . (int) $data['blocked'] . "
+                AND action_mode = '" . $this->db->sql_escape($data['action_mode']) . "'
                 AND details_json = '" . $this->db->sql_escape($data['details_json']) . "'
             ORDER BY log_id DESC";
         $result = $this->db->sql_query_limit($sql, 1);

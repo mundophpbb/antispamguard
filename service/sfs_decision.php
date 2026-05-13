@@ -280,6 +280,12 @@ class sfs_decision
             return false;
         }
 
+        $debug_until = isset($this->config['antispamguard_sfs_debug_until']) ? (int) $this->config['antispamguard_sfs_debug_until'] : 0;
+        if ($debug_until > 0 && time() > $debug_until)
+        {
+            return false;
+        }
+
         if (!empty($this->config['antispamguard_sfs_debug_localhost_only']))
         {
             return $this->is_localhost_ip($ip);
