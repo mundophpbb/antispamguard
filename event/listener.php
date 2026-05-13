@@ -376,7 +376,7 @@ $reasons = array();
             }
         }
 
-        if ($this->has_random_gmail_contact_pattern($form_type))
+        if ($this->has_random_gmail_pattern($form_type))
         {
             $reasons[] = 'random_gmail';
         }
@@ -517,14 +517,25 @@ $slow_spam_reason = $this->check_slow_spam();
     }
 
 
-    protected function has_random_gmail_contact_pattern($form_type)
+    protected function has_random_gmail_pattern($form_type)
     {
-        if (empty($this->config['antispamguard_random_gmail_enabled']))
-        {
-            return false;
-        }
+        $form_type = (string) $form_type;
 
-        if ((string) $form_type !== 'contact')
+        if ($form_type === 'contact')
+        {
+            if (empty($this->config['antispamguard_random_gmail_enabled']))
+            {
+                return false;
+            }
+        }
+        else if ($form_type === 'register')
+        {
+            if (empty($this->config['antispamguard_random_gmail_register_enabled']))
+            {
+                return false;
+            }
+        }
+        else
         {
             return false;
         }
@@ -618,6 +629,12 @@ $slow_spam_reason = $this->check_slow_spam();
         }
 
         if (empty($this->config['antispamguard_sfs_debug_log_all']))
+        {
+            return;
+        }
+
+        $debug_until = isset($this->config['antispamguard_sfs_debug_until']) ? (int) $this->config['antispamguard_sfs_debug_until'] : 0;
+        if ($debug_until > 0 && time() > $debug_until)
         {
             return;
         }

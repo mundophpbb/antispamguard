@@ -1,0 +1,19 @@
+AntiSpam Guard 3.3.30
+
+Implemented follow-up hardening after SFS moderation actions:
+
+1. SFS log performance
+- Added action_mode as a physical column in antispamguard_sfs_log.
+- Backfilled action_mode from details_json._decision.action_mode.
+- Added action_created_idx and blocked_action_created_idx.
+- Updated ACP SFS filters and CSV export to use the physical column.
+
+2. SFS debug timeout
+- Added antispamguard_sfs_debug_until.
+- Added ACP duration selector: no expiration, 10 minutes, 30 minutes, 1 hour, 24 hours.
+- Runtime debug logging now stops after the configured expiration.
+
+3. Random Gmail registration option
+- Added antispamguard_random_gmail_register_enabled, disabled by default.
+- Existing contact-form Random Gmail heuristic is now configurable in ACP.
+- Registration heuristic uses the same nine lowercase letters/digits Gmail pattern.

@@ -1,0 +1,6 @@
+AntiSpam Guard 3.3.35
+
+- Adds antispamguard_sfs_review_log for SFS moderation audit trail.
+- Records allow/block/report/clear review state transitions.
+- Adds antispamguard_sfs_log_preserve_reviewed config.
+- Manual and cron SFS retention cleanup can preserve reviewed rows and successfully reported rows.
