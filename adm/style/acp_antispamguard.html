@@ -588,6 +588,19 @@
                     <option value="1"{% if SFS_FILTER_BLOCKED == '1' %} selected="selected"{% endif %}>{{ lang('YES') }}</option>
                     <option value="0"{% if SFS_FILTER_BLOCKED == '0' %} selected="selected"{% endif %}>{{ lang('NO') }}</option>
                 </select>
+            </dd>
+        </dl>
+        <dl>
+            <dt><label for="sfs_filter_review">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_REVIEW') ~ lang('COLON') }}</label></dt>
+            <dd>
+                <select name="sfs_filter_review" id="sfs_filter_review">
+                    <option value="">{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
+                    <option value="pending"{% if SFS_FILTER_REVIEW == 'pending' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_PENDING') }}</option>
+                    <option value="reported"{% if SFS_FILTER_REVIEW == 'reported' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_REPORTED') }}</option>
+                    <option value="blocked"{% if SFS_FILTER_REVIEW == 'blocked' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_BLOCKED') }}</option>
+                    <option value="reported_blocked"{% if SFS_FILTER_REVIEW == 'reported_blocked' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_REPORTED_BLOCKED') }}</option>
+                    <option value="allowed"{% if SFS_FILTER_REVIEW == 'allowed' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_ALLOWED') }}</option>
+                </select>
                 <input class="button2" type="submit" value="{{ lang('ACP_ANTISPAMGUARD_APPLY_FILTERS') }}">
             </dd>
         </dl>
@@ -611,10 +624,19 @@
         <input class="button2" type="submit" name="export_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS') }}" data-ajax="false">
         <br><small>{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS_EXPLAIN') }}</small>
     </div>
+    <div class="asg-actions asg-sfs-bulk-actions">
+        <strong>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS') }}</strong>
+        <input class="button2" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT')|e('js') }}');">
+        <input class="button2" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK')|e('js') }}');">
+        <input class="button1" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK')|e('js') }}');">
+        <input class="button2" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW')|e('js') }}');">
+        <br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS_EXPLAIN') }}</small>
+    </div>
 
-    <table class="table1 zebra-table">
+    <table class="table1 zebra-table asg-sfs-table">
         <thead>
             <tr>
+                <th class="asg-sfs-select-col"><input type="checkbox" class="asg-sfs-select-all" title="{{ lang('ACP_ANTISPAMGUARD_SFS_SELECT_ALL') }}"></th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_LOG_TIME') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SOURCE') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}</th>
@@ -626,12 +648,14 @@
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_SHORT') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_MATCHED') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_DETAILS') }}</th>
+                <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_STATUS') }}</th>
                 <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_ACTION') }}</th>
             </tr>
         </thead>
         <tbody>
             {% for sfs in sfs_logs %}
-            <tr>
+            <tr class="{{ sfs.ROW_CLASS }}">
+                <td class="asg-sfs-select-col"><input type="checkbox" class="asg-sfs-select" name="sfs_selected_logs[]" value="{{ sfs.ID }}"></td>
                 <td>{{ sfs.TIME }}</td>
                 <td>{{ sfs.SOURCE }}</td>
                 <td>{{ sfs.IP }}</td>
@@ -643,7 +667,19 @@
                 <td>{{ sfs.ACTION_MODE }}</td>
                 <td>{{ sfs.MATCHED }}</td>
                 <td>{{ sfs.DETAILS }}</td>
-                <td class="asg-sfs-report-cell">{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2 asg-sfs-report-btn" href="{{ sfs.U_REPORT_PREFILL }}" title="{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG_TITLE') }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
+                <td><span class="asg-sfs-status-badge">{{ sfs.REVIEW_STATUS }}</span></td>
+                <td class="asg-sfs-report-cell">
+                    {% if sfs.S_ALREADY_REPORTED %}
+                        <span class="asg-sfs-status-badge">{{ lang('ACP_ANTISPAMGUARD_SFS_ALREADY_REPORTED') }}</span>
+                    {% elseif sfs.S_CAN_PREFILL_REPORT %}
+                        <button class="button2 asg-sfs-report-btn" type="submit" name="report_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_REPORT')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</button>
+                    {% else %}
+                        <em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>
+                    {% endif %}
+                    <button class="button2" type="submit" name="block_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BLOCK')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_LOCAL') }}</button>
+                    <button class="button2" type="submit" name="allow_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_ALLOW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_ALLOW') }}</button>
+                    <br><a class="asg-sfs-prefill-link" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_PREFILL_ONLY') }}</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -669,6 +705,7 @@
     <fieldset class="submit-buttons asg-actions">
         <input class="button1" type="submit" name="save_sfs" value="{{ lang('SUBMIT') }}">
         {{ S_FORM_TOKEN }}
+
     </fieldset>
 </form>
 {% endif %}
@@ -796,11 +833,21 @@
                 <option value="disabled"{% if SFS_FILTER_ACTION == 'disabled' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_DISABLED') }}</option>
             </select>
 
-            <label for="sfs_filter_blocked">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_BLOCKED') ~ lang('COLON') }}</label>
-            <select name="sfs_filter_blocked" id="sfs_filter_blocked">
+            <label for="sfs_filter_blocked_logs">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_BLOCKED') ~ lang('COLON') }}</label>
+            <select name="sfs_filter_blocked" id="sfs_filter_blocked_logs">
                 <option value="">{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
                 <option value="1"{% if SFS_FILTER_BLOCKED == '1' %} selected="selected"{% endif %}>{{ lang('YES') }}</option>
                 <option value="0"{% if SFS_FILTER_BLOCKED == '0' %} selected="selected"{% endif %}>{{ lang('NO') }}</option>
+            </select>
+
+            <label for="sfs_filter_review_logs">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_REVIEW') ~ lang('COLON') }}</label>
+            <select name="sfs_filter_review" id="sfs_filter_review_logs">
+                <option value="">{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
+                <option value="pending"{% if SFS_FILTER_REVIEW == 'pending' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_PENDING') }}</option>
+                <option value="reported"{% if SFS_FILTER_REVIEW == 'reported' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_REPORTED') }}</option>
+                <option value="blocked"{% if SFS_FILTER_REVIEW == 'blocked' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_BLOCKED') }}</option>
+                <option value="reported_blocked"{% if SFS_FILTER_REVIEW == 'reported_blocked' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_REPORTED_BLOCKED') }}</option>
+                <option value="allowed"{% if SFS_FILTER_REVIEW == 'allowed' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_ALLOWED') }}</option>
             </select>
 
             <input class="button2" type="submit" value="{{ lang('ACP_ANTISPAMGUARD_APPLY_FILTERS') }}">
@@ -821,9 +868,19 @@
             {% endif %}
         </div>
 
-        <table class="table1 zebra-table">
+        <div class="asg-actions asg-sfs-bulk-actions">
+            <strong>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS') }}</strong>
+            <input class="button2" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT')|e('js') }}');">
+            <input class="button2" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK')|e('js') }}');">
+            <input class="button1" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK')|e('js') }}');">
+            <input class="button2" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW')|e('js') }}');">
+            <br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS_EXPLAIN') }}</small>
+        </div>
+
+        <table class="table1 zebra-table asg-sfs-table">
             <thead>
                 <tr>
+                    <th class="asg-sfs-select-col"><input type="checkbox" class="asg-sfs-select-all" title="{{ lang('ACP_ANTISPAMGUARD_SFS_SELECT_ALL') }}"></th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_LOG_TIME') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_SOURCE') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_LOG_IP') }}</th>
@@ -835,12 +892,14 @@
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_ACTION_MODE_SHORT') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_MATCHED') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_DETAILS') }}</th>
+                    <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_STATUS') }}</th>
                     <th>{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_ACTION') }}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for sfs in sfs_logs %}
-                <tr>
+                <tr class="{{ sfs.ROW_CLASS }}">
+                    <td class="asg-sfs-select-col"><input type="checkbox" class="asg-sfs-select" name="sfs_selected_logs[]" value="{{ sfs.ID }}"></td>
                     <td>{{ sfs.TIME }}</td>
                     <td>{{ sfs.SOURCE }}</td>
                     <td>{{ sfs.IP }}</td>
@@ -851,8 +910,20 @@
                     <td>{{ sfs.BLOCKED }}</td>
                     <td>{{ sfs.ACTION_MODE }}</td>
                     <td>{{ sfs.MATCHED }}</td>
-                    <td>{{ sfs.DETAILS }}</td>
-                    <td class="asg-sfs-report-cell">{% if sfs.S_CAN_PREFILL_REPORT %}<a class="button2 asg-sfs-report-btn" href="{{ sfs.U_REPORT_PREFILL }}" title="{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG_TITLE') }}">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</a>{% else %}<em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>{% endif %}</td>
+                <td>{{ sfs.DETAILS }}</td>
+                    <td><span class="asg-sfs-status-badge">{{ sfs.REVIEW_STATUS }}</span></td>
+                    <td class="asg-sfs-report-cell">
+                        {% if sfs.S_ALREADY_REPORTED %}
+                            <span class="asg-sfs-status-badge">{{ lang('ACP_ANTISPAMGUARD_SFS_ALREADY_REPORTED') }}</span>
+                        {% elseif sfs.S_CAN_PREFILL_REPORT %}
+                            <button class="button2 asg-sfs-report-btn" type="submit" name="report_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_REPORT')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_REPORT_FROM_LOG') }}</button>
+                        {% else %}
+                            <em>{{ lang('ACP_ANTISPAMGUARD_NOT_AVAILABLE') }}</em>
+                        {% endif %}
+                        <button class="button2" type="submit" name="block_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BLOCK')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_LOCAL') }}</button>
+                        <button class="button2" type="submit" name="allow_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_ALLOW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_ALLOW') }}</button>
+                        <br><a class="asg-sfs-prefill-link" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_PREFILL_ONLY') }}</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -878,7 +949,24 @@
 
 </fieldset>
 {{ S_FORM_TOKEN }}
+
 </form>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.asg-sfs-select-all').forEach(function (toggle) {
+        toggle.addEventListener('change', function () {
+            var table = toggle.closest('table');
+            if (!table) {
+                return;
+            }
+            table.querySelectorAll('.asg-sfs-select').forEach(function (checkbox) {
+                checkbox.checked = toggle.checked;
+            });
+        });
+    });
+});
+</script>
 
 {% include 'overall_footer.html' %}

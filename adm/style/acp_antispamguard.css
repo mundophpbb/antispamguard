@@ -209,3 +209,43 @@
         grid-template-columns: repeat(2, minmax(120px, 1fr));
     }
 }
+
+/* 3.3.29 SFS moderation workflow */
+.asg-sfs-select-col {
+    width: 28px;
+    text-align: center;
+}
+.asg-sfs-bulk-actions {
+    margin: 8px 0 12px;
+    padding: 8px;
+    border: 1px solid #d8d8d8;
+    background: #f7f7f7;
+}
+.asg-sfs-report-cell .button2,
+.asg-sfs-report-cell .button1 {
+    margin: 1px 2px 2px 0;
+}
+.asg-sfs-status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: #ececec;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.asg-sfs-prefill-link {
+    font-size: 11px;
+}
+tr.asg-sfs-row-reported td {
+    background-color: #eaf6ff !important;
+}
+tr.asg-sfs-row-blocked td {
+    background-color: #ffecec !important;
+}
+tr.asg-sfs-row-reported-blocked td {
+    background-color: #fff3d6 !important;
+}
+tr.asg-sfs-row-allowed td {
+    background-color: #edf8ed !important;
+}

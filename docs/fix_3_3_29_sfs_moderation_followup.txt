@@ -1,0 +1,5 @@
+AntiSpam Guard 3.3.29 follow-up
+
+- Added review-status filter to StopForumSpam log views.
+- Added review metadata columns to SFS CSV export: review_status, reviewed_at, reviewed_by, local_action.
+- Consolidated SFS select-all JavaScript into one footer script block.

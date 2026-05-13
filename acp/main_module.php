@@ -191,6 +191,19 @@ class main_module
             return;
         }
 
+
+        if ($this->is_sfs_moderation_action($request))
+        {
+            if (!check_form_key('mundophpbb_antispamguard'))
+            {
+                trigger_error($user->lang('FORM_INVALID') . adm_back_link($this->u_action), E_USER_WARNING);
+            }
+
+            $summary = $this->handle_sfs_moderation_action($db, $request, $user, $config, $table_prefix);
+
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_MODERATION_DONE', $summary['reported'], $summary['blocked'], $summary['allowed'], $summary['skipped'], $summary['failed']) . adm_back_link($this->u_action));
+        }
+
         if ($request->is_set_post('remove_sfs_api_key'))
         {
             if (!check_form_key('mundophpbb_antispamguard'))
@@ -825,6 +838,7 @@ class main_module
     {
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
+        $sfs_filter_review = $request->variable('sfs_filter_review', '');
         $sfs_start = max(0, $request->variable('sfs_start', 0));
         $sfs_per_page = 25;
 
@@ -838,12 +852,29 @@ class main_module
             $sfs_filter_blocked = '';
         }
 
+        if (!in_array($sfs_filter_review, array('', 'pending', 'reported', 'blocked', 'reported_blocked', 'allowed'), true))
+        {
+            $sfs_filter_review = '';
+        }
+
         $sfs_table = $table_prefix . 'antispamguard_sfs_log';
         $sfs_where = array();
 
         if ($sfs_filter_blocked !== '')
         {
             $sfs_where[] = 'blocked = ' . (int) $sfs_filter_blocked;
+        }
+
+        if ($sfs_filter_review !== '')
+        {
+            if ($sfs_filter_review === 'pending')
+            {
+                $sfs_where[] = "(review_status = '' OR review_status IS NULL)";
+            }
+            else
+            {
+                $sfs_where[] = "review_status = '" . $db->sql_escape($sfs_filter_review) . "'";
+            }
         }
 
         $sfs_where_sql = !empty($sfs_where) ? ' WHERE ' . implode(' AND ', $sfs_where) : '';
@@ -935,6 +966,10 @@ class main_module
                     . ', cached=' . (!empty($detail_data['cached']) ? $user->lang('YES') : $user->lang('NO'));
             }
 
+            $already_reported = $this->has_successful_sfs_submission($db, $table_prefix, (int) $sfs_row['log_id']);
+            $review_status_text = $this->format_sfs_review_status($sfs_row, $already_reported, $user);
+            $row_class = $this->get_sfs_row_class($sfs_row, $already_reported);
+
             $template->assign_block_vars('sfs_logs', array(
                 'ID' => (int) $sfs_row['log_id'],
                 'TIME' => $user->format_date((int) $sfs_row['created_at']),
@@ -948,8 +983,13 @@ class main_module
                 'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
                 'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
                 'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+                'REVIEW_STATUS' => $review_status_text,
+                'ROW_CLASS' => $row_class,
                 'U_REPORT_PREFILL' => $this->append_url_param($this->get_sfs_mode_url(), 'sfs_prefill_log_id', (int) $sfs_row['log_id']),
                 'S_CAN_PREFILL_REPORT' => ($sfs_row['user_ip'] !== '' || $sfs_row['user_email'] !== '' || $sfs_row['username'] !== ''),
+                'S_ALREADY_REPORTED' => $already_reported || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('reported', 'reported_blocked'), true)),
+                'S_LOCAL_BLOCKED' => (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] === 'blocked') || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('blocked', 'reported_blocked'), true)),
+                'S_ALLOWED' => isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] === 'allowed',
             ));
         }
         $db->sql_freeresult($result);
@@ -963,6 +1003,10 @@ class main_module
         {
             $filter_params .= '&amp;sfs_filter_blocked=' . urlencode($sfs_filter_blocked);
         }
+        if ($sfs_filter_review !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_review=' . urlencode($sfs_filter_review);
+        }
 
         $base_url = $this->u_action . $filter_params;
         $sfs_pagination = $this->build_pagination($base_url, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start, 'sfs_start');
@@ -974,11 +1018,315 @@ class main_module
             'TOTAL_SFS_LOGS_FILTERED' => $total_sfs_logs_filtered,
             'SFS_FILTER_ACTION' => $sfs_filter_action,
             'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
-            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== ''),
+            'SFS_FILTER_REVIEW' => $sfs_filter_review,
+            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== ''),
             'SFS_PAGINATION' => $sfs_pagination,
             'SFS_PAGE_NUMBER' => $sfs_page_number,
         ));
     }
+
+    protected function is_sfs_moderation_action($request)
+    {
+        $actions = array(
+            'report_sfs_log',
+            'block_sfs_log',
+            'allow_sfs_log',
+            'bulk_report_sfs_logs',
+            'bulk_block_sfs_logs',
+            'bulk_allow_sfs_logs',
+            'bulk_report_block_sfs_logs',
+        );
+
+        foreach ($actions as $action)
+        {
+            if ($request->is_set_post($action))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function handle_sfs_moderation_action($db, $request, $user, $config, $table_prefix)
+    {
+        $summary = array(
+            'reported' => 0,
+            'blocked' => 0,
+            'allowed' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+        );
+
+        $mode = '';
+        $ids = array();
+
+        if ($request->is_set_post('report_sfs_log'))
+        {
+            $mode = 'report';
+            $ids = array($request->variable('report_sfs_log', 0));
+        }
+        else if ($request->is_set_post('block_sfs_log'))
+        {
+            $mode = 'block';
+            $ids = array($request->variable('block_sfs_log', 0));
+        }
+        else if ($request->is_set_post('allow_sfs_log'))
+        {
+            $mode = 'allow';
+            $ids = array($request->variable('allow_sfs_log', 0));
+        }
+        else if ($request->is_set_post('bulk_report_block_sfs_logs'))
+        {
+            $mode = 'report_block';
+            $ids = $request->variable('sfs_selected_logs', array(0));
+        }
+        else if ($request->is_set_post('bulk_report_sfs_logs'))
+        {
+            $mode = 'report';
+            $ids = $request->variable('sfs_selected_logs', array(0));
+        }
+        else if ($request->is_set_post('bulk_block_sfs_logs'))
+        {
+            $mode = 'block';
+            $ids = $request->variable('sfs_selected_logs', array(0));
+        }
+        else if ($request->is_set_post('bulk_allow_sfs_logs'))
+        {
+            $mode = 'allow';
+            $ids = $request->variable('sfs_selected_logs', array(0));
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
+        $ids = array_slice($ids, 0, 50);
+
+        if (empty($ids) || $mode === '')
+        {
+            $summary['skipped']++;
+            return $summary;
+        }
+
+        foreach ($ids as $log_id)
+        {
+            $row = $this->get_sfs_log_row($db, $table_prefix, $log_id);
+            if (!$row)
+            {
+                $summary['skipped']++;
+                continue;
+            }
+
+            if ($mode === 'allow')
+            {
+                $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'allowed', 'allowed');
+                $summary['allowed']++;
+                continue;
+            }
+
+            $reported = false;
+            $was_reported = false;
+            $blocked = false;
+
+            if ($mode === 'report' || $mode === 'report_block')
+            {
+                if (!$this->sfs_log_can_be_reported($row))
+                {
+                    $summary['skipped']++;
+                }
+                else if ($this->has_successful_sfs_submission($db, $table_prefix, $log_id))
+                {
+                    $was_reported = true;
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported', (string) $row['local_action']);
+                    $summary['skipped']++;
+                }
+                else
+                {
+                    global $phpbb_container;
+
+                    $sfs_client = $phpbb_container->get('mundophpbb.antispamguard.stopforumspam_client');
+                    $evidence = $user->lang('ACP_ANTISPAMGUARD_SFS_SUBMIT_EVIDENCE_FROM_LOG', (int) $row['log_id'], (string) $row['check_source'], $user->format_date((int) $row['created_at']));
+                    $submit_result = $sfs_client->submit_spammer((string) $row['user_ip'], (string) $row['user_email'], (string) $row['username'], $evidence);
+                    $this->record_sfs_submission($db, $table_prefix, $user, (string) $row['user_ip'], (string) $row['user_email'], (string) $row['username'], $evidence, 'sfs_log', (int) $row['log_id'], $submit_result);
+
+                    if (!empty($submit_result['success']))
+                    {
+                        $reported = true;
+                        $summary['reported']++;
+                    }
+                    else
+                    {
+                        $summary['failed']++;
+                    }
+                }
+            }
+
+            if ($mode === 'block' || $mode === 'report_block')
+            {
+                $blocked = $this->add_sfs_log_ip_to_blacklist($config, $row);
+                if ($blocked)
+                {
+                    $summary['blocked']++;
+                }
+                else
+                {
+                    $summary['skipped']++;
+                }
+            }
+
+            if ($mode === 'report')
+            {
+                if ($reported)
+                {
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported', (string) $row['local_action']);
+                }
+            }
+            else if ($mode === 'block')
+            {
+                if ($blocked)
+                {
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'blocked', 'blocked');
+                }
+            }
+            else if ($mode === 'report_block')
+            {
+                if (($reported || $was_reported) && $blocked)
+                {
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported_blocked', 'blocked');
+                }
+                else if ($reported || $was_reported)
+                {
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported', (string) $row['local_action']);
+                }
+                else if ($blocked)
+                {
+                    $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'blocked', 'blocked');
+                }
+            }
+        }
+
+        return $summary;
+    }
+
+    protected function get_sfs_log_row($db, $table_prefix, $log_id)
+    {
+        $sql = 'SELECT * FROM ' . $table_prefix . 'antispamguard_sfs_log
+            WHERE log_id = ' . (int) $log_id;
+        $result = $db->sql_query_limit($sql, 1);
+        $row = $db->sql_fetchrow($result);
+        $db->sql_freeresult($result);
+
+        return $row;
+    }
+
+    protected function sfs_log_can_be_reported(array $row)
+    {
+        return ((string) $row['user_ip'] !== '' || (string) $row['user_email'] !== '' || (string) $row['username'] !== '');
+    }
+
+    protected function has_successful_sfs_submission($db, $table_prefix, $log_id)
+    {
+        $sql = 'SELECT submit_id FROM ' . $table_prefix . "antispamguard_sfs_submit_log
+            WHERE source = 'sfs_log'
+                AND source_log_id = " . (int) $log_id . "
+                AND status = 'success'";
+        $result = $db->sql_query_limit($sql, 1);
+        $row = $db->sql_fetchrow($result);
+        $db->sql_freeresult($result);
+
+        return !empty($row);
+    }
+
+    protected function add_sfs_log_ip_to_blacklist($config, array $row)
+    {
+        $ip = trim((string) $row['user_ip']);
+        if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP))
+        {
+            return false;
+        }
+
+        $current = isset($config['antispamguard_ip_blacklist']) ? (string) $config['antispamguard_ip_blacklist'] : '';
+        $updated = $this->normalize_ip_list($current . "\n" . $ip);
+
+        if ($updated === $this->normalize_ip_list($current))
+        {
+            return false;
+        }
+
+        $config->set('antispamguard_ip_blacklist', $updated);
+
+        return true;
+    }
+
+    protected function mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, $review_status, $local_action)
+    {
+        $data = array(
+            'review_status' => (string) $review_status,
+            'reviewed_at' => time(),
+            'reviewed_by' => isset($user->data['user_id']) ? (int) $user->data['user_id'] : 0,
+            'local_action' => (string) $local_action,
+        );
+
+        $sql = 'UPDATE ' . $table_prefix . 'antispamguard_sfs_log
+            SET ' . $db->sql_build_array('UPDATE', $data) . '
+            WHERE log_id = ' . (int) $log_id;
+        $db->sql_query($sql);
+    }
+
+    protected function get_sfs_row_class(array $row, $already_reported)
+    {
+        $review_status = isset($row['review_status']) ? (string) $row['review_status'] : '';
+        $local_action = isset($row['local_action']) ? (string) $row['local_action'] : '';
+
+        if ($review_status === 'allowed')
+        {
+            return 'asg-sfs-row-allowed';
+        }
+
+        if ($review_status === 'reported_blocked')
+        {
+            return 'asg-sfs-row-reported-blocked';
+        }
+
+        if ($local_action === 'blocked' || $review_status === 'blocked')
+        {
+            return 'asg-sfs-row-blocked';
+        }
+
+        if ($already_reported || $review_status === 'reported')
+        {
+            return 'asg-sfs-row-reported';
+        }
+
+        return '';
+    }
+
+    protected function format_sfs_review_status(array $row, $already_reported, $user)
+    {
+        $review_status = isset($row['review_status']) ? (string) $row['review_status'] : '';
+        $local_action = isset($row['local_action']) ? (string) $row['local_action'] : '';
+
+        if ($review_status === 'allowed')
+        {
+            return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_ALLOWED');
+        }
+
+        if ($review_status === 'reported_blocked')
+        {
+            return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_REPORTED_BLOCKED');
+        }
+
+        if ($local_action === 'blocked' || $review_status === 'blocked')
+        {
+            return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_BLOCKED_LOCAL');
+        }
+
+        if ($already_reported || $review_status === 'reported')
+        {
+            return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_REPORTED');
+        }
+
+        return $user->lang('ACP_ANTISPAMGUARD_SFS_STATUS_PENDING');
+    }
+
     protected function get_sfs_mode_url()
     {
         if (strpos($this->u_action, 'mode=') !== false)
@@ -1762,6 +2110,7 @@ class main_module
         $filter_reason = $request->variable('filter_reason', '');
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
+        $sfs_filter_review = $request->variable('sfs_filter_review', '');
         $start = max(0, $request->variable('start', 0));
         $per_page = 25;
 
@@ -1783,6 +2132,11 @@ class main_module
         if (!in_array($sfs_filter_blocked, array('', '1', '0'), true))
         {
             $sfs_filter_blocked = '';
+        }
+
+        if (!in_array($sfs_filter_review, array('', 'pending', 'reported', 'blocked', 'reported_blocked', 'allowed'), true))
+        {
+            $sfs_filter_review = '';
         }
 
         if ($request->is_set_post('export_csv'))
@@ -1890,6 +2244,11 @@ class main_module
             $filter_params .= '&amp;sfs_filter_blocked=' . urlencode($sfs_filter_blocked);
         }
 
+        if ($sfs_filter_review !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_review=' . urlencode($sfs_filter_review);
+        }
+
         $where_sql = $this->build_log_filter_where($db, $filter_form, $filter_reason);
 
         $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $table . $where_sql;
@@ -1939,6 +2298,18 @@ class main_module
         if ($sfs_filter_blocked !== '')
         {
             $sfs_where[] = 'blocked = ' . (int) $sfs_filter_blocked;
+        }
+
+        if ($sfs_filter_review !== '')
+        {
+            if ($sfs_filter_review === 'pending')
+            {
+                $sfs_where[] = "(review_status = '' OR review_status IS NULL)";
+            }
+            else
+            {
+                $sfs_where[] = "review_status = '" . $db->sql_escape($sfs_filter_review) . "'";
+            }
         }
 
         $sfs_where_sql = !empty($sfs_where) ? ' WHERE ' . implode(' AND ', $sfs_where) : '';
@@ -2031,6 +2402,10 @@ class main_module
                     . ', cached=' . (!empty($detail_data['cached']) ? $user->lang('YES') : $user->lang('NO'));
             }
 
+            $already_reported = $this->has_successful_sfs_submission($db, $table_prefix, (int) $sfs_row['log_id']);
+            $review_status_text = $this->format_sfs_review_status($sfs_row, $already_reported, $user);
+            $row_class = $this->get_sfs_row_class($sfs_row, $already_reported);
+
             $template->assign_block_vars('sfs_logs', array(
                 'ID' => (int) $sfs_row['log_id'],
                 'TIME' => $user->format_date((int) $sfs_row['created_at']),
@@ -2044,8 +2419,13 @@ class main_module
                 'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
                 'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
                 'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+                'REVIEW_STATUS' => $review_status_text,
+                'ROW_CLASS' => $row_class,
                 'U_REPORT_PREFILL' => $this->append_url_param($this->get_sfs_mode_url(), 'sfs_prefill_log_id', (int) $sfs_row['log_id']),
                 'S_CAN_PREFILL_REPORT' => ($sfs_row['user_ip'] !== '' || $sfs_row['user_email'] !== '' || $sfs_row['username'] !== ''),
+                'S_ALREADY_REPORTED' => $already_reported || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('reported', 'reported_blocked'), true)),
+                'S_LOCAL_BLOCKED' => (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] === 'blocked') || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('blocked', 'reported_blocked'), true)),
+                'S_ALLOWED' => isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] === 'allowed',
             ));
         }
         $db->sql_freeresult($result);
@@ -2096,8 +2476,9 @@ class main_module
             'TOTAL_SFS_LOGS_FILTERED' => $total_sfs_logs_filtered,
             'SFS_FILTER_ACTION' => $sfs_filter_action,
             'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
+            'SFS_FILTER_REVIEW' => $sfs_filter_review,
             'S_FILTER_ACTIVE' => ($filter_form !== '' || $filter_reason !== ''),
-            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== ''),
+            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== ''),
             'U_ACTION' => $this->u_action,
             'FILTER_FORM' => $filter_form,
             'FILTER_REASON' => $filter_reason,
@@ -2678,6 +3059,7 @@ class main_module
     {
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
+        $sfs_filter_review = $request->variable('sfs_filter_review', '');
 
         if (!in_array($sfs_filter_action, array('', 'block', 'soft', 'log_only', 'whitelist', 'disabled'), true))
         {
@@ -2687,6 +3069,11 @@ class main_module
         if (!in_array($sfs_filter_blocked, array('', '1', '0'), true))
         {
             $sfs_filter_blocked = '';
+        }
+
+        if (!in_array($sfs_filter_review, array('', 'pending', 'reported', 'blocked', 'reported_blocked', 'allowed'), true))
+        {
+            $sfs_filter_review = '';
         }
 
         $filename = 'antispamguard_sfs_logs_' . gmdate('Ymd_His') . '.csv';
@@ -2713,6 +3100,10 @@ class main_module
             'blocked',
             'action_mode',
             'matched',
+            'review_status',
+            'reviewed_at',
+            'reviewed_by',
+            'local_action',
             'details',
         ));
 
@@ -2721,6 +3112,18 @@ class main_module
         if ($sfs_filter_blocked !== '')
         {
             $where[] = 'blocked = ' . (int) $sfs_filter_blocked;
+        }
+
+        if ($sfs_filter_review !== '')
+        {
+            if ($sfs_filter_review === 'pending')
+            {
+                $where[] = "(review_status = '' OR review_status IS NULL)";
+            }
+            else
+            {
+                $where[] = "review_status = '" . $db->sql_escape($sfs_filter_review) . "'";
+            }
         }
 
         $where_sql = !empty($where) ? ' WHERE ' . implode(' AND ', $where) : '';
@@ -2754,6 +3157,10 @@ class main_module
                 !empty($row['blocked']) ? 1 : 0,
                 $action_mode,
                 $matched,
+                isset($row['review_status']) ? $row['review_status'] : '',
+                !empty($row['reviewed_at']) ? $user->format_date((int) $row['reviewed_at']) : '',
+                isset($row['reviewed_by']) ? (int) $row['reviewed_by'] : 0,
+                isset($row['local_action']) ? $row['local_action'] : '',
                 $row['details_json'],
             ));
         }
