@@ -125,17 +125,8 @@ class main_module
             $removed_cache = (int) $db->sql_affectedrows();
 
             $retention_days = isset($config['antispamguard_sfs_log_retention_days']) ? (int) $config['antispamguard_sfs_log_retention_days'] : 90;
-            $removed_logs = 0;
-
-            if ($retention_days > 0)
-            {
-                $cutoff = $now - ($retention_days * 86400);
-
-                $sql = 'DELETE FROM ' . $table_prefix . 'antispamguard_sfs_log
-                    WHERE created_at < ' . (int) $cutoff;
-                $db->sql_query($sql);
-                $removed_logs = (int) $db->sql_affectedrows();
-            }
+            $preserve_reviewed = !empty($config['antispamguard_sfs_log_preserve_reviewed']);
+            $removed_logs = $this->prune_old_sfs_logs($db, $table_prefix, $retention_days, $preserve_reviewed);
 
             $config->set('antispamguard_sfs_cleanup_last_gc', $now, false);
 
@@ -201,7 +192,7 @@ class main_module
 
             $summary = $this->handle_sfs_moderation_action($db, $request, $user, $config, $table_prefix);
 
-            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_MODERATION_DONE', $summary['reported'], $summary['blocked'], $summary['allowed'], $summary['skipped'], $summary['failed']) . adm_back_link($this->u_action));
+            trigger_error($user->lang('ACP_ANTISPAMGUARD_SFS_MODERATION_DONE', $summary['reported'], $summary['blocked'], $summary['already_blocked'], $summary['allowed'], $summary['cleared'], $summary['skipped'], $summary['failed']) . adm_back_link($this->u_action));
         }
 
         if ($request->is_set_post('remove_sfs_api_key'))
@@ -491,14 +482,23 @@ class main_module
             $config->set('antispamguard_sfs_log_all_checks', $request->variable('antispamguard_sfs_log_all_checks', 1));
             $config->set('antispamguard_sfs_debug_log_all', $request->variable('antispamguard_sfs_debug_log_all', 0));
             $config->set('antispamguard_sfs_debug_localhost_only', $request->variable('antispamguard_sfs_debug_localhost_only', 1));
+            $sfs_debug_duration = $request->variable('antispamguard_sfs_debug_duration', 0);
+            if (!in_array((int) $sfs_debug_duration, array(0, 600, 1800, 3600, 86400), true))
+            {
+                $sfs_debug_duration = 0;
+            }
+            $config->set('antispamguard_sfs_debug_until', (!empty($request->variable('antispamguard_sfs_debug_log_all', 0)) && (int) $sfs_debug_duration > 0) ? time() + (int) $sfs_debug_duration : 0);
             $config->set('antispamguard_sfs_cleanup_interval', max(3600, $request->variable('antispamguard_sfs_cleanup_interval', 86400)));
             $config->set('antispamguard_sfs_log_retention_days', max(0, $request->variable('antispamguard_sfs_log_retention_days', 90)));
+            $config->set('antispamguard_sfs_log_preserve_reviewed', $request->variable('antispamguard_sfs_log_preserve_reviewed', 0));
             $config->set('antispamguard_sfs_cache_ttl', max(60, $request->variable('antispamguard_sfs_cache_ttl', 86400)));
             $config->set('antispamguard_sfs_whitelist_ips', $request->variable('antispamguard_sfs_whitelist_ips', '', true));
             $config->set('antispamguard_sfs_whitelist_emails', $request->variable('antispamguard_sfs_whitelist_emails', '', true));
             $config->set('antispamguard_sfs_whitelist_usernames', $request->variable('antispamguard_sfs_whitelist_usernames', '', true));
             $config->set('antispamguard_ip_reputation_weight_sfs', max(0, $request->variable('antispamguard_ip_reputation_weight_sfs', 5)));
             $config->set('antispamguard_decision_weight_sfs', max(0, $request->variable('antispamguard_decision_weight_sfs', 50)));
+            $config->set('antispamguard_random_gmail_enabled', $request->variable('antispamguard_random_gmail_enabled', 1));
+            $config->set('antispamguard_random_gmail_register_enabled', $request->variable('antispamguard_random_gmail_register_enabled', 0));
 
             $sfs_action_mode = $request->variable('antispamguard_sfs_action_mode', 'block');
             if (!in_array($sfs_action_mode, array('block', 'soft', 'log_only'), true))
@@ -695,6 +695,8 @@ class main_module
             'S_SETTINGS' => true,
             'SFS_DEBUG_LOG_ALL' => !empty($config['antispamguard_sfs_debug_log_all']),
             'SFS_DEBUG_LOCALHOST_ONLY' => !isset($config['antispamguard_sfs_debug_localhost_only']) || !empty($config['antispamguard_sfs_debug_localhost_only']),
+            'SFS_DEBUG_UNTIL' => isset($config['antispamguard_sfs_debug_until']) ? (int) $config['antispamguard_sfs_debug_until'] : 0,
+            'SFS_DEBUG_UNTIL_FORMATTED' => !empty($config['antispamguard_sfs_debug_until']) ? $user->format_date((int) $config['antispamguard_sfs_debug_until']) : '',
             'SFS_LOG_ALL_CHECKS' => !isset($config['antispamguard_sfs_log_all_checks']) || !empty($config['antispamguard_sfs_log_all_checks']),
             'SFS_CACHE_TTL' => isset($config['antispamguard_sfs_cache_ttl']) ? (int) $config['antispamguard_sfs_cache_ttl'] : 86400,
             'AUTOBAN_ENABLED' => !empty($config['antispamguard_autoban_enabled']),
@@ -727,6 +729,7 @@ class main_module
             'SFS_LOGS_TOTAL' => $sfs_logs_total,
             'SFS_CLEANUP_INTERVAL' => isset($config['antispamguard_sfs_cleanup_interval']) ? (int) $config['antispamguard_sfs_cleanup_interval'] : 86400,
             'SFS_LOG_RETENTION_DAYS' => isset($config['antispamguard_sfs_log_retention_days']) ? (int) $config['antispamguard_sfs_log_retention_days'] : 90,
+            'SFS_LOG_PRESERVE_REVIEWED' => !empty($config['antispamguard_sfs_log_preserve_reviewed']),
             'SFS_CLEANUP_LAST_GC' => !empty($config['antispamguard_sfs_cleanup_last_gc']) ? $user->format_date((int) $config['antispamguard_sfs_cleanup_last_gc']) : $user->lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_NEVER'),
             'ANTISPAMGUARD_ENABLED' => !empty($config['antispamguard_enabled']),
             'ANTISPAMGUARD_REGISTER_NOTICE_ENABLED' => !empty($config['antispamguard_register_notice_enabled']),
@@ -758,6 +761,8 @@ class main_module
             'ANTISPAMGUARD_IMPORT_SETTINGS' => '',
             'ANTISPAMGUARD_SFS_ENABLED' => !empty($config['antispamguard_sfs_enabled']),
             'SFS_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? (string) $config['antispamguard_sfs_action_mode'] : 'block',
+            'RANDOM_GMAIL_CONTACT_ENABLED' => !isset($config['antispamguard_random_gmail_enabled']) || !empty($config['antispamguard_random_gmail_enabled']),
+            'RANDOM_GMAIL_REGISTER_ENABLED' => !empty($config['antispamguard_random_gmail_register_enabled']),
             'SFS_API_KEY_CONFIGURED' => !empty($config['antispamguard_sfs_api_key']),
             'SFS_API_KEY_MASKED' => !empty($config['antispamguard_sfs_api_key']) ? $this->mask_secret((string) $config['antispamguard_sfs_api_key']) : '',
             'ANTISPAMGUARD_SFS_LOG_ENABLED' => !isset($config['antispamguard_sfs_log_enabled']) || !empty($config['antispamguard_sfs_log_enabled']),
@@ -798,6 +803,8 @@ class main_module
             'U_ACTION' => $this->u_action,
             'SFS_DEBUG_LOG_ALL' => !empty($config['antispamguard_sfs_debug_log_all']),
             'SFS_DEBUG_LOCALHOST_ONLY' => !isset($config['antispamguard_sfs_debug_localhost_only']) || !empty($config['antispamguard_sfs_debug_localhost_only']),
+            'SFS_DEBUG_UNTIL' => isset($config['antispamguard_sfs_debug_until']) ? (int) $config['antispamguard_sfs_debug_until'] : 0,
+            'SFS_DEBUG_UNTIL_FORMATTED' => !empty($config['antispamguard_sfs_debug_until']) ? $user->format_date((int) $config['antispamguard_sfs_debug_until']) : '',
             'SFS_LOG_ALL_CHECKS' => !isset($config['antispamguard_sfs_log_all_checks']) || !empty($config['antispamguard_sfs_log_all_checks']),
             'SFS_CACHE_TTL' => isset($config['antispamguard_sfs_cache_ttl']) ? (int) $config['antispamguard_sfs_cache_ttl'] : 86400,
             'SFS_CACHE_TOTAL' => $sfs_cache_total,
@@ -805,9 +812,12 @@ class main_module
             'SFS_LOGS_TOTAL' => $sfs_logs_total,
             'SFS_CLEANUP_INTERVAL' => isset($config['antispamguard_sfs_cleanup_interval']) ? (int) $config['antispamguard_sfs_cleanup_interval'] : 86400,
             'SFS_LOG_RETENTION_DAYS' => isset($config['antispamguard_sfs_log_retention_days']) ? (int) $config['antispamguard_sfs_log_retention_days'] : 90,
+            'SFS_LOG_PRESERVE_REVIEWED' => !empty($config['antispamguard_sfs_log_preserve_reviewed']),
             'SFS_CLEANUP_LAST_GC' => !empty($config['antispamguard_sfs_cleanup_last_gc']) ? $user->format_date((int) $config['antispamguard_sfs_cleanup_last_gc']) : $user->lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_NEVER'),
             'ANTISPAMGUARD_SFS_ENABLED' => !empty($config['antispamguard_sfs_enabled']),
             'SFS_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? (string) $config['antispamguard_sfs_action_mode'] : 'block',
+            'RANDOM_GMAIL_CONTACT_ENABLED' => !isset($config['antispamguard_random_gmail_enabled']) || !empty($config['antispamguard_random_gmail_enabled']),
+            'RANDOM_GMAIL_REGISTER_ENABLED' => !empty($config['antispamguard_random_gmail_register_enabled']),
             'SFS_API_KEY_CONFIGURED' => !empty($config['antispamguard_sfs_api_key']),
             'SFS_API_KEY_MASKED' => !empty($config['antispamguard_sfs_api_key']) ? $this->mask_secret((string) $config['antispamguard_sfs_api_key']) : '',
             'SFS_SUBMIT_PREFILL_IP' => $sfs_submit_prefill['ip'],
@@ -839,6 +849,8 @@ class main_module
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
         $sfs_filter_review = $request->variable('sfs_filter_review', '');
+        $sfs_filter_query = trim($request->variable('sfs_filter_query', '', true));
+        $sfs_filter_query = $this->truncate_for_storage($sfs_filter_query, 100);
         $sfs_start = max(0, $request->variable('sfs_start', 0));
         $sfs_per_page = 25;
 
@@ -865,6 +877,11 @@ class main_module
             $sfs_where[] = 'blocked = ' . (int) $sfs_filter_blocked;
         }
 
+        if ($sfs_filter_action !== '')
+        {
+            $sfs_where[] = "action_mode = '" . $db->sql_escape($sfs_filter_action) . "'";
+        }
+
         if ($sfs_filter_review !== '')
         {
             if ($sfs_filter_review === 'pending')
@@ -875,6 +892,12 @@ class main_module
             {
                 $sfs_where[] = "review_status = '" . $db->sql_escape($sfs_filter_review) . "'";
             }
+        }
+
+        if ($sfs_filter_query !== '')
+        {
+            $sfs_like = $db->sql_like_expression($db->get_any_char() . $db->sql_escape($sfs_filter_query) . $db->get_any_char());
+            $sfs_where[] = '(user_ip ' . $sfs_like . ' OR user_email ' . $sfs_like . ' OR username ' . $sfs_like . ')';
         }
 
         $sfs_where_sql = !empty($sfs_where) ? ' WHERE ' . implode(' AND ', $sfs_where) : '';
@@ -889,26 +912,18 @@ class main_module
         $sfs_rows_rendered = 0;
         $sfs_seen_filtered = 0;
 
-        if ($sfs_filter_action === '')
-        {
-            $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
-            $result = $db->sql_query($sql);
-            $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
-            $db->sql_freeresult($result);
+        $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+        $result = $db->sql_query($sql);
+        $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
 
-            if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
-            {
-                $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
-            }
-
-            $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
-            $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
-        }
-        else
+        if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
         {
-            $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
-            $result = $db->sql_query($sql);
+            $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
         }
+
+        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
+        $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
 
         while ($sfs_row = $db->sql_fetchrow($result))
         {
@@ -920,33 +935,12 @@ class main_module
 
             $detail_parts = array();
             $decision_meta = isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
-            $action_mode = isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block';
+            $action_mode = (isset($sfs_row['action_mode']) && (string) $sfs_row['action_mode'] !== '') ? (string) $sfs_row['action_mode'] : (isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block');
             $matched = !empty($decision_meta['matched']);
-
-            if ($sfs_filter_action !== '' && $action_mode !== $sfs_filter_action)
-            {
-                continue;
-            }
-
-            if ($sfs_filter_action !== '')
-            {
-                $total_sfs_logs_filtered++;
-
-                if ($sfs_seen_filtered < $sfs_start)
-                {
-                    $sfs_seen_filtered++;
-                    continue;
-                }
-            }
 
             if ($sfs_rows_rendered >= $sfs_per_page)
             {
-                if ($sfs_filter_action === '')
-                {
-                    break;
-                }
-
-                continue;
+                break;
             }
 
             $has_sfs_logs = true;
@@ -990,6 +984,7 @@ class main_module
                 'S_ALREADY_REPORTED' => $already_reported || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('reported', 'reported_blocked'), true)),
                 'S_LOCAL_BLOCKED' => (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] === 'blocked') || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('blocked', 'reported_blocked'), true)),
                 'S_ALLOWED' => isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] === 'allowed',
+                'S_REVIEWED' => ((isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] !== '') || (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] !== '')),
             ));
         }
         $db->sql_freeresult($result);
@@ -1007,10 +1002,15 @@ class main_module
         {
             $filter_params .= '&amp;sfs_filter_review=' . urlencode($sfs_filter_review);
         }
+        if ($sfs_filter_query !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_query=' . urlencode($sfs_filter_query);
+        }
 
         $base_url = $this->u_action . $filter_params;
         $sfs_pagination = $this->build_pagination($base_url, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start, 'sfs_start');
         $sfs_page_number = $this->build_page_number($user, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start);
+        $sfs_review_stats = $this->get_sfs_review_stats($db, $table_prefix);
 
         $template->assign_vars(array(
             'S_HAS_SFS_LOGS' => $has_sfs_logs,
@@ -1019,10 +1019,59 @@ class main_module
             'SFS_FILTER_ACTION' => $sfs_filter_action,
             'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
             'SFS_FILTER_REVIEW' => $sfs_filter_review,
-            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== ''),
+            'SFS_FILTER_QUERY' => $sfs_filter_query,
+            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== '' || $sfs_filter_query !== ''),
+            'SFS_REVIEW_TOTAL' => $sfs_review_stats['total'],
+            'SFS_REVIEW_PENDING' => $sfs_review_stats['pending'],
+            'SFS_REVIEW_REPORTED' => $sfs_review_stats['reported'],
+            'SFS_REVIEW_BLOCKED' => $sfs_review_stats['blocked'],
+            'SFS_REVIEW_REPORTED_BLOCKED' => $sfs_review_stats['reported_blocked'],
+            'SFS_REVIEW_ALLOWED' => $sfs_review_stats['allowed'],
             'SFS_PAGINATION' => $sfs_pagination,
             'SFS_PAGE_NUMBER' => $sfs_page_number,
         ));
+    }
+
+    protected function get_sfs_review_stats($db, $table_prefix)
+    {
+        $stats = array(
+            'total' => 0,
+            'pending' => 0,
+            'reported' => 0,
+            'blocked' => 0,
+            'reported_blocked' => 0,
+            'allowed' => 0,
+        );
+
+        $table = $table_prefix . 'antispamguard_sfs_log';
+        $sql = 'SELECT review_status, COUNT(log_id) AS total_rows
+            FROM ' . $table . '
+            GROUP BY review_status';
+        $result = $db->sql_query($sql);
+
+        while ($row = $db->sql_fetchrow($result))
+        {
+            $status = isset($row['review_status']) ? (string) $row['review_status'] : '';
+            $count = (int) $row['total_rows'];
+            $stats['total'] += $count;
+
+            if ($status === '' || $status === null)
+            {
+                $stats['pending'] += $count;
+            }
+            else if (isset($stats[$status]))
+            {
+                $stats[$status] += $count;
+            }
+            else
+            {
+                $stats['pending'] += $count;
+            }
+        }
+
+        $db->sql_freeresult($result);
+
+        return $stats;
     }
 
     protected function is_sfs_moderation_action($request)
@@ -1031,9 +1080,11 @@ class main_module
             'report_sfs_log',
             'block_sfs_log',
             'allow_sfs_log',
+            'clear_sfs_review',
             'bulk_report_sfs_logs',
             'bulk_block_sfs_logs',
             'bulk_allow_sfs_logs',
+            'bulk_clear_sfs_review',
             'bulk_report_block_sfs_logs',
         );
 
@@ -1053,7 +1104,9 @@ class main_module
         $summary = array(
             'reported' => 0,
             'blocked' => 0,
+            'already_blocked' => 0,
             'allowed' => 0,
+            'cleared' => 0,
             'skipped' => 0,
             'failed' => 0,
         );
@@ -1076,6 +1129,11 @@ class main_module
             $mode = 'allow';
             $ids = array($request->variable('allow_sfs_log', 0));
         }
+        else if ($request->is_set_post('clear_sfs_review'))
+        {
+            $mode = 'clear';
+            $ids = array($request->variable('clear_sfs_review', 0));
+        }
         else if ($request->is_set_post('bulk_report_block_sfs_logs'))
         {
             $mode = 'report_block';
@@ -1094,6 +1152,11 @@ class main_module
         else if ($request->is_set_post('bulk_allow_sfs_logs'))
         {
             $mode = 'allow';
+            $ids = $request->variable('sfs_selected_logs', array(0));
+        }
+        else if ($request->is_set_post('bulk_clear_sfs_review'))
+        {
+            $mode = 'clear';
             $ids = $request->variable('sfs_selected_logs', array(0));
         }
 
@@ -1122,9 +1185,17 @@ class main_module
                 continue;
             }
 
+            if ($mode === 'clear')
+            {
+                $this->clear_sfs_log_review($db, $table_prefix, $log_id, $user);
+                $summary['cleared']++;
+                continue;
+            }
+
             $reported = false;
             $was_reported = false;
             $blocked = false;
+            $already_blocked = false;
 
             if ($mode === 'report' || $mode === 'report_block')
             {
@@ -1161,10 +1232,16 @@ class main_module
 
             if ($mode === 'block' || $mode === 'report_block')
             {
-                $blocked = $this->add_sfs_log_ip_to_blacklist($config, $row);
-                if ($blocked)
+                $block_status = $this->add_sfs_log_ip_to_blacklist($config, $row);
+                if ($block_status === 'added')
                 {
+                    $blocked = true;
                     $summary['blocked']++;
+                }
+                else if ($block_status === 'exists')
+                {
+                    $already_blocked = true;
+                    $summary['already_blocked']++;
                 }
                 else
                 {
@@ -1181,14 +1258,14 @@ class main_module
             }
             else if ($mode === 'block')
             {
-                if ($blocked)
+                if ($blocked || $already_blocked)
                 {
                     $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'blocked', 'blocked');
                 }
             }
             else if ($mode === 'report_block')
             {
-                if (($reported || $was_reported) && $blocked)
+                if (($reported || $was_reported) && ($blocked || $already_blocked))
                 {
                     $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported_blocked', 'blocked');
                 }
@@ -1196,7 +1273,7 @@ class main_module
                 {
                     $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'reported', (string) $row['local_action']);
                 }
-                else if ($blocked)
+                else if ($blocked || $already_blocked)
                 {
                     $this->mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, 'blocked', 'blocked');
                 }
@@ -1240,24 +1317,29 @@ class main_module
         $ip = trim((string) $row['user_ip']);
         if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP))
         {
-            return false;
+            return 'invalid';
         }
 
         $current = isset($config['antispamguard_ip_blacklist']) ? (string) $config['antispamguard_ip_blacklist'] : '';
+        $current_normalized = $this->normalize_ip_list($current);
         $updated = $this->normalize_ip_list($current . "\n" . $ip);
 
-        if ($updated === $this->normalize_ip_list($current))
+        if ($updated === $current_normalized)
         {
-            return false;
+            return 'exists';
         }
 
         $config->set('antispamguard_ip_blacklist', $updated);
 
-        return true;
+        return 'added';
     }
 
     protected function mark_sfs_log_reviewed($db, $table_prefix, $log_id, $user, $review_status, $local_action)
     {
+        $old_row = $this->get_sfs_log_row($db, $table_prefix, $log_id);
+        $old_review_status = $old_row && isset($old_row['review_status']) ? (string) $old_row['review_status'] : '';
+        $old_local_action = $old_row && isset($old_row['local_action']) ? (string) $old_row['local_action'] : '';
+
         $data = array(
             'review_status' => (string) $review_status,
             'reviewed_at' => time(),
@@ -1269,6 +1351,80 @@ class main_module
             SET ' . $db->sql_build_array('UPDATE', $data) . '
             WHERE log_id = ' . (int) $log_id;
         $db->sql_query($sql);
+
+        $this->record_sfs_review_audit($db, $table_prefix, $log_id, $user, (string) $review_status, $old_review_status, (string) $review_status, $old_local_action, (string) $local_action);
+    }
+
+    protected function clear_sfs_log_review($db, $table_prefix, $log_id, $user = null)
+    {
+        if ($user === null)
+        {
+            global $user;
+        }
+
+        $old_row = $this->get_sfs_log_row($db, $table_prefix, $log_id);
+        $old_review_status = $old_row && isset($old_row['review_status']) ? (string) $old_row['review_status'] : '';
+        $old_local_action = $old_row && isset($old_row['local_action']) ? (string) $old_row['local_action'] : '';
+
+        $data = array(
+            'review_status' => '',
+            'reviewed_at' => 0,
+            'reviewed_by' => 0,
+            'local_action' => '',
+        );
+
+        $sql = 'UPDATE ' . $table_prefix . 'antispamguard_sfs_log
+            SET ' . $db->sql_build_array('UPDATE', $data) . '
+            WHERE log_id = ' . (int) $log_id;
+        $db->sql_query($sql);
+
+        $this->record_sfs_review_audit($db, $table_prefix, $log_id, $user, 'clear', $old_review_status, '', $old_local_action, '');
+    }
+
+    protected function record_sfs_review_audit($db, $table_prefix, $log_id, $user, $action, $old_review_status, $new_review_status, $old_local_action, $new_local_action, $note = '')
+    {
+        $table = $table_prefix . 'antispamguard_sfs_review_log';
+
+        $sql_ary = array(
+            'sfs_log_id' => (int) $log_id,
+            'action' => (string) $action,
+            'old_review_status' => (string) $old_review_status,
+            'new_review_status' => (string) $new_review_status,
+            'old_local_action' => (string) $old_local_action,
+            'new_local_action' => (string) $new_local_action,
+            'admin_user_id' => isset($user->data['user_id']) ? (int) $user->data['user_id'] : 0,
+            'created_at' => time(),
+            'note' => (string) $note,
+        );
+
+        $sql = 'INSERT INTO ' . $table . ' ' . $db->sql_build_array('INSERT', $sql_ary);
+        $db->sql_query($sql);
+    }
+
+    protected function prune_old_sfs_logs($db, $table_prefix, $retention_days, $preserve_reviewed = true)
+    {
+        $retention_days = (int) $retention_days;
+
+        if ($retention_days <= 0)
+        {
+            return 0;
+        }
+
+        $table = $table_prefix . 'antispamguard_sfs_log';
+        $submit_table = $table_prefix . 'antispamguard_sfs_submit_log';
+        $cutoff = time() - ($retention_days * 86400);
+        $where = 'created_at < ' . (int) $cutoff;
+
+        if ($preserve_reviewed)
+        {
+            $where .= " AND (review_status = '' OR review_status IS NULL)";
+            $where .= ' AND log_id NOT IN (SELECT source_log_id FROM ' . $submit_table . " WHERE source = 'sfs_log' AND status = 'success')";
+        }
+
+        $sql = 'DELETE FROM ' . $table . ' WHERE ' . $where;
+        $db->sql_query($sql);
+
+        return (int) $db->sql_affectedrows();
     }
 
     protected function get_sfs_row_class(array $row, $already_reported)
@@ -2111,6 +2267,8 @@ class main_module
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
         $sfs_filter_review = $request->variable('sfs_filter_review', '');
+        $sfs_filter_query = trim($request->variable('sfs_filter_query', '', true));
+        $sfs_filter_query = $this->truncate_for_storage($sfs_filter_query, 100);
         $start = max(0, $request->variable('start', 0));
         $per_page = 25;
 
@@ -2249,6 +2407,11 @@ class main_module
             $filter_params .= '&amp;sfs_filter_review=' . urlencode($sfs_filter_review);
         }
 
+        if ($sfs_filter_query !== '')
+        {
+            $filter_params .= '&amp;sfs_filter_query=' . urlencode($sfs_filter_query);
+        }
+
         $where_sql = $this->build_log_filter_where($db, $filter_form, $filter_reason);
 
         $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $table . $where_sql;
@@ -2300,6 +2463,11 @@ class main_module
             $sfs_where[] = 'blocked = ' . (int) $sfs_filter_blocked;
         }
 
+        if ($sfs_filter_action !== '')
+        {
+            $sfs_where[] = "action_mode = '" . $db->sql_escape($sfs_filter_action) . "'";
+        }
+
         if ($sfs_filter_review !== '')
         {
             if ($sfs_filter_review === 'pending')
@@ -2312,6 +2480,12 @@ class main_module
             }
         }
 
+        if ($sfs_filter_query !== '')
+        {
+            $sfs_like = $db->sql_like_expression($db->get_any_char() . $db->sql_escape($sfs_filter_query) . $db->get_any_char());
+            $sfs_where[] = '(user_ip ' . $sfs_like . ' OR user_email ' . $sfs_like . ' OR username ' . $sfs_like . ')';
+        }
+
         $sfs_where_sql = !empty($sfs_where) ? ' WHERE ' . implode(' AND ', $sfs_where) : '';
 
         $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table;
@@ -2319,32 +2493,20 @@ class main_module
         $total_sfs_logs = (int) $db->sql_fetchfield('total_logs');
         $db->sql_freeresult($result);
 
-        if ($sfs_filter_action === '')
-        {
-            $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
-            $result = $db->sql_query($sql);
-            $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
-            $db->sql_freeresult($result);
+        $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+        $result = $db->sql_query($sql);
+        $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+        $db->sql_freeresult($result);
 
-            if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
-            {
-                $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
-            }
-
-            $sql = 'SELECT *
-                FROM ' . $sfs_table . $sfs_where_sql . '
-                ORDER BY created_at DESC';
-            $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
-        }
-        else
+        if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
         {
-            // action_mode is stored inside details_json, so it must be filtered in PHP.
-            // Iterate the result set once to count accurately and render the requested page.
-            $sql = 'SELECT *
-                FROM ' . $sfs_table . $sfs_where_sql . '
-                ORDER BY created_at DESC';
-            $result = $db->sql_query($sql);
+            $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
         }
+
+        $sql = 'SELECT *
+            FROM ' . $sfs_table . $sfs_where_sql . '
+            ORDER BY created_at DESC';
+        $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
 
         while ($sfs_row = $db->sql_fetchrow($result))
         {
@@ -2356,33 +2518,12 @@ class main_module
 
             $detail_parts = array();
             $decision_meta = isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
-            $action_mode = isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block';
+            $action_mode = (isset($sfs_row['action_mode']) && (string) $sfs_row['action_mode'] !== '') ? (string) $sfs_row['action_mode'] : (isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block');
             $matched = !empty($decision_meta['matched']);
-
-            if ($sfs_filter_action !== '' && $action_mode !== $sfs_filter_action)
-            {
-                continue;
-            }
-
-            if ($sfs_filter_action !== '')
-            {
-                $total_sfs_logs_filtered++;
-
-                if ($sfs_seen_filtered < $sfs_start)
-                {
-                    $sfs_seen_filtered++;
-                    continue;
-                }
-            }
 
             if ($sfs_rows_rendered >= $sfs_per_page)
             {
-                if ($sfs_filter_action === '')
-                {
-                    break;
-                }
-
-                continue;
+                break;
             }
 
             $has_sfs_logs = true;
@@ -2426,14 +2567,10 @@ class main_module
                 'S_ALREADY_REPORTED' => $already_reported || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('reported', 'reported_blocked'), true)),
                 'S_LOCAL_BLOCKED' => (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] === 'blocked') || (isset($sfs_row['review_status']) && in_array((string) $sfs_row['review_status'], array('blocked', 'reported_blocked'), true)),
                 'S_ALLOWED' => isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] === 'allowed',
+                'S_REVIEWED' => ((isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] !== '') || (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] !== '')),
             ));
         }
         $db->sql_freeresult($result);
-
-        if ($sfs_filter_action !== '' && $sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
-        {
-            $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
-        }
 
         $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
         $has_ip_reputation = false;
@@ -2466,6 +2603,7 @@ class main_module
         $page_number = $this->build_page_number($user, $total_logs, $per_page, $start);
         $sfs_pagination = $this->build_pagination($base_url, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start, 'sfs_start');
         $sfs_page_number = $this->build_page_number($user, $total_sfs_logs_filtered, $sfs_per_page, $sfs_start);
+        $sfs_review_stats = $this->get_sfs_review_stats($db, $table_prefix);
 
         $template->assign_vars(array(
             'S_LOGS' => true,
@@ -2477,8 +2615,15 @@ class main_module
             'SFS_FILTER_ACTION' => $sfs_filter_action,
             'SFS_FILTER_BLOCKED' => $sfs_filter_blocked,
             'SFS_FILTER_REVIEW' => $sfs_filter_review,
+            'SFS_FILTER_QUERY' => $sfs_filter_query,
             'S_FILTER_ACTIVE' => ($filter_form !== '' || $filter_reason !== ''),
-            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== ''),
+            'S_SFS_FILTER_ACTIVE' => ($sfs_filter_action !== '' || $sfs_filter_blocked !== '' || $sfs_filter_review !== '' || $sfs_filter_query !== ''),
+            'SFS_REVIEW_TOTAL' => $sfs_review_stats['total'],
+            'SFS_REVIEW_PENDING' => $sfs_review_stats['pending'],
+            'SFS_REVIEW_REPORTED' => $sfs_review_stats['reported'],
+            'SFS_REVIEW_BLOCKED' => $sfs_review_stats['blocked'],
+            'SFS_REVIEW_REPORTED_BLOCKED' => $sfs_review_stats['reported_blocked'],
+            'SFS_REVIEW_ALLOWED' => $sfs_review_stats['allowed'],
             'U_ACTION' => $this->u_action,
             'FILTER_FORM' => $filter_form,
             'FILTER_REASON' => $filter_reason,
@@ -3060,6 +3205,8 @@ class main_module
         $sfs_filter_action = $request->variable('sfs_filter_action', '');
         $sfs_filter_blocked = $request->variable('sfs_filter_blocked', '');
         $sfs_filter_review = $request->variable('sfs_filter_review', '');
+        $sfs_filter_query = trim($request->variable('sfs_filter_query', '', true));
+        $sfs_filter_query = $this->truncate_for_storage($sfs_filter_query, 100);
 
         if (!in_array($sfs_filter_action, array('', 'block', 'soft', 'log_only', 'whitelist', 'disabled'), true))
         {
@@ -3114,6 +3261,11 @@ class main_module
             $where[] = 'blocked = ' . (int) $sfs_filter_blocked;
         }
 
+        if ($sfs_filter_action !== '')
+        {
+            $where[] = "action_mode = '" . $db->sql_escape($sfs_filter_action) . "'";
+        }
+
         if ($sfs_filter_review !== '')
         {
             if ($sfs_filter_review === 'pending')
@@ -3124,6 +3276,12 @@ class main_module
             {
                 $where[] = "review_status = '" . $db->sql_escape($sfs_filter_review) . "'";
             }
+        }
+
+        if ($sfs_filter_query !== '')
+        {
+            $sfs_like = $db->sql_like_expression($db->get_any_char() . $db->sql_escape($sfs_filter_query) . $db->get_any_char());
+            $where[] = '(user_ip ' . $sfs_like . ' OR user_email ' . $sfs_like . ' OR username ' . $sfs_like . ')';
         }
 
         $where_sql = !empty($where) ? ' WHERE ' . implode(' AND ', $where) : '';
@@ -3137,13 +3295,8 @@ class main_module
         {
             $details = json_decode($row['details_json'], true);
             $decision_meta = is_array($details) && isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
-            $action_mode = isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block';
+            $action_mode = (isset($row['action_mode']) && (string) $row['action_mode'] !== '') ? (string) $row['action_mode'] : (isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block');
             $matched = !empty($decision_meta['matched']) ? 1 : 0;
-
-            if ($sfs_filter_action !== '' && $action_mode !== $sfs_filter_action)
-            {
-                continue;
-            }
 
             fputcsv($output, array(
                 (int) $row['log_id'],

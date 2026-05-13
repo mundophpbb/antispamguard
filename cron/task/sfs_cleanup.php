@@ -35,8 +35,16 @@ class sfs_cleanup extends \phpbb\cron\task\base
         {
             $cutoff = $now - ($retention_days * 86400);
 
-            $sql = 'DELETE FROM ' . $log_table . '
-                WHERE created_at < ' . (int) $cutoff;
+            $where = 'created_at < ' . (int) $cutoff;
+
+            if (!empty($this->config['antispamguard_sfs_log_preserve_reviewed']))
+            {
+                $submit_table = $this->table_prefix . 'antispamguard_sfs_submit_log';
+                $where .= " AND (review_status = '' OR review_status IS NULL)";
+                $where .= ' AND log_id NOT IN (SELECT source_log_id FROM ' . $submit_table . " WHERE source = 'sfs_log' AND status = 'success')";
+            }
+
+            $sql = 'DELETE FROM ' . $log_table . ' WHERE ' . $where;
             $this->db->sql_query($sql);
         }
 

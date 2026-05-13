@@ -37,6 +37,7 @@
 -- were never created, were already removed, or belong to an older/newer install.
 -- ---------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS phpbb_antispamguard_sfs_review_log;
 DROP TABLE IF EXISTS phpbb_antispamguard_sfs_submit_log;
 DROP TABLE IF EXISTS phpbb_antispamguard_alerts;
 DROP TABLE IF EXISTS phpbb_antispamguard_activity_log;

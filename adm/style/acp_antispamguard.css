@@ -249,3 +249,11 @@ tr.asg-sfs-row-reported-blocked td {
 tr.asg-sfs-row-allowed td {
     background-color: #edf8ed !important;
 }
+
+.asg-sfs-review-stats {
+    margin: 8px 0 12px;
+    padding: 8px 10px;
+    border-left: 4px solid #b8c7d9;
+    background: #f5f7fa;
+    font-weight: 600;
+}

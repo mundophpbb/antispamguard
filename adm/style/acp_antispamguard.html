@@ -367,8 +367,11 @@
             <dl><dt><label for="antispamguard_sfs_block_multiple_hits">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_block_multiple_hits" value="1"{% if ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_block_multiple_hits" value="0"{% if not ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_ip_reputation_weight_sfs">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_sfs" name="antispamguard_ip_reputation_weight_sfs" value="{{ IP_REPUTATION_WEIGHT_SFS }}" min="0"></dd></dl>
             <dl><dt><label for="antispamguard_decision_weight_sfs">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_decision_weight_sfs" name="antispamguard_decision_weight_sfs" value="{{ DECISION_WEIGHT_SFS }}" min="0"></dd></dl>
+            <dl><dt><label for="antispamguard_random_gmail_enabled">{{ lang('ACP_ANTISPAMGUARD_RANDOM_GMAIL_CONTACT') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_RANDOM_GMAIL_CONTACT_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_random_gmail_enabled" value="1"{% if RANDOM_GMAIL_CONTACT_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_random_gmail_enabled" value="0"{% if not RANDOM_GMAIL_CONTACT_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_random_gmail_register_enabled">{{ lang('ACP_ANTISPAMGUARD_RANDOM_GMAIL_REGISTER') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_RANDOM_GMAIL_REGISTER_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_random_gmail_register_enabled" value="1"{% if RANDOM_GMAIL_REGISTER_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_random_gmail_register_enabled" value="0"{% if not RANDOM_GMAIL_REGISTER_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_sfs_log_all_checks">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ALL_CHECKS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ALL_CHECKS_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_all_checks" value="1"{% if SFS_LOG_ALL_CHECKS %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_all_checks" value="0"{% if not SFS_LOG_ALL_CHECKS %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_sfs_debug_log_all">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOG_ALL') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOG_ALL_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_debug_log_all" value="1"{% if SFS_DEBUG_LOG_ALL %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_debug_log_all" value="0"{% if not SFS_DEBUG_LOG_ALL %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_sfs_debug_duration">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_DURATION') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_DURATION_EXPLAIN') }}</span></dt><dd><select id="antispamguard_sfs_debug_duration" name="antispamguard_sfs_debug_duration"><option value="0">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_DURATION_KEEP') }}</option><option value="600">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_10_MINUTES') }}</option><option value="1800">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_30_MINUTES') }}</option><option value="3600">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_1_HOUR') }}</option><option value="86400">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_24_HOURS') }}</option></select>{% if SFS_DEBUG_UNTIL %}<br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_UNTIL') }}: <strong>{{ SFS_DEBUG_UNTIL_FORMATTED }}</strong></small>{% endif %}</dd></dl>
             <dl><dt><label for="antispamguard_sfs_debug_localhost_only">{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOCALHOST_ONLY') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_DEBUG_LOCALHOST_ONLY_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_debug_localhost_only" value="1"{% if SFS_DEBUG_LOCALHOST_ONLY %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_debug_localhost_only" value="0"{% if not SFS_DEBUG_LOCALHOST_ONLY %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_sfs_log_enabled">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_enabled" value="1"{% if ANTISPAMGUARD_SFS_LOG_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_enabled" value="0"{% if not ANTISPAMGUARD_SFS_LOG_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_sfs_log_only_blocked">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_sfs_log_only_blocked" value="1"{% if ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_sfs_log_only_blocked" value="0"{% if not ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
@@ -549,6 +552,11 @@
             </dl>
 
             <dl>
+                <dt><label for="antispamguard_sfs_log_preserve_reviewed">{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_PRESERVE_REVIEWED') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SFS_LOG_PRESERVE_REVIEWED_EXPLAIN') }}</span></dt>
+                <dd><label><input type="checkbox" class="radio" id="antispamguard_sfs_log_preserve_reviewed" name="antispamguard_sfs_log_preserve_reviewed" value="1"{% if SFS_LOG_PRESERVE_REVIEWED %} checked="checked"{% endif %}> {{ lang('YES') }}</label></dd>
+            </dl>
+
+            <dl>
                 <dt><label>{{ lang('ACP_ANTISPAMGUARD_SFS_CLEANUP_LAST_GC') ~ lang('COLON') }}</label></dt>
                 <dd><strong>{{ SFS_CLEANUP_LAST_GC }}</strong></dd>
             </dl>
@@ -604,7 +612,15 @@
                 <input class="button2" type="submit" value="{{ lang('ACP_ANTISPAMGUARD_APPLY_FILTERS') }}">
             </dd>
         </dl>
+        <dl>
+            <dt><label for="sfs_filter_query">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_QUERY') ~ lang('COLON') }}</label><br><span>{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_QUERY_EXPLAIN') }}</span></dt>
+            <dd><input type="text" name="sfs_filter_query" id="sfs_filter_query" value="{{ SFS_FILTER_QUERY|e }}" size="35" maxlength="100"></dd>
+        </dl>
     </fieldset>
+
+    <div class="asg-sfs-review-stats">
+        {{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_COUNTS', SFS_REVIEW_PENDING, SFS_REVIEW_REPORTED, SFS_REVIEW_BLOCKED, SFS_REVIEW_REPORTED_BLOCKED, SFS_REVIEW_ALLOWED, SFS_REVIEW_TOTAL) }}
+    </div>
 
     {% if S_HAS_SFS_LOGS %}
     <div class="asg-pagination">
@@ -626,10 +642,11 @@
     </div>
     <div class="asg-actions asg-sfs-bulk-actions">
         <strong>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS') }}</strong>
-        <input class="button2" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT')|e('js') }}');">
-        <input class="button2" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK')|e('js') }}');">
-        <input class="button1" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK')|e('js') }}');">
-        <input class="button2" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW')|e('js') }}');">
+        <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_COUNT')|e('html_attr') }}" disabled="disabled">
+        <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK_COUNT')|e('html_attr') }}" disabled="disabled">
+        <input class="button1 asg-sfs-bulk-button" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK_COUNT')|e('html_attr') }}" disabled="disabled">
+        <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW_COUNT')|e('html_attr') }}" disabled="disabled">
+        <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_clear_sfs_review" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_CLEAR_REVIEW') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_CLEAR_COUNT')|e('html_attr') }}" disabled="disabled">
         <br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS_EXPLAIN') }}</small>
     </div>
 
@@ -678,6 +695,9 @@
                     {% endif %}
                     <button class="button2" type="submit" name="block_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BLOCK')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_LOCAL') }}</button>
                     <button class="button2" type="submit" name="allow_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_ALLOW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_ALLOW') }}</button>
+                    {% if sfs.S_REVIEWED %}
+                    <button class="button2" type="submit" name="clear_sfs_review" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_CLEAR_REVIEW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_CLEAR_REVIEW') }}</button>
+                    {% endif %}
                     <br><a class="asg-sfs-prefill-link" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_PREFILL_ONLY') }}</a>
                 </td>
             </tr>
@@ -850,9 +870,16 @@
                 <option value="allowed"{% if SFS_FILTER_REVIEW == 'allowed' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_ALLOWED') }}</option>
             </select>
 
+            <label for="sfs_filter_query_logs">{{ lang('ACP_ANTISPAMGUARD_SFS_FILTER_QUERY') ~ lang('COLON') }}</label>
+            <input type="text" name="sfs_filter_query" id="sfs_filter_query_logs" value="{{ SFS_FILTER_QUERY|e }}" size="28" maxlength="100">
+
             <input class="button2" type="submit" value="{{ lang('ACP_ANTISPAMGUARD_APPLY_FILTERS') }}">
             <input class="button2" type="submit" name="export_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_SFS_LOGS') }}" data-ajax="false">
         </fieldset>
+
+        <div class="asg-sfs-review-stats">
+            {{ lang('ACP_ANTISPAMGUARD_SFS_REVIEW_COUNTS', SFS_REVIEW_PENDING, SFS_REVIEW_REPORTED, SFS_REVIEW_BLOCKED, SFS_REVIEW_REPORTED_BLOCKED, SFS_REVIEW_ALLOWED, SFS_REVIEW_TOTAL) }}
+        </div>
 
         {% if S_HAS_SFS_LOGS %}
         <div class="asg-pagination">
@@ -870,10 +897,11 @@
 
         <div class="asg-actions asg-sfs-bulk-actions">
             <strong>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS') }}</strong>
-            <input class="button2" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT')|e('js') }}');">
-            <input class="button2" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK')|e('js') }}');">
-            <input class="button1" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK')|e('js') }}');">
-            <input class="button2" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW')|e('js') }}');">
+            <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_report_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_COUNT')|e('html_attr') }}" disabled="disabled">
+            <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_BLOCK') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_BLOCK_COUNT')|e('html_attr') }}" disabled="disabled">
+            <input class="button1 asg-sfs-bulk-button" type="submit" name="bulk_report_block_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_REPORT_BLOCK') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_REPORT_BLOCK_COUNT')|e('html_attr') }}" disabled="disabled">
+            <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_allow_sfs_logs" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ALLOW') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_ALLOW_COUNT')|e('html_attr') }}" disabled="disabled">
+            <input class="button2 asg-sfs-bulk-button" type="submit" name="bulk_clear_sfs_review" value="{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_CLEAR_REVIEW') }}" data-ajax="false" data-confirm-template="{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BULK_CLEAR_COUNT')|e('html_attr') }}" disabled="disabled">
             <br><small>{{ lang('ACP_ANTISPAMGUARD_SFS_BULK_ACTIONS_EXPLAIN') }}</small>
         </div>
 
@@ -922,6 +950,9 @@
                         {% endif %}
                         <button class="button2" type="submit" name="block_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_BLOCK')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_BLOCK_LOCAL') }}</button>
                         <button class="button2" type="submit" name="allow_sfs_log" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_ALLOW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_ALLOW') }}</button>
+                        {% if sfs.S_REVIEWED %}
+                        <button class="button2" type="submit" name="clear_sfs_review" value="{{ sfs.ID }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_SFS_CONFIRM_CLEAR_REVIEW')|e('js') }}');">{{ lang('ACP_ANTISPAMGUARD_SFS_CLEAR_REVIEW') }}</button>
+                        {% endif %}
                         <br><a class="asg-sfs-prefill-link" href="{{ sfs.U_REPORT_PREFILL }}">{{ lang('ACP_ANTISPAMGUARD_SFS_PREFILL_ONLY') }}</a>
                     </td>
                 </tr>
@@ -955,6 +986,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    function getSelectedCount(container) {
+        return container.querySelectorAll('.asg-sfs-select:checked').length;
+    }
+
+    function updateBulkActions(container) {
+        var count = getSelectedCount(container);
+        container.querySelectorAll('.asg-sfs-bulk-button').forEach(function (button) {
+            button.disabled = count === 0;
+        });
+        container.querySelectorAll('.asg-sfs-select-all').forEach(function (toggle) {
+            var checkboxes = container.querySelectorAll('.asg-sfs-select');
+            toggle.checked = checkboxes.length > 0 && count === checkboxes.length;
+            toggle.indeterminate = count > 0 && count < checkboxes.length;
+        });
+    }
+
+    document.querySelectorAll('.asg-sfs-table').forEach(function (table) {
+        var container = table.closest('form') || document;
+        updateBulkActions(container);
+    });
+
     document.querySelectorAll('.asg-sfs-select-all').forEach(function (toggle) {
         toggle.addEventListener('change', function () {
             var table = toggle.closest('table');
@@ -964,6 +1016,31 @@ document.addEventListener('DOMContentLoaded', function () {
             table.querySelectorAll('.asg-sfs-select').forEach(function (checkbox) {
                 checkbox.checked = toggle.checked;
             });
+            updateBulkActions(table.closest('form') || document);
+        });
+    });
+
+    document.querySelectorAll('.asg-sfs-select').forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            updateBulkActions(checkbox.closest('form') || document);
+        });
+    });
+
+    document.querySelectorAll('.asg-sfs-bulk-button').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            var container = button.closest('form') || document;
+            var count = getSelectedCount(container);
+            if (count === 0) {
+                event.preventDefault();
+                return false;
+            }
+            var message = button.getAttribute('data-confirm-template') || '';
+            message = message.replace('{count}', count);
+            if (message && !confirm(message)) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
         });
     });
 });
