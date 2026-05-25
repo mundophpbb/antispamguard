@@ -1,9 +1,9 @@
 {
     "name": "mundophpbb/antispamguard",
     "type": "phpbb-extension",
-    "description": "Invisible anti-spam guard for phpBB using HoneyPot, timing, IP controls, content filters and ACP diagnostics.",
+    "description": "Invisible anti-spam protection for phpBB with HoneyPot, timing checks, IP controls, content filters, StopForumSpam integration and ACP diagnostics.",
     "homepage": "https://www.mundophpbb.com.br",
-    "version": "3.3.35",
+    "version": "3.3.36",
     "time": "2026-05-13",
     "license": "GPL-2.0-only",
     "authors": [
