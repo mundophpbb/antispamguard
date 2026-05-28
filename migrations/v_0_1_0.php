@@ -72,7 +72,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             )),
             array('permission.add', array('a_antispamguard_manage', true)),
             array('permission.permission_set', array('ROLE_ADMIN_FULL', 'a_antispamguard_manage')),
-            array('config.update', array('antispamguard_version', '3.3.35')),
+            array('config.update', array('antispamguard_version', '0.1.0')),
         );
     }
 
