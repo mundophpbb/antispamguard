@@ -28,7 +28,8 @@
         }
 
         var hpWrap = document.createElement('div');
-        hpWrap.className = 'antispamguard-field';
+        hpWrap.className = '{{ ANTISPAMGUARD_HP_CLASS|escape('js') }}';
+        hpWrap.style.cssText = '{{ ANTISPAMGUARD_HP_STYLE|escape('js') }}';
         hpWrap.setAttribute('aria-hidden', 'true');
 
         var hpInput = document.createElement('input');

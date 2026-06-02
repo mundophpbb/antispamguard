@@ -40,7 +40,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_MIN_SECONDS'          => 'Nombre minimal de secondes avant soumission',
     'ACP_ANTISPAMGUARD_MIN_SECONDS_EXPLAIN'  => 'Les soumissions plus rapides que cette valeur seront bloquées.',
     'ACP_ANTISPAMGUARD_MAX_SECONDS'          => 'Nombre maximal de secondes avant soumission',
-    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Les soumissions plus anciennes que cette valeur seront bloquées.',
+    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Délai maximal entre l’ouverture du formulaire et l’envoi. Si « Âge maximal du formulaire » est aussi défini, la limite la plus stricte (la plus basse) s’applique. Utilisez 0 pour ignorer ce champ.',
     'ACP_ANTISPAMGUARD_INVALID_FIELD'        => 'Nom de champ HoneyPot invalide. Utilisez de 3 à 31 caractères, commencez par une lettre et utilisez uniquement des lettres, des chiffres ou des traits de soulignement.',
     'ACP_ANTISPAMGUARD_SAVED'                => 'Paramètres d’AntiSpam Guard enregistrés avec succès.',
     'ACP_ANTISPAMGUARD_FILTER_FORM'          => 'Formulaire de filtre',
@@ -313,7 +313,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLE_EXPLAIN' => 'Utilise une classe dynamique et du CSS hors écran au lieu de s’appuyer uniquement sur display:none. Recommandé : activé.',
 
     'ACP_ANTISPAMGUARD_MAX_FORM_AGE' => 'Âge maximal du formulaire',
-    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Temps maximal, en secondes, pour accepter un formulaire précédemment généré. Utilisez 0 pour désactiver. Recommandé : 3600.',
+    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Temps maximal, en secondes, pour accepter un formulaire généré auparavant. Combiné avec « Secondes maximales », la limite active la plus basse est appliquée. Utilisez 0 pour ignorer. Recommandé : 3600.',
 
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST' => 'Horodatage : soumission trop rapide',
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_EXPIRED' => 'Horodatage : formulaire expiré',
@@ -547,6 +547,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT' => 'Texte de l’avis anti-spam d’inscription',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Texte brut uniquement, sans HTML. Limite : 255 caractères. Si vide, le texte par défaut sera utilisé.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'Ce forum utilise une protection anti-spam automatique pour réduire les inscriptions abusives et protéger la communauté.',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT' => 'Inscription tolérante (révision au lieu de blocage)',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT_EXPLAIN' => 'Si activé, les problèmes courants du navigateur (autofill, envoi rapide, onglet ancien) sont journalisés pour révision mais l’inscription continue. StopForumSpam, liste noire, réputation IP et autres signaux forts bloquent toujours.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Poids appliqué à la réputation IP lorsque la source du score est StopForumSpam.',
 
     'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Les champs ont été remplis depuis un log StopForumSpam. Vérifiez les données avant l’envoi.',

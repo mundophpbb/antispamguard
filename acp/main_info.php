@@ -15,27 +15,27 @@ class main_info
             'modes'    => array(
                 'settings' => array(
                     'title' => 'ACP_ANTISPAMGUARD_SETTINGS',
-                    'auth'  => 'ext_mundophpbb/antispamguard && acl_a_antispamguard_manage',
+                    'auth'  => 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)',
                     'cat'   => array('ACP_ANTISPAMGUARD_TITLE'),
                 ),
                 'sfs' => array(
                     'title' => 'ACP_ANTISPAMGUARD_PANEL_SFS',
-                    'auth'  => 'ext_mundophpbb/antispamguard && acl_a_antispamguard_manage',
+                    'auth'  => 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)',
                     'cat'   => array('ACP_ANTISPAMGUARD_TITLE'),
                 ),
                 'logs' => array(
                     'title' => 'ACP_ANTISPAMGUARD_LOGS',
-                    'auth'  => 'ext_mundophpbb/antispamguard && acl_a_antispamguard_manage',
+                    'auth'  => 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)',
                     'cat'   => array('ACP_ANTISPAMGUARD_TITLE'),
                 ),
                 'stats' => array(
                     'title' => 'ACP_ANTISPAMGUARD_STATS',
-                    'auth'  => 'ext_mundophpbb/antispamguard && acl_a_antispamguard_manage',
+                    'auth'  => 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)',
                     'cat'   => array('ACP_ANTISPAMGUARD_TITLE'),
                 ),
                 'about' => array(
                     'title' => 'ACP_ANTISPAMGUARD_ABOUT',
-                    'auth'  => 'ext_mundophpbb/antispamguard && acl_a_antispamguard_manage',
+                    'auth'  => 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)',
                     'cat'   => array('ACP_ANTISPAMGUARD_TITLE'),
                 ),
             ),

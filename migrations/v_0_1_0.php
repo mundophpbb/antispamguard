@@ -182,6 +182,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'antispamguard_sfs_api_key' => array('', true),
             'antispamguard_register_notice_enabled' => array(0, false),
             'antispamguard_register_notice_text' => array('', false),
+            'antispamguard_register_audit_soft_signals' => array(1, false),
             'antispamguard_subnet_rate_limit_enabled' => array(1, false),
             'antispamguard_subnet_rate_limit_window' => array(600, false),
             'antispamguard_subnet_rate_limit_max_hits' => array(10, false),

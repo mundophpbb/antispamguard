@@ -40,7 +40,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_MIN_SECONDS'          => 'Minimum seconds before submit',
     'ACP_ANTISPAMGUARD_MIN_SECONDS_EXPLAIN'  => 'Submissions faster than this value will be blocked.',
     'ACP_ANTISPAMGUARD_MAX_SECONDS'          => 'Maximum seconds before submit',
-    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Submissions older than this value will be blocked.',
+    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Maximum time between opening the form and submitting. If “Maximum form age” is also set, the stricter (lower) limit applies. Use 0 to ignore this field.',
     'ACP_ANTISPAMGUARD_INVALID_FIELD'        => 'Invalid HoneyPot field name. Use 3 to 31 characters, start with a letter, and use only letters, numbers, or underscores.',
     'ACP_ANTISPAMGUARD_SAVED'                => 'AntiSpam Guard settings saved successfully.',
     'ACP_ANTISPAMGUARD_FILTER_FORM'          => 'Filter form',
@@ -313,7 +313,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLE_EXPLAIN' => 'Uses a dynamic class and off-screen CSS instead of relying only on display:none. Recommended: enabled.',
 
     'ACP_ANTISPAMGUARD_MAX_FORM_AGE' => 'Maximum form age',
-    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Maximum time, in seconds, to accept a previously generated form. Use 0 to disable. Recommended: 3600.',
+    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Maximum time, in seconds, to accept a previously generated form. Combined with “Maximum seconds”, the lower active limit is enforced. Use 0 to ignore. Recommended: 3600.',
 
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST' => 'Timestamp: submitted too quickly',
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_EXPIRED' => 'Timestamp: expired form',
@@ -547,6 +547,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT' => 'Registration anti-spam notice text',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Plain text only, no HTML. Limit: 255 characters. If empty, the default text will be used.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'This forum uses automatic anti-spam protection to reduce abusive registrations and protect the community.',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT' => 'Lenient registration (review instead of block)',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT_EXPLAIN' => 'When enabled, common browser issues (autofill in hidden fields, fast submit, or stale form tabs) are logged for review but registration continues. StopForumSpam, blacklist, IP reputation and other strong signals still block.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Weight applied to IP reputation when the score source is StopForumSpam.',
 
     'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Fields were filled from a StopForumSpam log. Review the data before submitting.',

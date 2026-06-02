@@ -1,114 +1,127 @@
-# Changelog
+# Changelog — AntiSpam Guard
 
-## 3.3.26 - Wider main log merge window
+Todas as versões relevantes desta linha **3.3.x** (phpBB 3.3).  
+Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
-- Strengthens near-duplicate detection for the main Blocking logs.
-- Uses a 60-second short window for repeated validation paths from the same submission.
-- Matches stable request identity fields and merges differing reason sets instead of creating a second visible row.
-- Adds migration `v_3_3_26` to merge existing near-duplicates that were not caught by the stricter 3.3.25 rule.
+## [3.3.43] — 2026-06-01
 
-## 3.3.25 - Main log near-duplicate merge
+### Corrigido
+- Menu **AntiSpam Guard** invisível no ACP quando a permissão `a_antispamguard_manage` não existia no banco (instalações parciais ou após “remover dados”).
+- Migração `v_3_3_43` recria a permissão, atribui a **ROLE_ADMIN_FULL** e **ROLE_ADMIN_STANDARD**, e atualiza o `module_auth` dos módulos ACP.
 
-- Improves main Blocking logs de-duplication.
-- De-duplicates by request identity instead of requiring an identical reason string.
-- Merges reason lists when the same submission is logged twice with one extra heuristic reason, such as `slow_spam`.
-- Adds migration `v_3_3_25` to merge and clean existing near-duplicate rows in `antispamguard_log`.
-- No template or language changes required.
+### Alterado
+- Autorização dos módulos ACP: `ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)` — administradores com permissão geral do fórum também veem o painel.
 
-# AntiSpam Guard Changelog
+---
 
-## 3.3.24 - StopForumSpam report button visual refinement
+## [3.3.42] — 2026-06-01
 
-- Shortened the SFS report action button label in log tables.
-- Added a tooltip with the full description of the action.
-- Added compact no-wrap styling and centered alignment for the report column.
+### Corrigido
+- Módulos ACP ausentes em `phpbb_modules` após exclusão acidental da pasta da extensão ou limpeza incompleta.
+- Migração `v_3_3_42` re-registra categoria **AntiSpam Guard** e modos (Configurações, Logs, Estatísticas, Sobre, StopForumSpam).
 
-All notable changes to AntiSpam Guard are documented here.
+---
 
-## 3.3.23
+## [3.3.41] — 2026-06-01
 
-### Fixed
-- Fixed the StopForumSpam report shortcut in SFS log rows.
-- The **Use for SFS report** action is now displayed when a StopForumSpam log row contains at least one useful value: IP address, email address, or username.
-- Previously, the shortcut required IP, email, and username to be present at the same time, which made it unavailable for contact-form submissions or partial SFS records.
+### Corrigido
+- Cadastros legítimos bloqueados por autofill/gerenciador de senhas (honeypot), envio rápido ou aba de registro antiga.
+- Motor de decisão bloqueava só com honeypot/tempo mesmo em falsos positivos claros.
 
-### Changed
-- The manual StopForumSpam report form continues to validate the final submission before sending data to StopForumSpam.
-- Missing required fields must still be completed manually by the administrator.
+### Adicionado
+- Serviço `registration_policy` e opção ACP **Cadastro tolerante (revisar em vez de bloquear)** (`antispamguard_register_audit_soft_signals`).
+- Sinais “suaves” no registro passam a ser **auditados nos logs** sem bloquear; SFS, lista negra, reputação de IP e demais sinais fortes continuam bloqueando.
+- Testes `RegistrationPolicyTest` (suite com 33 testes).
+- Proteção extra no template de registro: `readonly`, `data-lpignore`, limpeza do honeypot no envio.
 
-### Migration
-- No database migration required.
+### Alterado
+- `migrations/v_3_3_41.php` usa config seguro (sem `config.add` duplicado).
 
-## 3.3.22
+---
 
-### Added
-- Added manual submission of confirmed spammers to StopForumSpam from the ACP.
-- Added StopForumSpam API key support for manual/reporting workflows.
-- Added an internal audit table for StopForumSpam submissions: `antispamguard_sfs_submit_log`.
-- Added audit logging for manual StopForumSpam reports, including:
-  - administrator responsible for the submission;
-  - submitted IP address, email address, and username;
-  - report source;
-  - source SFS log ID, when available;
-  - StopForumSpam response/status.
-- Added a manual StopForumSpam submission panel in the ACP.
-- Added pre-fill support from SFS log rows to the manual StopForumSpam submission form.
-- Added confirmation before submitting data to StopForumSpam.
-- Added ACP language strings in English, Portuguese, and French.
+## [3.3.40] — 2026-06-01
 
-### Migration
-- Adds the StopForumSpam submission audit table.
+### Adicionado
+- `acp/logs_controller.php` — logs, estatísticas, export CSV de logs, poda e bloco de reputação de IP na página de logs.
 
-## 3.3.21
+### Alterado
+- `acp/main_module.php` delega logs/estatísticas ao `logs_controller` (shell ACP mais enxuto).
+- `sfs_controller::assign_sfs_logs()` aceita URL base opcional para paginação na página de logs (sem duplicar query SFS).
+- Página **Block logs** usa apenas `assign_sfs_logs()` para o bloco StopForumSpam.
 
-### Changed
-- Refined the visual layout of ACP log pagination.
-- Replaced compact bullet-separated pagination with a cleaner layout.
-- Separated total counters, filtered counters, current page information, and navigation links.
-- Added styled page buttons, current-page highlight, previous/next links, and ellipsis for long page ranges.
-- Applied the same pagination style to:
-  - general blocking logs;
-  - StopForumSpam logs;
-  - the StopForumSpam panel inside Blocking logs;
-  - the dedicated StopForumSpam page.
+---
 
-### Migration
-- No database migration required.
+## [3.3.39] — 2026-06-01
 
-## 3.3.20
+### Adicionado
+- `acp/sfs_controller.php` — painel StopForumSpam, moderação, exportação, estatísticas de revisão.
+- `acp/pagination_helper.php` — paginação reutilizável no ACP.
 
-### Fixed
-- Added duplicate protection to the dedicated StopForumSpam log table.
-- Reuses an existing SFS log row when the same StopForumSpam decision is logged again within 5 seconds.
-- Prevents inflated SFS statistics and repeated SFS log entries caused by duplicate writes.
+### Alterado
+- `acp/main_module.php` reduzido; modo `sfs` e ações SFS delegados ao controller.
 
-### Migration
-- Adds migration `v_3_3_20` to remove exact duplicate rows already stored in `antispamguard_sfs_log`.
+---
 
-## 3.3.19
+## [3.3.38] — 2026-06-01
 
-### Fixed
-- Prevented duplicate rows in the general blocking log when phpBB reaches the logger twice during the same submission.
-- Added a 5-second duplicate guard based on IP address, username, email address, form type, reason, and user agent.
+### Adicionado
+- `service/form_guard.php` — honeypot e validação de timestamp/token (HMAC).
+- `service/ip_matcher.php` — listas e whitelist de IP.
+- `acp/settings_helper.php` — import/export JSON, normalização de IPs e segredos.
+- Pasta `tests/` com runner `tests/run.php` (28+ testes: FormGuard, IpMatcher, DecisionEngine, SettingsHelper).
 
-### Added
-- Added independent StopForumSpam pagination support using the `sfs_start` parameter.
-- StopForumSpam pagination is separated from the general blocking log pagination.
+### Alterado
+- `event/listener.php` delega validação de formulário e IP aos novos serviços.
 
-### Migration
-- Adds migration `v_3_3_19` to remove exact duplicate rows already stored in `antispamguard_log`.
+---
 
-## 3.3.18
+## [3.3.37] — 2026-06-01
 
-### Fixed
-- Repaired the ACP Extensions tab/category after delete-data and reinstall cycles.
-- Ensures the AntiSpam Guard ACP category is correctly placed under the global phpBB Extensions ACP category.
-- Rebuilds ACP nested-set values when needed.
+### Corrigido
+- Inconsistência entre `max_seconds` e `max_form_age` na validação de tempo.
+- Remoção de `early_contact_check` redundante no listener.
 
-## Notes for administrators
+### Alterado
+- Tempo unificado em `form_guard::get_timestamp_block_reason()`.
+- Templates usam constantes/helpers para honeypot (nome/classe/estilo dinâmicos).
 
-- After updating from an older version, clear the phpBB cache.
-- If updating to a version that includes migrations, run the normal phpBB extension database update process.
-- StopForumSpam lookups work without an API key.
-- The StopForumSpam API key is used for submitting/reporting confirmed spammers.
-- Manual reporting should be used only for confirmed spam activity to avoid false reports.
+---
+
+## [3.3.36] — 2026-06-01
+
+### Corrigido
+- Instalações com `antispamguard_version` definida mas tabelas ausentes — migração reexecuta `repair_schema` até existir `antispamguard_log`.
+
+---
+
+## [3.3.35] — 2026-06-01
+
+### Adicionado
+- Migração consolidada de upgrade/repair alinhada à linha 3.3.x.
+
+---
+
+## [0.1.0] — base consolidada
+
+### Adicionado
+- Instalação completa: tabelas (log, SFS cache/log, reputação IP, rate limit, slow spam, alertas).
+- Módulos e permissão ACP `a_antispamguard_manage`.
+- Proteção em registro, postagens, contato e MP; StopForumSpam; motor de decisão; reputação de IP; cron de limpeza.
+- Idiomas: `pt_br`, `en`, `fr`.
+
+---
+
+## Atualização recomendada
+
+1. Extraia o ZIP em `ext/mundophpbb/antispamguard/` (não renomeie `ext` nem aninhe `antispamguard/antispamguard/`).
+2. ACP → **Gerenciar extensões** → **Atualizar** AntiSpam Guard.
+3. ACP → **Manutenção geral** → **Limpar cache**.
+4. Saia e entre de novo no ACP se o menu não aparecer de imediato.
+
+**Não use “Remover dados”** na extensão, exceto se quiser apagar configuração e tabelas — isso também remove módulos e permissões do ACP.
+
+---
+
+## Créditos
+
+Desenvolvido por [Mundophpbb](https://www.mundophpbb.com.br). Licença GPL-2.0-only.

@@ -40,7 +40,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_MIN_SECONDS'          => 'Segundos mínimos antes do envio',
     'ACP_ANTISPAMGUARD_MIN_SECONDS_EXPLAIN'  => 'Envios mais rápidos que este valor serão bloqueados.',
     'ACP_ANTISPAMGUARD_MAX_SECONDS'          => 'Segundos máximos antes do envio',
-    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Envios mais antigos que este valor serão bloqueados.',
+    'ACP_ANTISPAMGUARD_MAX_SECONDS_EXPLAIN'  => 'Tempo máximo entre abrir o formulário e enviar. Se também definir “Idade máxima do formulário”, vale o limite mais restritivo (menor valor). Use 0 para ignorar este campo.',
     'ACP_ANTISPAMGUARD_INVALID_FIELD'        => 'Nome inválido para o campo campo invisível. Use de 3 a 31 caracteres, começando com uma letra, e apenas letras, números ou sublinhado.',
     'ACP_ANTISPAMGUARD_SAVED'                => 'Configurações do AntiSpam Guard salvas com sucesso.',
     'ACP_ANTISPAMGUARD_FILTER_FORM'          => 'Filtrar formulário',
@@ -313,7 +313,7 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_HP_CAMOUFLAGE_ENABLE_EXPLAIN' => 'Usa classe dinâmica e CSS fora da tela em vez de depender apenas de display:none. Recomendado: ativado.',
 
     'ACP_ANTISPAMGUARD_MAX_FORM_AGE' => 'Idade máxima do formulário',
-    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Tempo máximo, em segundos, para aceitar um formulário gerado anteriormente. Use 0 para desativar. Recomendado: 3600.',
+    'ACP_ANTISPAMGUARD_MAX_FORM_AGE_EXPLAIN' => 'Tempo máximo, em segundos, para aceitar um formulário gerado anteriormente. Combinado com “Segundos máximos”, aplica-se o menor dos dois limites ativos. Use 0 para ignorar. Recomendado: 3600.',
 
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST' => 'Timestamp: envio rápido demais',
     'ACP_ANTISPAMGUARD_REASON_TIMESTAMP_EXPIRED' => 'Timestamp: formulário expirado',
@@ -547,6 +547,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT' => 'Texto do aviso antispam no registro',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_TEXT_EXPLAIN' => 'Texto simples, sem HTML. Limite de 255 caracteres. Se ficar vazio, será usado o texto padrão.',
     'ACP_ANTISPAMGUARD_REGISTER_NOTICE_DEFAULT' => 'Este fórum usa proteção antispam automática para reduzir cadastros abusivos e proteger a comunidade.',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT' => 'Cadastro tolerante (revisar em vez de bloquear)',
+    'ACP_ANTISPAMGUARD_REGISTER_AUDIT_SOFT_EXPLAIN' => 'Quando ativo, falhas comuns de navegador (campo oculto preenchido por autofill, envio rápido ou formulário antigo) são registradas nos logs para revisão, mas o cadastro segue. StopForumSpam, lista negra, reputação de IP e outros sinais fortes continuam bloqueando.',
     'ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_SFS_EXPLAIN' => 'Peso aplicado à reputação de IP quando a origem do ponto é StopForumSpam.',
 
     'ACP_ANTISPAMGUARD_SFS_SUBMIT_PREFILLED' => 'Os campos foram preenchidos a partir de um log StopForumSpam. Revise os dados antes de enviar.',

@@ -1,0 +1,32 @@
+<?php
+/**
+ * AntiSpam Guard 3.3.38 — shared services refactor and unit tests.
+ */
+
+namespace mundophpbb\antispamguard\migrations;
+
+class v_3_3_38 extends \mundophpbb\antispamguard\migrations\v_0_1_0
+{
+    public function effectively_installed()
+    {
+        return isset($this->config['antispamguard_version'])
+            && version_compare($this->config['antispamguard_version'], '3.3.38', '>=');
+    }
+
+    public static function depends_on()
+    {
+        return array('\\mundophpbb\\antispamguard\\migrations\\v_3_3_37');
+    }
+
+    public function update_data()
+    {
+        return array(
+            array('config.update', array('antispamguard_version', '3.3.38')),
+        );
+    }
+
+    public function revert_schema()
+    {
+        return array();
+    }
+}

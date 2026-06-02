@@ -58,6 +58,15 @@ services:
             - '@config'
             - '%core.table_prefix%'
 
+    mundophpbb.antispamguard.ip_matcher:
+        class: mundophpbb\antispamguard\service\ip_matcher
+
+    mundophpbb.antispamguard.form_guard:
+        class: mundophpbb\antispamguard\service\form_guard
+        arguments:
+            - '@config'
+            - '@request'
+
     mundophpbb.antispamguard.listener:
         class: mundophpbb\antispamguard\event\listener
         arguments:
@@ -70,6 +79,8 @@ services:
             - '@mundophpbb.antispamguard.sfs_decision'
             - '@mundophpbb.antispamguard.ip_reputation'
             - '@mundophpbb.antispamguard.ip_rate_limit'
+            - '@mundophpbb.antispamguard.form_guard'
+            - '@mundophpbb.antispamguard.ip_matcher'
         tags:
             - { name: event.listener }
 

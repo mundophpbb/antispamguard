@@ -5,7 +5,7 @@ class decision_engine
 {
     protected $config;
 
-    public function __construct(\phpbb\config\config $config)
+    public function __construct($config)
     {
         $this->config = $config;
     }

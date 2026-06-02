@@ -16,6 +16,9 @@ use phpbb\user;
 use mundophpbb\antispamguard\service\sfs_decision;
 use mundophpbb\antispamguard\service\ip_reputation;
 use mundophpbb\antispamguard\service\ip_rate_limit;
+use mundophpbb\antispamguard\service\form_guard;
+use mundophpbb\antispamguard\service\ip_matcher;
+use mundophpbb\antispamguard\service\registration_policy;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 
@@ -30,8 +33,10 @@ class listener implements EventSubscriberInterface
     protected $sfs_decision;
     protected $ip_reputation;
     protected $ip_rate_limit;
+    protected $form_guard;
+    protected $ip_matcher;
 
-    public function __construct(config $config, request_interface $request, template $template, user $user, driver_interface $db, $table_prefix, sfs_decision $sfs_decision, ip_reputation $ip_reputation, ip_rate_limit $ip_rate_limit)
+    public function __construct(config $config, request_interface $request, template $template, user $user, driver_interface $db, $table_prefix, sfs_decision $sfs_decision, ip_reputation $ip_reputation, ip_rate_limit $ip_rate_limit, form_guard $form_guard, ip_matcher $ip_matcher)
     {
         $this->config = $config;
         $this->request = $request;
@@ -42,6 +47,8 @@ class listener implements EventSubscriberInterface
         $this->sfs_decision = $sfs_decision;
         $this->ip_reputation = $ip_reputation;
         $this->ip_rate_limit = $ip_rate_limit;
+        $this->form_guard = $form_guard;
+        $this->ip_matcher = $ip_matcher;
     }
 
     public static function getSubscribedEvents()
@@ -122,54 +129,6 @@ class listener implements EventSubscriberInterface
         \trigger_error($this->get_block_message($reason));
     }
 
-    public function early_contact_check($event)
-    {
-        $this->user->add_lang_ext('mundophpbb/antispamguard', 'common');
-
-        if (empty($this->config['antispamguard_enabled']) || empty($this->config['antispamguard_protect_contact']))
-        {
-            return;
-        }
-
-        if (strtoupper($this->request->server('REQUEST_METHOD', 'GET')) !== 'POST')
-        {
-            return;
-        }
-
-        $mode = $this->request->variable('mode', '');
-        $request_uri = (string) $this->request->server('REQUEST_URI', '');
-        $script_name = (string) $this->request->server('SCRIPT_NAME', '');
-
-        $is_contact = ($mode === 'contactadmin' || $mode === 'email' || strpos($request_uri, 'mode=contactadmin') !== false || strpos($request_uri, 'mode=email') !== false)
-            && strpos($script_name, 'memberlist.php') !== false;
-
-        if (!$is_contact)
-        {
-            return;
-        }
-
-        $reason = $this->get_submission_block_reason('contact');
-        if ($reason === '')
-        {
-            return;
-        }
-
-        if ($this->is_audit_only_reason($reason))
-        {
-            $this->write_log($reason, 'contact');
-            return;
-        }
-
-        if (!empty($this->config['antispamguard_simulation_mode']))
-        {
-            $this->write_log($this->get_simulation_log_reason($reason), 'contact');
-            return;
-        }
-
-        $this->write_log($reason, 'contact');
-        \trigger_error($this->get_block_message($reason));
-    }
-
     public function assign_template_vars($event)
     {
         if (empty($this->config['antispamguard_enabled']))
@@ -180,7 +139,7 @@ class listener implements EventSubscriberInterface
         $this->user->add_lang_ext('mundophpbb/antispamguard', 'common');
 
         $timestamp = time();
-        $token = $this->build_token($timestamp);
+        $token = $this->form_guard->build_token($timestamp);
 
         $register_notice_text = $this->get_register_notice_text();
 
@@ -188,9 +147,9 @@ class listener implements EventSubscriberInterface
             'ANTISPAMGUARD_ENABLED' => true,
             'ANTISPAMGUARD_REGISTER_NOTICE_ENABLED' => !empty($this->config['antispamguard_register_notice_enabled']),
             'ANTISPAMGUARD_REGISTER_NOTICE_TEXT' => $register_notice_text,
-            'ANTISPAMGUARD_HP_NAME' => $this->get_honeypot_name($timestamp),
-            'ANTISPAMGUARD_HP_CLASS' => $this->get_honeypot_class($timestamp),
-            'ANTISPAMGUARD_HP_STYLE' => $this->get_honeypot_style($timestamp),
+            'ANTISPAMGUARD_HP_NAME' => $this->form_guard->get_honeypot_name($timestamp),
+            'ANTISPAMGUARD_HP_CLASS' => $this->form_guard->get_honeypot_class($timestamp),
+            'ANTISPAMGUARD_HP_STYLE' => $this->form_guard->get_honeypot_style($timestamp),
             'ANTISPAMGUARD_TS'      => $timestamp . ':' . $token,
             'ANTISPAMGUARD_PROTECT_CONTACT' => !empty($this->config['antispamguard_protect_contact']),
             'ANTISPAMGUARD_PROTECT_PM' => !empty($this->config['antispamguard_protect_pm']),
@@ -299,13 +258,12 @@ class listener implements EventSubscriberInterface
 
     protected function get_submission_block_reason($form_type)
     {
-        
         if ($this->ip_whitelist_matches((string) $this->user->ip) && $this->get_ip_whitelist_mode() === 'total')
         {
             return '';
         }
 
-$reasons = array();
+        $reasons = array();
 
         if ($this->ip_is_whitelisted())
         {
@@ -322,14 +280,17 @@ $reasons = array();
             $reasons[] = 'ip_rate_limit';
         }
 
-        if (!$this->passes_honeypot())
+        if (!$this->form_guard->passes_honeypot($this->request->variable('antispamguard_ts', ''), array()))
         {
             $reasons[] = 'honeypot';
         }
 
-        if (!$this->passes_timestamp())
+        $timestamp_reason = $this->form_guard->get_timestamp_block_reason(
+            $this->request->variable('antispamguard_ts', '')
+        );
+        if ($timestamp_reason !== '')
         {
-            $reasons[] = 'timestamp';
+            $reasons[] = $timestamp_reason;
         }
 
         if (!empty($this->config['antispamguard_ip_rate_limit_enabled']))
@@ -396,9 +357,9 @@ $reasons = array();
             }
         }
 
-                $this->force_sfs_debug_trace($reasons);
+        $this->force_sfs_debug_trace($reasons);
 
-$slow_spam_reason = $this->check_slow_spam();
+        $slow_spam_reason = $this->check_slow_spam();
 
         if ($slow_spam_reason !== '')
         {
@@ -469,43 +430,16 @@ $slow_spam_reason = $this->check_slow_spam();
 
     protected function should_audit_registration_without_blocking($form_type, array $reasons)
     {
-        if ((string) $form_type !== 'register')
-        {
-            return false;
-        }
+        $policy = new registration_policy();
+        $lenient = !isset($this->config['antispamguard_register_audit_soft_signals'])
+            || !empty($this->config['antispamguard_register_audit_soft_signals']);
 
-        if (!$this->registration_has_submitted_identity())
-        {
-            return false;
-        }
-
-        // A real registration can be affected by browser autofill/password
-        // managers. If the only effective signals are honeypot/timestamp and
-        // the combined score, keep the event for review instead of blocking.
-        $hard_block_reasons = array(
-            'sfs_reputation',
-            'ip_blacklist',
-            'ip_reputation',
-            'content_filter',
-            'too_many_urls',
-            'ip_rate_limit',
-            'subnet_abuse',
-            'random_gmail',
-            'slow_spam',
+        return $policy->should_audit_without_blocking(
+            $form_type,
+            $reasons,
+            $this->registration_has_submitted_identity(),
+            $lenient
         );
-
-        foreach ($hard_block_reasons as $hard_reason)
-        {
-            if (in_array($hard_reason, $reasons, true))
-            {
-                return false;
-            }
-        }
-
-        $has_honeypot = in_array('honeypot', $reasons, true);
-        $has_timestamp = in_array('timestamp', $reasons, true) || in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp_expired', $reasons, true);
-
-        return $has_honeypot && $has_timestamp;
     }
 
     protected function registration_has_submitted_identity()
@@ -797,92 +731,7 @@ $slow_spam_reason = $this->check_slow_spam();
             return false;
         }
 
-        $entries = preg_split('/\r\n|\r|\n/', $list);
-
-        foreach ($entries as $entry)
-        {
-            $entry = trim($entry);
-
-            if ($entry === '' || strpos($entry, '#') === 0)
-            {
-                continue;
-            }
-
-            if ($this->ip_entry_matches($ip, $entry))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    protected function ip_entry_matches($ip, $entry)
-    {
-        if ($entry === $ip)
-        {
-            return true;
-        }
-
-        if (strpos($entry, '*') !== false)
-        {
-            $pattern = '/^' . str_replace('\\*', '.*', preg_quote($entry, '/')) . '$/i';
-
-            return (bool) preg_match($pattern, $ip);
-        }
-
-        if (strpos($entry, '/') !== false)
-        {
-            return $this->ip_cidr_matches($ip, $entry);
-        }
-
-        return false;
-    }
-
-    protected function ip_cidr_matches($ip, $cidr)
-    {
-        $parts = explode('/', $cidr, 2);
-
-        if (count($parts) !== 2)
-        {
-            return false;
-        }
-
-        $subnet = trim($parts[0]);
-        $bits = (int) trim($parts[1]);
-
-        $ip_bin = @inet_pton($ip);
-        $subnet_bin = @inet_pton($subnet);
-
-        if ($ip_bin === false || $subnet_bin === false || strlen($ip_bin) !== strlen($subnet_bin))
-        {
-            return false;
-        }
-
-        $length = strlen($ip_bin);
-        $max_bits = $length * 8;
-
-        if ($bits < 0 || $bits > $max_bits)
-        {
-            return false;
-        }
-
-        $full_bytes = (int) floor($bits / 8);
-        $remaining_bits = $bits % 8;
-
-        if ($full_bytes > 0 && substr($ip_bin, 0, $full_bytes) !== substr($subnet_bin, 0, $full_bytes))
-        {
-            return false;
-        }
-
-        if ($remaining_bits === 0)
-        {
-            return true;
-        }
-
-        $mask = (0xff << (8 - $remaining_bits)) & 0xff;
-
-        return ((ord($ip_bin[$full_bytes]) & $mask) === (ord($subnet_bin[$full_bytes]) & $mask));
+        return $this->ip_matcher->whitelist_match($ip, trim($list))['matched'];
     }
 
     protected function ip_is_whitelisted()
@@ -897,76 +746,7 @@ $slow_spam_reason = $this->check_slow_spam();
 
     protected function ip_matches_list($raw_list)
     {
-        $current_ip = (string) $this->user->ip;
-        if ($current_ip === '' || trim($raw_list) === '')
-        {
-            return false;
-        }
-
-        $items = preg_split('/[\r\n,]+/', $raw_list);
-        foreach ($items as $item)
-        {
-            $item = trim($item);
-            if ($item === '')
-            {
-                continue;
-            }
-
-            if (strpos($item, '/') !== false)
-            {
-                if ($this->ip_in_cidr($current_ip, $item))
-                {
-                    return true;
-                }
-            }
-            else if (strcasecmp($current_ip, $item) === 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    protected function ip_in_cidr($ip, $cidr)
-    {
-        if (strpos($cidr, '/') === false)
-        {
-            return false;
-        }
-
-        list($subnet, $prefix) = explode('/', $cidr, 2);
-        $subnet = trim($subnet);
-        $prefix = (int) trim($prefix);
-
-        $ip_bin = @inet_pton($ip);
-        $subnet_bin = @inet_pton($subnet);
-        if ($ip_bin === false || $subnet_bin === false || strlen($ip_bin) !== strlen($subnet_bin))
-        {
-            return false;
-        }
-
-        $bits = strlen($ip_bin) * 8;
-        if ($prefix < 0 || $prefix > $bits)
-        {
-            return false;
-        }
-
-        $bytes = (int) floor($prefix / 8);
-        $remainder = $prefix % 8;
-
-        if ($bytes > 0 && substr($ip_bin, 0, $bytes) !== substr($subnet_bin, 0, $bytes))
-        {
-            return false;
-        }
-
-        if ($remainder === 0)
-        {
-            return true;
-        }
-
-        $mask = chr((0xff << (8 - $remainder)) & 0xff);
-        return ($ip_bin[$bytes] & $mask) === ($subnet_bin[$bytes] & $mask);
+        return $this->ip_matcher->matches_list((string) $this->user->ip, $raw_list);
     }
 
     protected function get_simulation_log_reason($reason)
@@ -981,22 +761,24 @@ $slow_spam_reason = $this->check_slow_spam();
         switch ($single_reason)
         {
             case 'ip_blacklist':
-            return 'simulation_ip_blacklist';
-        case 'ip_rate_limit':
-            return 'simulation_ip_rate_limit';
-        case 'timestamp':
-            return 'simulation_timestamp';
-        case 'content_filter':
-            return 'simulation_content_filter';
-        case 'too_many_urls':
-            return 'simulation_too_many_urls';
-        case 'sfs_reputation':
-            return 'simulation_sfs_reputation';
-        case 'honeypot':
-        default:
-            return 'simulation_honeypot';
+                return 'simulation_ip_blacklist';
+            case 'ip_rate_limit':
+                return 'simulation_ip_rate_limit';
+            case 'timestamp':
+            case 'timestamp_too_fast':
+            case 'timestamp_expired':
+                return 'simulation_timestamp';
+            case 'content_filter':
+                return 'simulation_content_filter';
+            case 'too_many_urls':
+                return 'simulation_too_many_urls';
+            case 'sfs_reputation':
+                return 'simulation_sfs_reputation';
+            case 'honeypot':
+            default:
+                return 'simulation_honeypot';
+        }
     }
-}
 
     protected function get_block_message($reason)
     {
@@ -1012,6 +794,8 @@ $slow_spam_reason = $this->check_slow_spam();
             case 'ip_rate_limit':
                 return $this->user->lang('ANTISPAMGUARD_BLOCKED_RATE_LIMIT');
             case 'timestamp':
+            case 'timestamp_too_fast':
+            case 'timestamp_expired':
                 return $this->user->lang('ANTISPAMGUARD_BLOCKED_TIME');
             case 'content_filter':
             case 'too_many_urls':
@@ -1128,66 +912,6 @@ $slow_spam_reason = $this->check_slow_spam();
         return count($matches[0]);
     }
 
-
-    protected function passes_honeypot()
-    {
-        $timestamp = $this->get_timestamp_from_request();
-
-        if ($timestamp <= 0)
-        {
-            return false;
-        }
-
-        $field_name = $this->get_honeypot_name($timestamp);
-        $value = $this->request->variable($field_name, '', true);
-
-        return trim($value) === '';
-    }
-
-    protected function get_timestamp_block_reason()
-    {
-        $timestamp = $this->get_timestamp_from_request();
-        $token = $this->get_token_from_request();
-
-        if ($timestamp <= 0 || !hash_equals($this->build_token($timestamp), $token))
-        {
-            return 'timestamp';
-        }
-
-        $age = time() - $timestamp;
-        $min_seconds = isset($this->config['antispamguard_min_seconds']) ? (int) $this->config['antispamguard_min_seconds'] : 3;
-
-        if ($age < $min_seconds)
-        {
-            return 'timestamp_too_fast';
-        }
-
-        $max_age = isset($this->config['antispamguard_max_form_age']) ? (int) $this->config['antispamguard_max_form_age'] : 3600;
-
-        if ($max_age > 0 && $age > $max_age)
-        {
-            return 'timestamp_expired';
-        }
-
-        return '';
-    }
-
-    protected function passes_timestamp()
-    {
-        $timestamp = $this->get_timestamp_from_request();
-        $token = $this->get_token_from_request();
-
-        if ($timestamp <= 0 || !hash_equals($this->build_token($timestamp), $token))
-        {
-            return false;
-        }
-
-        $elapsed = time() - $timestamp;
-        $min_seconds = max(0, (int) $this->config['antispamguard_min_seconds']);
-        $max_seconds = max($min_seconds + 1, (int) $this->config['antispamguard_max_seconds']);
-
-        return $elapsed >= $min_seconds && $elapsed <= $max_seconds;
-    }
 
     protected function write_log($reason, $form_type = 'register')
     {
@@ -1400,85 +1124,6 @@ $slow_spam_reason = $this->check_slow_spam();
         return strlen($value) > $max_length ? substr($value, 0, $max_length) : $value;
     }
 
-    protected function get_timestamp_from_request()
-    {
-        $raw = $this->request->variable('antispamguard_ts', '');
-
-        if (strpos($raw, ':') === false)
-        {
-            return 0;
-        }
-
-        list($timestamp, $token) = explode(':', $raw, 2);
-
-        return (int) $timestamp;
-    }
-
-    protected function get_token_from_request()
-    {
-        $raw = $this->request->variable('antispamguard_ts', '');
-
-        if (strpos($raw, ':') === false)
-        {
-            return '';
-        }
-
-        list($timestamp, $token) = explode(':', $raw, 2);
-
-        return (string) $token;
-    }
-
-    protected function build_token($timestamp)
-    {
-        $secret = isset($this->config['cookie_name']) ? $this->config['cookie_name'] : 'phpbb';
-        $secret .= isset($this->config['cookie_salt']) ? $this->config['cookie_salt'] : '';
-
-        return hash_hmac('sha256', (string) $timestamp, $secret);
-    }
-
-    protected function get_honeypot_class($timestamp = 0)
-    {
-        if (empty($this->config['antispamguard_hp_camouflage_enabled']) || (int) $timestamp <= 0)
-        {
-            return 'antispamguard-hp';
-        }
-
-        return 'asg-field-' . substr($this->build_token((int) $timestamp), 12, 10);
-    }
-
-    protected function get_honeypot_style($timestamp = 0)
-    {
-        if (empty($this->config['antispamguard_hp_camouflage_enabled']))
-        {
-            return 'display:none;';
-        }
-
-        return 'position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;';
-    }
-
-    protected function get_honeypot_name($timestamp = 0)
-    {
-        if (!empty($this->config['antispamguard_hp_dynamic_enabled']) && (int) $timestamp > 0)
-        {
-            $prefix = isset($this->config['antispamguard_hp_dynamic_prefix']) ? trim((string) $this->config['antispamguard_hp_dynamic_prefix']) : 'asg_hp';
-
-            if ($prefix === '' || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]{1,20}$/', $prefix))
-            {
-                $prefix = 'asg_hp';
-            }
-
-            return $prefix . '_' . substr($this->build_token((int) $timestamp), 0, 12);
-        }
-
-        $field_name = isset($this->config['antispamguard_hp_name']) ? trim($this->config['antispamguard_hp_name']) : '';
-
-        if ($field_name === '' || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]{2,30}$/', $field_name))
-        {
-            return 'homepage';
-        }
-
-        return $field_name;
-    }
     protected function apply_shadowban(array $reasons)
     {
         if (empty($this->config['antispamguard_shadowban_enabled']))

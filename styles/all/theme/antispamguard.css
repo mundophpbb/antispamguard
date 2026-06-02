@@ -8,6 +8,14 @@
     opacity: 0 !important;
 }
 
+.asg-hp-label {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+}
+
 .asg-notice-container {
     display: inline-flex;
     align-items: center;
