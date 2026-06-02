@@ -28,14 +28,16 @@ class v_3_3_42 extends \mundophpbb\antispamguard\migrations\v_0_1_0
 
     public function repair_acp_modules()
     {
-        if (!$this->module_tool->exists('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE', true))
+        $module_tool = $this->get_module_tool();
+
+        if (!$module_tool->exists('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE', true))
         {
-            $this->module_tool->add('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE');
+            $module_tool->add('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE');
         }
 
-        if (!$this->module_tool->exists('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_SETTINGS', true))
+        if (!$module_tool->exists('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_SETTINGS', true))
         {
-            $this->module_tool->add('acp', 'ACP_ANTISPAMGUARD_TITLE', array(
+            $module_tool->add('acp', 'ACP_ANTISPAMGUARD_TITLE', array(
                 'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
                 'modes' => array('settings', 'logs', 'stats', 'about', 'sfs'),
             ));

@@ -608,4 +608,24 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             ),
         );
     }
+
+    /**
+     * @return \phpbb\db\migration\tool\module
+     */
+    protected function get_module_tool()
+    {
+        global $phpbb_container;
+
+        return $phpbb_container->get('migrator.tool.module');
+    }
+
+    /**
+     * @return \phpbb\db\migration\tool\permission
+     */
+    protected function get_permission_tool()
+    {
+        global $phpbb_container;
+
+        return $phpbb_container->get('migrator.tool.permission');
+    }
 }

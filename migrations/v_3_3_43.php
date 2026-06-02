@@ -29,13 +29,15 @@ class v_3_3_43 extends \mundophpbb\antispamguard\migrations\v_0_1_0
 
     public function repair_admin_permission()
     {
-        if (!$this->permission_tool->exists('a_antispamguard_manage', true))
+        $permission_tool = $this->get_permission_tool();
+
+        if (!$permission_tool->exists('a_antispamguard_manage', true))
         {
-            $this->permission_tool->add('a_antispamguard_manage', true);
+            $permission_tool->add('a_antispamguard_manage', true);
         }
 
-        $this->permission_tool->permission_set('ROLE_ADMIN_FULL', 'a_antispamguard_manage');
-        $this->permission_tool->permission_set('ROLE_ADMIN_STANDARD', 'a_antispamguard_manage');
+        $permission_tool->permission_set('ROLE_ADMIN_FULL', 'a_antispamguard_manage');
+        $permission_tool->permission_set('ROLE_ADMIN_STANDARD', 'a_antispamguard_manage');
     }
 
     public function repair_module_auth()

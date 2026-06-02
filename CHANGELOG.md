@@ -3,6 +3,13 @@
 Todas as versões relevantes desta linha **3.3.x** (phpBB 3.3).  
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [3.3.44] — 2026-06-01
+
+### Corrigido
+- Erro fatal na migração `v_3_3_42` / `v_3_3_43`: `Undefined property: $module_tool` / `$permission_tool` em métodos `custom` — ferramentas do migrator passam a ser obtidas via `get_module_tool()` e `get_permission_tool()` em `v_0_1_0`.
+
+---
+
 ## [3.3.43] — 2026-06-01
 
 ### Corrigido
