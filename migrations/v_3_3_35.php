@@ -22,7 +22,7 @@ class v_3_3_35 extends \mundophpbb\antispamguard\migrations\v_0_1_0
         return array(
             array('custom', array(array($this, 'repair_schema'))),
             array('custom', array(array($this, 'ensure_config_defaults'))),
-            array('config.update', array('antispamguard_version', '3.3.35')),
+            array('custom', array(array($this, 'set_version'))),
         );
     }
 

@@ -22,7 +22,7 @@ class v_3_3_41 extends \mundophpbb\antispamguard\migrations\v_0_1_0
     {
         return array(
             array('custom', array(array($this, 'ensure_register_audit_config'))),
-            array('config.update', array('antispamguard_version', '3.3.41')),
+            array('custom', array(array($this, 'set_version'))),
         );
     }
 

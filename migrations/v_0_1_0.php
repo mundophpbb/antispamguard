@@ -25,54 +25,72 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         return array(
             array('custom', array(array($this, 'repair_schema'))),
             array('custom', array(array($this, 'ensure_config_defaults'))),
-            array('module.add', array(
-                'acp',
-                'ACP_CAT_DOT_MODS',
-                'ACP_ANTISPAMGUARD_TITLE'
-            )),
-            array('module.add', array(
-                'acp',
-                'ACP_ANTISPAMGUARD_TITLE',
-                array(
-                    'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
-                    'modes'           => array('settings'),
-                ),
-            )),
-            array('module.add', array(
-                'acp',
-                'ACP_ANTISPAMGUARD_TITLE',
-                array(
-                    'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
-                    'modes'           => array('logs'),
-                ),
-            )),
-            array('module.add', array(
-                'acp',
-                'ACP_ANTISPAMGUARD_TITLE',
-                array(
-                    'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
-                    'modes'           => array('stats'),
-                ),
-            )),
-            array('module.add', array(
-                'acp',
-                'ACP_ANTISPAMGUARD_TITLE',
-                array(
-                    'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
-                    'modes'           => array('about'),
-                ),
-            )),
-            array('module.add', array(
-                'acp',
-                'ACP_ANTISPAMGUARD_TITLE',
-                array(
-                    'module_basename' => '\\mundophpbb\\antispamguard\\acp\\main_module',
-                    'modes'           => array('sfs'),
-                ),
-            )),
-            array('permission.add', array('a_antispamguard_manage', true)),
-            array('permission.permission_set', array('ROLE_ADMIN_FULL', 'a_antispamguard_manage')),
-            array('config.update', array('antispamguard_version', '0.1.0')),
+            array('custom', array(array($this, 'install_acp_modules_if_missing'))),
+            array('custom', array(array($this, 'install_admin_permissions_if_missing'))),
+            array('custom', array(array($this, 'set_version'))),
+        );
+    }
+
+    /**
+     * Idempotent ACP module install (avoids MODULE_EXISTS + broken rollback).
+     */
+    public function install_acp_modules_if_missing()
+    {
+        $module_tool = $this->get_module_tool();
+
+        if (!$module_tool->exists('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE', true))
+        {
+            $module_tool->add('acp', 'ACP_CAT_DOT_MODS', 'ACP_ANTISPAMGUARD_TITLE');
+        }
+
+        $basename = '\\mundophpbb\\antispamguard\\acp\\main_module';
+
+        foreach ($this->get_acp_module_modes() as $mode => $langname)
+        {
+            if (!$module_tool->exists('acp', 'ACP_ANTISPAMGUARD_TITLE', $langname, true))
+            {
+                $module_tool->add('acp', 'ACP_ANTISPAMGUARD_TITLE', array(
+                    'module_basename' => $basename,
+                    'modes' => array($mode),
+                ));
+            }
+        }
+
+        $this->repair_module_auth();
+    }
+
+    public function install_admin_permissions_if_missing()
+    {
+        $permission_tool = $this->get_permission_tool();
+
+        if (!$permission_tool->exists('a_antispamguard_manage', true))
+        {
+            $permission_tool->add('a_antispamguard_manage', true);
+        }
+
+        $permission_tool->permission_set('ROLE_ADMIN_FULL', 'a_antispamguard_manage');
+        $permission_tool->permission_set('ROLE_ADMIN_STANDARD', 'a_antispamguard_manage');
+    }
+
+    public function repair_module_auth()
+    {
+        $auth = 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)';
+
+        $sql = 'UPDATE ' . $this->table_prefix . "modules
+            SET module_auth = '" . $this->db->sql_escape($auth) . "'
+            WHERE module_langname LIKE 'ACP_ANTISPAMGUARD_%'
+                OR module_langname = 'ACP_ANTISPAMGUARD_TITLE'";
+        $this->db->sql_query($sql);
+    }
+
+    protected function get_acp_module_modes()
+    {
+        return array(
+            'settings' => 'ACP_ANTISPAMGUARD_SETTINGS',
+            'sfs'      => 'ACP_ANTISPAMGUARD_PANEL_SFS',
+            'logs'     => 'ACP_ANTISPAMGUARD_LOGS',
+            'stats'    => 'ACP_ANTISPAMGUARD_STATS',
+            'about'    => 'ACP_ANTISPAMGUARD_ABOUT',
         );
     }
 
@@ -203,6 +221,27 @@ class v_0_1_0 extends \phpbb\db\migration\migration
                 $this->config->set($key, $data[0], $data[1]);
             }
         }
+    }
+
+    /**
+     * Safely set the extension migration version.
+     *
+     * phpBB's config.update migration tool expects the config key to
+     * already exist. Using config->set() here makes fresh installs and
+     * repaired/partial installs idempotent because the key is created when
+     * missing and updated when present.
+     */
+    public function set_version()
+    {
+        $version = '0.1.0';
+        $class = get_class($this);
+
+        if (preg_match('/v_(\d+)_(\d+)_(\d+)$/', $class, $matches))
+        {
+            $version = $matches[1] . '.' . $matches[2] . '.' . $matches[3];
+        }
+
+        $this->config->set('antispamguard_version', $version);
     }
 
     protected function repair_main_log_table()

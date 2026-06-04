@@ -21,34 +21,10 @@ class v_3_3_43 extends \mundophpbb\antispamguard\migrations\v_0_1_0
     public function update_data()
     {
         return array(
-            array('custom', array(array($this, 'repair_admin_permission'))),
+            array('custom', array(array($this, 'install_admin_permissions_if_missing'))),
             array('custom', array(array($this, 'repair_module_auth'))),
-            array('config.update', array('antispamguard_version', '3.3.43')),
+            array('custom', array(array($this, 'set_version'))),
         );
-    }
-
-    public function repair_admin_permission()
-    {
-        $permission_tool = $this->get_permission_tool();
-
-        if (!$permission_tool->exists('a_antispamguard_manage', true))
-        {
-            $permission_tool->add('a_antispamguard_manage', true);
-        }
-
-        $permission_tool->permission_set('ROLE_ADMIN_FULL', 'a_antispamguard_manage');
-        $permission_tool->permission_set('ROLE_ADMIN_STANDARD', 'a_antispamguard_manage');
-    }
-
-    public function repair_module_auth()
-    {
-        $auth = 'ext_mundophpbb/antispamguard && (acl_a_board || acl_a_antispamguard_manage)';
-
-        $sql = 'UPDATE ' . $this->table_prefix . "modules
-            SET module_auth = '" . $this->db->sql_escape($auth) . "'
-            WHERE module_langname LIKE 'ACP_ANTISPAMGUARD_%'
-                OR module_langname = 'ACP_ANTISPAMGUARD_TITLE'";
-        $this->db->sql_query($sql);
     }
 
     public function revert_schema()

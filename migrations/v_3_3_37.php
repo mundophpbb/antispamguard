@@ -21,7 +21,7 @@ class v_3_3_37 extends \mundophpbb\antispamguard\migrations\v_0_1_0
     public function update_data()
     {
         return array(
-            array('config.update', array('antispamguard_version', '3.3.37')),
+            array('custom', array(array($this, 'set_version'))),
         );
     }
 

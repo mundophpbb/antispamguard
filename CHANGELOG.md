@@ -3,6 +3,14 @@
 Todas as versões relevantes desta linha **3.3.x** (phpBB 3.3).  
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [3.3.45] — 2026-06-01
+
+### Corrigido
+- Erro fatal `CANNOT_REMOVE_MODULE` ao ativar a extensão em fóruns que já tinham módulos ACP parciais (instalação anterior interrompida).
+- `v_0_1_0` deixa de usar `module.add` (que dispara rollback perigoso) e passa a `install_acp_modules_if_missing()` — verifica cada módulo antes de criar.
+
+---
+
 ## [3.3.44] — 2026-06-01
 
 ### Corrigido
