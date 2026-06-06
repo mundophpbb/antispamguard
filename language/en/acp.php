@@ -571,6 +571,8 @@ $lang = array_merge($lang, array(
     'ACP_ANTISPAMGUARD_SFS_SUBMIT_RESPONSE' => 'Response',
 
     'ACP_ANTISPAMGUARD_DECISION_WEIGHT_SFS_EXPLAIN' => 'Weight used by the decision engine when StopForumSpam contributes to the final score.',
+    'ACP_ANTISPAMGUARD_PROFILE_RECOMMENDED' => 'Recommended safe profile active',
+	'ACP_ANTISPAMGUARD_PROFILE_RECOMMENDED_EXPLAIN' => 'Default settings are conservative: honeypot and strong StopForumSpam hits can block, while local reputation, slow-spam and timing-only signals are treated as audit/review signals to reduce false positives on small forums.',
 ));
 // 3.3.27 subnet/risk heuristics
 $lang['ACP_ANTISPAMGUARD_REASON_SUBNET_ABUSE'] = 'Subnet abuse';

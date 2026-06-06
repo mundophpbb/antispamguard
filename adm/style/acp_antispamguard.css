@@ -17,6 +17,7 @@
 .asg-panel textarea { width: 96%; max-width: 680px; }
 .asg-alert { border: 1px solid #ead28a; background: #fff9e6; border-radius: 6px; padding: 8px 10px; margin: 8px 0 10px; font-size: 12px; }
 .asg-alert strong { display: block; margin-bottom: 3px; }
+.asg-alert-info { border-color: #b8d1e8; background: #f4f9ff; }
 .asg-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 @media (max-width: 900px) { .asg-modern-grid { grid-template-columns: 1fr; } }
 

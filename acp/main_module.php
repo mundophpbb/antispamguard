@@ -773,7 +773,7 @@ class main_module
         $ip_reputation_total = (int) $db->sql_fetchfield('total_scores');
         $db->sql_freeresult($result);
 
-        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
+        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 20;
         $sql = 'SELECT COUNT(score_id) AS blocked_scores
             FROM ' . $table_prefix . 'antispamguard_ip_score
             WHERE score >= ' . (int) $ip_reputation_threshold;
@@ -865,14 +865,14 @@ class main_module
             'SHADOWBAN_ENABLED' => !empty($config['antispamguard_shadowban_enabled']),
             'SHADOWBAN_THRESHOLD' => isset($config['antispamguard_shadowban_threshold']) ? (int) $config['antispamguard_shadowban_threshold'] : 80,
             'DECISION_ENGINE_ENABLED' => !isset($config['antispamguard_decision_engine_enabled']) || !empty($config['antispamguard_decision_engine_enabled']),
-            'DECISION_SCORE_LOG' => isset($config['antispamguard_decision_score_log']) ? (int) $config['antispamguard_decision_score_log'] : 30,
-            'DECISION_SCORE_BLOCK' => isset($config['antispamguard_decision_score_block']) ? (int) $config['antispamguard_decision_score_block'] : 60,
+            'DECISION_SCORE_LOG' => isset($config['antispamguard_decision_score_log']) ? (int) $config['antispamguard_decision_score_log'] : 25,
+            'DECISION_SCORE_BLOCK' => isset($config['antispamguard_decision_score_block']) ? (int) $config['antispamguard_decision_score_block'] : 80,
             'DECISION_WEIGHT_HONEYPOT' => isset($config['antispamguard_decision_weight_honeypot']) ? (int) $config['antispamguard_decision_weight_honeypot'] : 100,
             'DECISION_WEIGHT_TIMESTAMP_FAST' => isset($config['antispamguard_decision_weight_timestamp_fast']) ? (int) $config['antispamguard_decision_weight_timestamp_fast'] : 30,
             'DECISION_WEIGHT_TIMESTAMP_EXPIRED' => isset($config['antispamguard_decision_weight_timestamp_expired']) ? (int) $config['antispamguard_decision_weight_timestamp_expired'] : 15,
             'DECISION_WEIGHT_RATE_LIMIT' => isset($config['antispamguard_decision_weight_rate_limit']) ? (int) $config['antispamguard_decision_weight_rate_limit'] : 40,
-            'DECISION_WEIGHT_SFS' => isset($config['antispamguard_decision_weight_sfs']) ? (int) $config['antispamguard_decision_weight_sfs'] : 50,
-            'DECISION_WEIGHT_IP_REPUTATION' => isset($config['antispamguard_decision_weight_ip_reputation']) ? (int) $config['antispamguard_decision_weight_ip_reputation'] : 1,
+            'DECISION_WEIGHT_SFS' => isset($config['antispamguard_decision_weight_sfs']) ? (int) $config['antispamguard_decision_weight_sfs'] : 80,
+            'DECISION_WEIGHT_IP_REPUTATION' => isset($config['antispamguard_decision_weight_ip_reputation']) ? (int) $config['antispamguard_decision_weight_ip_reputation'] : 0,
             'DECISION_WEIGHT_SLOWSPAM' => isset($config['antispamguard_decision_weight_slowspam']) ? (int) $config['antispamguard_decision_weight_slowspam'] : 35,
             'SLOWSPAM_ENABLED' => !isset($config['antispamguard_slowspam_enabled']) || !empty($config['antispamguard_slowspam_enabled']),
             'SLOWSPAM_WINDOW' => isset($config['antispamguard_slowspam_window']) ? (int) $config['antispamguard_slowspam_window'] : 1800,
@@ -920,7 +920,7 @@ class main_module
             'ANTISPAMGUARD_RATE_LIMIT_MAX_ATTEMPTS' => isset($config['antispamguard_rate_limit_max_attempts']) ? (int) $config['antispamguard_rate_limit_max_attempts'] : 5,
             'ANTISPAMGUARD_RATE_LIMIT_WINDOW' => isset($config['antispamguard_rate_limit_window']) ? (int) $config['antispamguard_rate_limit_window'] : 3600,
             'IP_REPUTATION_ENABLED' => !isset($config['antispamguard_ip_reputation_enabled']) || !empty($config['antispamguard_ip_reputation_enabled']),
-            'IP_REPUTATION_THRESHOLD' => isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5,
+            'IP_REPUTATION_THRESHOLD' => isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 20,
             'IP_REPUTATION_DECAY_INTERVAL' => isset($config['antispamguard_ip_reputation_decay_interval']) ? (int) $config['antispamguard_ip_reputation_decay_interval'] : 600,
             'IP_REPUTATION_TTL' => isset($config['antispamguard_ip_reputation_ttl']) ? (int) $config['antispamguard_ip_reputation_ttl'] : 86400,
             'IP_REPUTATION_CLEANUP_INTERVAL' => isset($config['antispamguard_ip_reputation_cleanup_interval']) ? (int) $config['antispamguard_ip_reputation_cleanup_interval'] : 86400,

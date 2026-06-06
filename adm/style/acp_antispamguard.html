@@ -16,6 +16,7 @@
 
     {% if not ANTISPAMGUARD_ENABLED %}<div class="asg-alert"><strong>{{ lang('ACP_ANTISPAMGUARD_ALERT_PROTECTION_OFF') }}</strong>{{ lang('ACP_ANTISPAMGUARD_ALERT_PROTECTION_OFF_EXPLAIN') }}</div>{% endif %}
     {% if ANTISPAMGUARD_SIMULATION_MODE %}<div class="asg-alert"><strong>{{ lang('ACP_ANTISPAMGUARD_ALERT_SIMULATION_ON') }}</strong>{{ lang('ACP_ANTISPAMGUARD_ALERT_SIMULATION_ON_EXPLAIN') }}</div>{% endif %}
+    <div class="asg-alert asg-alert-info"><strong>{{ lang('ACP_ANTISPAMGUARD_PROFILE_RECOMMENDED') }}</strong>{{ lang('ACP_ANTISPAMGUARD_PROFILE_RECOMMENDED_EXPLAIN') }}</div>
 
     <div class="asg-modern-grid">
         <div class="asg-panel"><h2>🛡️ {{ lang('ACP_ANTISPAMGUARD_PANEL_PROTECTION') }}</h2>

@@ -28,49 +28,49 @@ class decision_engine
 
         if (!empty($signals['timestamp_too_fast']))
         {
-            $score += $this->weight('timestamp_fast', 30);
+            $score += $this->weight('timestamp_fast', 15);
             $reasons[] = 'timestamp_too_fast';
         }
 
         if (!empty($signals['timestamp_expired']))
         {
-            $score += $this->weight('timestamp_expired', 15);
+            $score += $this->weight('timestamp_expired', 5);
             $reasons[] = 'timestamp_expired';
         }
 
         if (!empty($signals['slow_spam']))
         {
-            $score += $this->weight('slowspam', 35);
+            $score += $this->weight('slowspam', 15);
             $reasons[] = 'slow_spam';
         }
 
         if (!empty($signals['rate_limit']))
         {
-            $score += $this->weight('rate_limit', 40);
+            $score += $this->weight('rate_limit', 25);
             $reasons[] = 'ip_rate_limit';
         }
 
         if (!empty($signals['subnet_abuse']))
         {
-            $score += $this->weight('subnet_abuse', 45);
+            $score += $this->weight('subnet_abuse', 30);
             $reasons[] = 'subnet_abuse';
         }
 
         if (!empty($signals['random_gmail']))
         {
-            $score += $this->weight('random_gmail', 20);
+            $score += $this->weight('random_gmail', 10);
             $reasons[] = 'random_gmail';
         }
 
         if (!empty($signals['sfs']))
         {
-            $score += $this->weight('sfs', 50);
+            $score += $this->weight('sfs', 80);
             $reasons[] = 'sfs_reputation';
         }
 
         if (isset($signals['ip_reputation_score']))
         {
-            $score += ((int) $signals['ip_reputation_score']) * $this->weight('ip_reputation', 1);
+            $score += ((int) $signals['ip_reputation_score']) * $this->weight('ip_reputation', 0);
 
             if ((int) $signals['ip_reputation_score'] > 0)
             {
@@ -87,8 +87,8 @@ class decision_engine
 
     public function decide($score)
     {
-        $block = isset($this->config['antispamguard_decision_score_block']) ? (int) $this->config['antispamguard_decision_score_block'] : 60;
-        $log = isset($this->config['antispamguard_decision_score_log']) ? (int) $this->config['antispamguard_decision_score_log'] : 30;
+        $block = isset($this->config['antispamguard_decision_score_block']) ? (int) $this->config['antispamguard_decision_score_block'] : 80;
+        $log = isset($this->config['antispamguard_decision_score_log']) ? (int) $this->config['antispamguard_decision_score_log'] : 25;
 
         if ((int) $score >= $block)
         {
