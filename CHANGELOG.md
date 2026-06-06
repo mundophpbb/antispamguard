@@ -1,3 +1,10 @@
+# AntiSpam Guard Changelog
+
+## 3.3.47
+
+- Reduced false positives during registration when `slow_spam` appears together with local `ip_reputation` but the user submitted a normal username and email.
+- In lenient registration mode, `slow_spam` is now treated as an audit/review signal unless it is combined with hard-block signals such as StopForumSpam, blacklist, rate limit, subnet abuse, content filter, or random Gmail pattern.
+
 
 ## 3.3.46
 

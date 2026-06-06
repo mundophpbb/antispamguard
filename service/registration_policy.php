@@ -33,6 +33,7 @@ class registration_policy
             'timestamp_too_fast',
             'timestamp_expired',
             'ip_reputation',
+            'slow_spam',
             'combined_decision',
         );
 
@@ -72,7 +73,6 @@ class registration_policy
             'ip_rate_limit',
             'subnet_abuse',
             'random_gmail',
-            'slow_spam',
         );
 
         foreach ($hard_block_reasons as $hard_reason)
