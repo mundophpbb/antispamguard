@@ -1,3 +1,10 @@
+
+## 3.3.46
+
+- Reduced false positives from local IP reputation during registration.
+- A registration with submitted username and email is no longer blocked by isolated local `ip_reputation`; it is logged for review instead.
+- Prevented local IP reputation from self-amplifying on `ip_reputation` and `combined_decision` outcomes.
+
 # Changelog — AntiSpam Guard
 
 Todas as versões relevantes desta linha **3.3.x** (phpBB 3.3).  

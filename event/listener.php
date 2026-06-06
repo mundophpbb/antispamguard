@@ -394,7 +394,7 @@ class listener implements EventSubscriberInterface
             {
                 $reason = trim($reason);
 
-                if ($reason !== '')
+                if ($reason !== '' && !in_array($reason, array('ip_reputation', 'combined_decision', 'possible_false_positive'), true))
                 {
                     $this->ip_reputation->add_event((string) $this->user->ip, $reason);
                 }

@@ -32,6 +32,7 @@ class registration_policy
             'timestamp',
             'timestamp_too_fast',
             'timestamp_expired',
+            'ip_reputation',
             'combined_decision',
         );
 
@@ -66,7 +67,6 @@ class registration_policy
         $hard_block_reasons = array(
             'sfs_reputation',
             'ip_blacklist',
-            'ip_reputation',
             'content_filter',
             'too_many_urls',
             'ip_rate_limit',
