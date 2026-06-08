@@ -27,6 +27,16 @@ class registration_policy
             return false;
         }
 
+        // StopForumSpam is an external reputation signal. When it is the only
+        // meaningful reason for a registration with username/e-mail submitted,
+        // keep the event in audit mode to avoid blocking a legitimate user using
+        // a shared, VPN, proxy, corporate, or previously abused IP. If there is
+        // also a local bot signal, such as honeypot or timestamp failure, block.
+        if (in_array('sfs_reputation', $reasons, true))
+        {
+            return !$this->has_local_bot_signal($reasons);
+        }
+
         $soft_reasons = array(
             'honeypot',
             'timestamp',
@@ -66,7 +76,6 @@ class registration_policy
     protected function has_hard_block_reason(array $reasons)
     {
         $hard_block_reasons = array(
-            'sfs_reputation',
             'ip_blacklist',
             'content_filter',
             'too_many_urls',
@@ -78,6 +87,27 @@ class registration_policy
         foreach ($hard_block_reasons as $hard_reason)
         {
             if (in_array($hard_reason, $reasons, true))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function has_local_bot_signal(array $reasons)
+    {
+        $local_bot_reasons = array(
+            'honeypot',
+            'timestamp',
+            'timestamp_too_fast',
+            'timestamp_expired',
+            'slow_spam',
+        );
+
+        foreach ($local_bot_reasons as $local_reason)
+        {
+            if (in_array($local_reason, $reasons, true))
             {
                 return true;
             }
