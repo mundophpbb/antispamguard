@@ -482,7 +482,7 @@ class main_module
                 $whitelist = (string) $config['antispamguard_trusted_ip_whitelist'];
             }
 
-            $match = $this->test_ip_whitelist_match($test_ip, $whitelist);
+            $match = $this->get_ip_matcher()->whitelist_match($test_ip, $whitelist);
 
             $template->assign_vars(array(
                 'S_IP_WHITELIST_TEST_DONE' => true,
