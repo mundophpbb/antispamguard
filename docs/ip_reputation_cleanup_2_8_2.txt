@@ -1,1 +1,0 @@
-AntiSpam Guard 2.8.2 - limpeza automática/manual da reputação local por IP.

@@ -1,1 +1,0 @@
-Diagnostics block moved inside the visible StopForumSpam panel in Settings.

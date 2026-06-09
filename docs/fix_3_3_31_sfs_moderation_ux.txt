@@ -1,9 +1,0 @@
-AntiSpam Guard 3.3.31 - SFS moderation UX finishing pass
-
-- Added per-row Clear review action for SFS logs.
-- Added bulk Clear review action for selected SFS logs.
-- Bulk SFS moderation buttons are disabled until at least one row is selected.
-- Bulk confirmations now include the selected row count and action description.
-- Blocking an IP from an SFS log no longer treats an existing blacklist entry as a failed operation.
-- Existing blacklist entries are not duplicated; the log is still marked as locally blocked.
-- SFS moderation result summary now reports newly blocked and already-blocked counts separately.
