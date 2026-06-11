@@ -59,7 +59,7 @@ class sfs_log
     {
         $window_start = max(0, (int) $data['created_at'] - 5);
 
-        $sql = 'SELECT log_id
+        $sql = 'SELECT log_id, details_json
             FROM ' . $this->table . '
             WHERE created_at >= ' . (int) $window_start . "
                 AND check_source = '" . $this->db->sql_escape($data['check_source']) . "'
@@ -70,12 +70,60 @@ class sfs_log
                 AND strong_hit = " . (int) $data['strong_hit'] . "
                 AND blocked = " . (int) $data['blocked'] . "
                 AND action_mode = '" . $this->db->sql_escape($data['action_mode']) . "'
-                AND details_json = '" . $this->db->sql_escape($data['details_json']) . "'
             ORDER BY log_id DESC";
-        $result = $this->db->sql_query_limit($sql, 1);
-        $log_id = (int) $this->db->sql_fetchfield('log_id');
+        $result = $this->db->sql_query_limit($sql, 10);
+        $new_details = $this->canonicalize_details_json($data['details_json']);
+        $log_id = 0;
+
+        while ($row = $this->db->sql_fetchrow($result))
+        {
+            if ($this->canonicalize_details_json($row['details_json']) === $new_details)
+            {
+                $log_id = (int) $row['log_id'];
+                break;
+            }
+        }
+
         $this->db->sql_freeresult($result);
 
         return $log_id;
+    }
+
+    protected function canonicalize_details_json($json)
+    {
+        $details = json_decode((string) $json, true);
+
+        if (!is_array($details))
+        {
+            return (string) $json;
+        }
+
+        $details = $this->remove_volatile_detail_fields($details);
+        ksort($details);
+
+        return json_encode($details);
+    }
+
+    protected function remove_volatile_detail_fields(array $data)
+    {
+        foreach ($data as $key => $value)
+        {
+            // The same SFS lookup can be logged once from a live API response and
+            // once from cache during the same request. The cached flag is runtime
+            // metadata, not a distinct spam decision, so ignore it for de-dupe.
+            if ($key === 'cached')
+            {
+                unset($data[$key]);
+                continue;
+            }
+
+            if (is_array($value))
+            {
+                $data[$key] = $this->remove_volatile_detail_fields($value);
+                ksort($data[$key]);
+            }
+        }
+
+        return $data;
     }
 }

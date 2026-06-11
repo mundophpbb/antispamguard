@@ -492,17 +492,24 @@ class listener implements EventSubscriberInterface
         }
 
         $ip = (string) $this->user->ip;
-        $email = $this->request->variable('email', '', true);
-        $username = $this->request->variable('username', '', true);
+        $email = trim((string) $this->request->variable('email', '', true));
+        $username = trim((string) $this->request->variable('username', '', true));
 
-        if ($email === '' && !empty($this->user->data['user_email']))
+        // During registration phpBB's current user is still the guest account,
+        // commonly named "Anonymous". Never use that account identity as the
+        // SFS username/email for a registration attempt; it can cause a false
+        // SFS hit unrelated to the submitted account.
+        if ($form_type !== 'register')
         {
-            $email = (string) $this->user->data['user_email'];
-        }
+            if ($email === '' && !empty($this->user->data['user_email']) && !$this->current_user_is_anonymous())
+            {
+                $email = trim((string) $this->user->data['user_email']);
+            }
 
-        if ($username === '' && !empty($this->user->data['username']))
-        {
-            $username = (string) $this->user->data['username'];
+            if ($username === '' && !empty($this->user->data['username']) && !$this->current_user_is_anonymous())
+            {
+                $username = trim((string) $this->user->data['username']);
+            }
         }
 
         $decision = $this->sfs_decision->should_block($ip, $email, $username, $form_type);
@@ -555,6 +562,13 @@ class listener implements EventSubscriberInterface
         );
     }
 
+    protected function current_user_is_anonymous()
+    {
+        $user_id = isset($this->user->data['user_id']) ? (int) $this->user->data['user_id'] : ANONYMOUS;
+
+        return $user_id === ANONYMOUS;
+    }
+
     protected function force_sfs_debug_trace(array $reasons)
     {
         if (empty($this->config['antispamguard_sfs_enabled']))
@@ -586,28 +600,22 @@ class listener implements EventSubscriberInterface
             return;
         }
 
-        $email = '';
-        $username = '';
+        // Prefer submitted form identity. The current phpBB user can still be
+        // ANONYMOUS while a registration/contact submission is being validated.
+        $email = trim((string) $this->request->variable('email', '', true));
+        $username = trim((string) $this->request->variable('username', '', true));
 
-        if (isset($this->user->data['user_email']))
+        if (!$this->current_user_is_anonymous())
         {
-            $email = (string) $this->user->data['user_email'];
-        }
+            if ($email === '' && isset($this->user->data['user_email']))
+            {
+                $email = trim((string) $this->user->data['user_email']);
+            }
 
-        if (isset($this->user->data['username']))
-        {
-            $username = (string) $this->user->data['username'];
-        }
-
-        // Registration forms may not have a logged-in user's email/username yet.
-        if ($email === '')
-        {
-            $email = $this->request->variable('email', '');
-        }
-
-        if ($username === '')
-        {
-            $username = $this->request->variable('username', '', true);
+            if ($username === '' && isset($this->user->data['username']))
+            {
+                $username = trim((string) $this->user->data['username']);
+            }
         }
 
         // Force a trace decision. In debug mode, sfs_decision logs checked_not_listed too.
