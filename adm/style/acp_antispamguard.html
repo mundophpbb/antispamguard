@@ -810,7 +810,13 @@
                 <td>{{ log.USERNAME }}</td>
                 <td>{{ log.EMAIL }}</td>
                 <td>{{ log.FORM_TYPE }}</td>
-                <td>{{ log.REASON }}</td>
+                <td>
+                    {% if log.REASON_BADGES %}
+                        {{ log.REASON_BADGES }}
+                    {% else %}
+                        {{ log.REASON }}
+                    {% endif %}
+                </td>
                 <td>{{ log.USER_AGENT }}</td>
             </tr>
             {% endfor %}

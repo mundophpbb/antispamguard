@@ -258,3 +258,34 @@ tr.asg-sfs-row-allowed td {
     background: #f5f7fa;
     font-weight: 600;
 }
+
+/* === Reason Badges (Logs page) - colored pills for better readability === */
+.asg-reason-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.asg-reason-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.25;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+}
+
+.asg-reason-honeypot          { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.asg-reason-timestamp         { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.asg-reason-sfs               { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+.asg-reason-combined          { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+.asg-reason-ip-reputation     { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.asg-reason-rate-limit        { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.asg-reason-content-filter    { background: #f3e8ff; color: #6b21a8; border-color: #e9d5ff; }
+.asg-reason-simulation        { background: #f3f4f6; color: #374151; border-color: #e5e7eb; }
+.asg-reason-other             { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }

@@ -427,8 +427,9 @@ class logs_controller
                 'USERNAME'   => $row['username'],
                 'EMAIL'      => $row['email'],
                 'FORM_TYPE'  => $this->format_log_value(isset($row['form_type']) ? $row['form_type'] : 'register', 'form_type', $user),
-                'REASON'     => $this->format_log_value($row['reason'], 'reason', $user),
-                'USER_AGENT' => $row['user_agent'],
+                'REASON'        => $this->format_log_value($row['reason'], 'reason', $user),
+                'REASON_BADGES' => $this->build_reason_badges(isset($row['matched_rules']) && $row['matched_rules'] !== '' ? $row['matched_rules'] : $row['reason'], $user),
+                'USER_AGENT'    => $row['user_agent'],
                 'RISK_SCORE' => isset($row['risk_score']) ? (int) $row['risk_score'] : 0,
                 'RISK_LEVEL' => isset($row['risk_level']) ? $row['risk_level'] : '',
                 'ACTION' => isset($row['action']) ? $row['action'] : '',
@@ -695,5 +696,75 @@ class logs_controller
         }
 
         return (string) $reason;
+    }
+
+    /**
+     * Builds colored reason badges HTML for the logs table.
+     * Supports comma-separated reasons from matched_rules or reason column.
+     */
+    public function build_reason_badges($reasons_string, $user = null)
+    {
+        if ($user === null)
+        {
+            global $user;
+        }
+
+        $reasons_string = trim((string) $reasons_string);
+        if ($reasons_string === '')
+        {
+            return '';
+        }
+
+        $parts = array_map('trim', explode(',', $reasons_string));
+        $html  = '<div class="asg-reason-badges">';
+
+        foreach ($parts as $reason)
+        {
+            if ($reason === '')
+            {
+                continue;
+            }
+
+            $class = 'asg-reason-other';
+            $label = $this->format_log_value($reason, 'reason', $user);
+
+            if (strpos($reason, 'honeypot') !== false)
+            {
+                $class = 'asg-reason-honeypot';
+            }
+            elseif (strpos($reason, 'timestamp') !== false)
+            {
+                $class = 'asg-reason-timestamp';
+            }
+            elseif (strpos($reason, 'sfs_reputation') !== false)
+            {
+                $class = 'asg-reason-sfs';
+            }
+            elseif (strpos($reason, 'combined_decision') !== false)
+            {
+                $class = 'asg-reason-combined';
+            }
+            elseif (strpos($reason, 'ip_reputation') !== false)
+            {
+                $class = 'asg-reason-ip-reputation';
+            }
+            elseif (strpos($reason, 'ip_rate_limit') !== false || strpos($reason, 'rate_limit') !== false)
+            {
+                $class = 'asg-reason-rate-limit';
+            }
+            elseif (strpos($reason, 'content_filter') !== false || strpos($reason, 'too_many_urls') !== false)
+            {
+                $class = 'asg-reason-content-filter';
+            }
+            elseif (strpos($reason, 'simulation_') !== false)
+            {
+                $class = 'asg-reason-simulation';
+            }
+
+            $html .= '<span class="asg-reason-badge ' . $class . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+        }
+
+        $html .= '</div>';
+        return $html;
     }
 }
