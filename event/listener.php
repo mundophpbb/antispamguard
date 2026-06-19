@@ -956,13 +956,12 @@ class listener implements EventSubscriberInterface
 
     protected function recent_duplicate_log_exists($table, array $log_row, $now)
     {
-        $window_start = max(0, (int) $now - 60);
+        $window_start = max(0, (int) $now - 180);
 
-        // De-duplicate by request identity, not by the full reason string.
-        // The contact form can hit more than one validation path and produce
-        // near-identical rows with one extra heuristic reason, commonly
-        // slow_spam. Use a wider short window and match the stable request
-        // fields, then merge reasons into the newest row.
+        // De-duplicate by request identity. Some phpBB validation paths can log
+        // an early row before username/email are available, then another row for
+        // the same registration with the submitted identity. Treat the sparse
+        // row and the completed row as the same person and merge them.
         $identity_sql = array(
             "user_ip = '" . $this->db->sql_escape($log_row['user_ip']) . "'",
             "form_type = '" . $this->db->sql_escape($log_row['form_type']) . "'",
@@ -971,20 +970,30 @@ class listener implements EventSubscriberInterface
 
         if ((string) $log_row['email'] !== '')
         {
-            $identity_sql[] = "email = '" . $this->db->sql_escape($log_row['email']) . "'";
-        }
-        else
-        {
-            $identity_sql[] = "username = '" . $this->db->sql_escape($log_row['username']) . "'";
+            $identity_sql[] = "(email = '" . $this->db->sql_escape($log_row['email']) . "' OR email = '')";
         }
 
-        $sql = 'SELECT log_id, reason
+        if ((string) $log_row['username'] !== '')
+        {
+            $identity_sql[] = "(username = '" . $this->db->sql_escape($log_row['username']) . "' OR username = '')";
+        }
+
+        $sql = 'SELECT log_id, reason, username, email
             FROM ' . $table . "
             WHERE log_time >= " . (int) $window_start . "
                 AND " . implode(' AND ', $identity_sql) . "
             ORDER BY log_time DESC, log_id DESC";
-        $result = $this->db->sql_query_limit($sql, 1);
-        $row = $this->db->sql_fetchrow($result);
+        $result = $this->db->sql_query_limit($sql, 10);
+
+        $row = false;
+        while ($candidate = $this->db->sql_fetchrow($result))
+        {
+            if ($this->is_same_logged_submission($candidate, $log_row))
+            {
+                $row = $candidate;
+                break;
+            }
+        }
         $this->db->sql_freeresult($result);
 
         if (!$row)
@@ -993,16 +1002,37 @@ class listener implements EventSubscriberInterface
         }
 
         $merged_reason = $this->merge_log_reasons($row['reason'], $log_row['reason']);
+        $merged_username = ((string) $row['username'] !== '') ? (string) $row['username'] : (string) $log_row['username'];
+        $merged_email = ((string) $row['email'] !== '') ? (string) $row['email'] : (string) $log_row['email'];
 
-        if ($merged_reason !== (string) $row['reason'])
+        $sql = 'UPDATE ' . $table . "
+            SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "',
+                username = '" . $this->db->sql_escape($this->truncate_for_storage($merged_username, 255)) . "',
+                email = '" . $this->db->sql_escape($this->truncate_for_storage($merged_email, 255)) . "',
+                risk_score = " . (int) $this->calculate_log_score($merged_reason) . ",
+                risk_level = '" . $this->db->sql_escape($this->get_log_risk_level($merged_reason)) . "',
+                matched_rules = '" . $this->db->sql_escape($this->normalize_log_reason($merged_reason)) . "'
+            WHERE log_id = " . (int) $row['log_id'];
+        $this->db->sql_query($sql);
+
+        return true;
+    }
+
+    protected function is_same_logged_submission(array $existing, array $incoming)
+    {
+        $existing_email = strtolower(trim((string) $existing['email']));
+        $incoming_email = strtolower(trim((string) $incoming['email']));
+        $existing_username = strtolower(trim((string) $existing['username']));
+        $incoming_username = strtolower(trim((string) $incoming['username']));
+
+        if ($existing_email !== '' && $incoming_email !== '' && $existing_email !== $incoming_email)
         {
-            $sql = 'UPDATE ' . $table . "
-                SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "',
-                    risk_score = " . (int) $this->calculate_log_score($merged_reason) . ",
-                    risk_level = '" . $this->db->sql_escape($this->get_log_risk_level($merged_reason)) . "',
-                    matched_rules = '" . $this->db->sql_escape($this->normalize_log_reason($merged_reason)) . "'
-                WHERE log_id = " . (int) $row['log_id'];
-            $this->db->sql_query($sql);
+            return false;
+        }
+
+        if ($existing_username !== '' && $incoming_username !== '' && $existing_username !== $incoming_username)
+        {
+            return false;
         }
 
         return true;

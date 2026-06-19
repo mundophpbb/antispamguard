@@ -761,7 +761,7 @@ class logs_controller
                 $class = 'asg-reason-simulation';
             }
 
-            $html .= '<span class="asg-reason-badge ' . $class . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>';
+            $html .= '<span class="asg-reason-badge ' . $class . '">' . utf8_htmlspecialchars($label) . '</span>';
         }
 
         $html .= '</div>';
