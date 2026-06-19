@@ -43,7 +43,7 @@ class sfs_log
             'created_at' => time(),
         );
 
-        $existing_log_id = $this->recent_duplicate_log_exists($data);
+        $existing_log_id = $this->merge_recent_related_log($data);
         if ($existing_log_id)
         {
             return (int) $existing_log_id;
@@ -55,75 +55,139 @@ class sfs_log
         return (int) $this->db->sql_nextid();
     }
 
-    protected function recent_duplicate_log_exists(array $data)
+    /**
+     * Merge SFS checks that belong to the same form submission/person.
+     *
+     * A registration can be logged more than once while phpBB validates the
+     * request. Early rows may only contain the IP, then a later row contains
+     * the submitted username/email. Keeping them as separate rows creates a
+     * false conflict in ACP review, so the sparse row is enriched instead of
+     * creating a second visible candidate.
+     */
+    protected function merge_recent_related_log(array $data)
     {
-        $window_start = max(0, (int) $data['created_at'] - 5);
+        $window_start = max(0, (int) $data['created_at'] - 180);
 
-        $sql = 'SELECT log_id, details_json
+        $sql = 'SELECT *
             FROM ' . $this->table . '
             WHERE created_at >= ' . (int) $window_start . "
                 AND check_source = '" . $this->db->sql_escape($data['check_source']) . "'
                 AND user_ip = '" . $this->db->sql_escape($data['user_ip']) . "'
-                AND user_email = '" . $this->db->sql_escape($data['user_email']) . "'
-                AND username = '" . $this->db->sql_escape($data['username']) . "'
-                AND listed_count = " . (int) $data['listed_count'] . "
-                AND strong_hit = " . (int) $data['strong_hit'] . "
-                AND blocked = " . (int) $data['blocked'] . "
-                AND action_mode = '" . $this->db->sql_escape($data['action_mode']) . "'
-            ORDER BY log_id DESC";
-        $result = $this->db->sql_query_limit($sql, 10);
-        $new_details = $this->canonicalize_details_json($data['details_json']);
-        $log_id = 0;
+            ORDER BY created_at DESC, log_id DESC";
+        $result = $this->db->sql_query_limit($sql, 25);
 
+        $best = false;
         while ($row = $this->db->sql_fetchrow($result))
         {
-            if ($this->canonicalize_details_json($row['details_json']) === $new_details)
+            if ($this->is_same_submission($row, $data))
             {
-                $log_id = (int) $row['log_id'];
+                $best = $row;
                 break;
             }
         }
-
         $this->db->sql_freeresult($result);
 
-        return $log_id;
-    }
-
-    protected function canonicalize_details_json($json)
-    {
-        $details = json_decode((string) $json, true);
-
-        if (!is_array($details))
+        if (!$best)
         {
-            return (string) $json;
+            return 0;
         }
 
-        $details = $this->remove_volatile_detail_fields($details);
-        ksort($details);
+        $merged = array(
+            'user_email' => ((string) $best['user_email'] !== '') ? (string) $best['user_email'] : (string) $data['user_email'],
+            'username' => ((string) $best['username'] !== '') ? (string) $best['username'] : (string) $data['username'],
+            'listed_count' => max((int) $best['listed_count'], (int) $data['listed_count']),
+            'strong_hit' => (!empty($best['strong_hit']) || !empty($data['strong_hit'])) ? 1 : 0,
+            'blocked' => (!empty($best['blocked']) || !empty($data['blocked'])) ? 1 : 0,
+            'action_mode' => $this->strongest_action_mode((string) $best['action_mode'], (string) $data['action_mode']),
+            'details_json' => $this->merge_details_json((string) $best['details_json'], (string) $data['details_json']),
+            'created_at' => max((int) $best['created_at'], (int) $data['created_at']),
+        );
 
-        return json_encode($details);
+        $sql = 'UPDATE ' . $this->table . ' SET ' . $this->db->sql_build_array('UPDATE', $merged) . '
+            WHERE log_id = ' . (int) $best['log_id'];
+        $this->db->sql_query($sql);
+
+        return (int) $best['log_id'];
     }
 
-    protected function remove_volatile_detail_fields(array $data)
+    protected function is_same_submission(array $existing, array $incoming)
     {
-        foreach ($data as $key => $value)
+        $existing_email = strtolower(trim((string) $existing['user_email']));
+        $incoming_email = strtolower(trim((string) $incoming['user_email']));
+        $existing_username = strtolower(trim((string) $existing['username']));
+        $incoming_username = strtolower(trim((string) $incoming['username']));
+
+        if ($existing_email !== '' && $incoming_email !== '' && $existing_email !== $incoming_email)
         {
-            // The same SFS lookup can be logged once from a live API response and
-            // once from cache during the same request. The cached flag is runtime
-            // metadata, not a distinct spam decision, so ignore it for de-dupe.
-            if ($key === 'cached')
+            return false;
+        }
+
+        if ($existing_username !== '' && $incoming_username !== '' && $existing_username !== $incoming_username)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function strongest_action_mode($a, $b)
+    {
+        $rank = array(
+            'disabled' => 0,
+            'whitelist' => 1,
+            'log_only' => 2,
+            'soft' => 3,
+            'block' => 4,
+        );
+
+        $a = isset($rank[$a]) ? $a : 'log_only';
+        $b = isset($rank[$b]) ? $b : 'log_only';
+
+        return ($rank[$b] > $rank[$a]) ? $b : $a;
+    }
+
+    protected function merge_details_json($existing_json, $incoming_json)
+    {
+        $existing = json_decode((string) $existing_json, true);
+        $incoming = json_decode((string) $incoming_json, true);
+
+        if (!is_array($existing))
+        {
+            $existing = array();
+        }
+        if (!is_array($incoming))
+        {
+            $incoming = array();
+        }
+
+        foreach ($incoming as $key => $incoming_value)
+        {
+            if (!isset($existing[$key]) || !is_array($existing[$key]) || !is_array($incoming_value))
             {
-                unset($data[$key]);
+                $existing[$key] = $incoming_value;
                 continue;
             }
 
-            if (is_array($value))
+            $existing[$key] = array_merge($existing[$key], $incoming_value);
+
+            if (isset($incoming_value['confidence'], $existing[$key]['confidence']))
             {
-                $data[$key] = $this->remove_volatile_detail_fields($value);
-                ksort($data[$key]);
+                $existing[$key]['confidence'] = max((float) $existing[$key]['confidence'], (float) $incoming_value['confidence']);
+            }
+            if (isset($incoming_value['frequency'], $existing[$key]['frequency']))
+            {
+                $existing[$key]['frequency'] = max((int) $existing[$key]['frequency'], (int) $incoming_value['frequency']);
+            }
+            if (isset($incoming_value['is_listed'], $existing[$key]['is_listed']))
+            {
+                $existing[$key]['is_listed'] = !empty($existing[$key]['is_listed']) || !empty($incoming_value['is_listed']);
+            }
+            if (isset($incoming_value['cached'], $existing[$key]['cached']))
+            {
+                $existing[$key]['cached'] = !empty($existing[$key]['cached']) && !empty($incoming_value['cached']);
             }
         }
 
-        return $data;
+        return json_encode($existing);
     }
 }
