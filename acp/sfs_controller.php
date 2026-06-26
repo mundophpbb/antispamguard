@@ -164,23 +164,35 @@ class sfs_controller
         $total_sfs_logs_filtered = 0;
         $has_sfs_logs = false;
         $sfs_rows_rendered = 0;
-        $sfs_seen_filtered = 0;
 
-        $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC, log_id DESC';
         $result = $db->sql_query($sql);
-        $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+
+        $sfs_raw_rows = array();
+        while ($sfs_row = $db->sql_fetchrow($result))
+        {
+            $sfs_raw_rows[] = $sfs_row;
+        }
         $db->sql_freeresult($result);
+
+        $sfs_grouped_rows = $this->group_sfs_log_rows($sfs_raw_rows);
+        $total_sfs_logs_filtered = count($sfs_grouped_rows);
+
+        if ($sfs_where_sql === '')
+        {
+            $total_sfs_logs = $total_sfs_logs_filtered;
+        }
 
         if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
         {
             $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
         }
 
-        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC';
-        $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
+        $sfs_page_rows = array_slice($sfs_grouped_rows, $sfs_start, $sfs_per_page);
 
-        while ($sfs_row = $db->sql_fetchrow($result))
+        foreach ($sfs_page_rows as $sfs_group)
         {
+            $sfs_row = $sfs_group['row'];
             $details = json_decode($sfs_row['details_json'], true);
             if (!is_array($details))
             {
@@ -199,7 +211,6 @@ class sfs_controller
 
             $has_sfs_logs = true;
             $sfs_rows_rendered++;
-            $sfs_seen_filtered++;
 
             foreach ($details as $detail_type => $detail_data)
             {
@@ -214,7 +225,7 @@ class sfs_controller
                     . ', cached=' . (!empty($detail_data['cached']) ? $user->lang('YES') : $user->lang('NO'));
             }
 
-            $already_reported = $this->has_successful_sfs_submission($db, $table_prefix, (int) $sfs_row['log_id']);
+            $already_reported = $this->sfs_group_has_successful_submission($db, $table_prefix, $sfs_group['ids']);
             $review_status_text = $this->format_sfs_review_status($sfs_row, $already_reported, $user);
             $row_class = $this->get_sfs_row_class($sfs_row, $already_reported);
 
@@ -230,7 +241,9 @@ class sfs_controller
                 'BLOCKED' => !empty($sfs_row['blocked']) ? $user->lang('YES') : $user->lang('NO'),
                 'ACTION_MODE' => $this->format_sfs_action_mode($action_mode, $user),
                 'MATCHED' => $matched ? $user->lang('YES') : $user->lang('NO'),
-                'DETAILS' => !empty($detail_parts) ? implode('; ', $detail_parts) : '',
+                'DETAILS' => $this->format_sfs_group_details(!empty($detail_parts) ? implode('; ', $detail_parts) : '', (int) $sfs_group['count']),
+                'GROUP_COUNT' => (int) $sfs_group['count'],
+                'S_GROUPED' => ((int) $sfs_group['count'] > 1),
                 'REVIEW_STATUS' => $review_status_text,
                 'ROW_CLASS' => $row_class,
                 'U_REPORT_PREFILL' => $this->append_url_param($this->get_sfs_mode_url(), 'sfs_prefill_log_id', (int) $sfs_row['log_id']),
@@ -241,7 +254,6 @@ class sfs_controller
                 'S_REVIEWED' => ((isset($sfs_row['review_status']) && (string) $sfs_row['review_status'] !== '') || (isset($sfs_row['local_action']) && (string) $sfs_row['local_action'] !== '')),
             ));
         }
-        $db->sql_freeresult($result);
 
         $filter_params = '';
         if ($sfs_filter_action !== '')
@@ -286,6 +298,265 @@ class sfs_controller
             'SFS_PAGINATION' => $sfs_pagination,
             'SFS_PAGE_NUMBER' => $sfs_page_number,
         ));
+    }
+
+
+    /**
+     * Build ACP-visible SFS groups without deleting raw audit rows.
+     *
+     * Older rows can contain only the IP and a later row from the same form
+     * submission can contain the username/e-mail.  Grouping at render time keeps
+     * the audit trail intact, but displays the most complete candidate for
+     * review and StopForumSpam reporting.
+     */
+    protected function group_sfs_log_rows(array $rows)
+    {
+        $groups = array();
+        $window = 600;
+
+        foreach ($rows as $row)
+        {
+            $matched_index = null;
+
+            foreach ($groups as $index => $group)
+            {
+                if ($this->sfs_rows_belong_to_same_group($group['row'], $row, $window))
+                {
+                    $matched_index = $index;
+                    break;
+                }
+            }
+
+            if ($matched_index === null)
+            {
+                $groups[] = array(
+                    'row' => $this->normalize_sfs_group_row($row),
+                    'rows' => array($row),
+                    'ids' => array((int) $row['log_id']),
+                    'count' => 1,
+                );
+                continue;
+            }
+
+            $groups[$matched_index]['row'] = $this->merge_sfs_group_row($groups[$matched_index]['row'], $row);
+            $groups[$matched_index]['rows'][] = $row;
+            $groups[$matched_index]['ids'][] = (int) $row['log_id'];
+            $groups[$matched_index]['count']++;
+        }
+
+        usort($groups, array($this, 'sort_sfs_groups'));
+
+        return $groups;
+    }
+
+    protected function sfs_rows_belong_to_same_group(array $existing, array $incoming, $window)
+    {
+        if ((string) $existing['check_source'] !== (string) $incoming['check_source'])
+        {
+            return false;
+        }
+
+        if ((string) $existing['user_ip'] === '' || (string) $incoming['user_ip'] === '' || (string) $existing['user_ip'] !== (string) $incoming['user_ip'])
+        {
+            return false;
+        }
+
+        if (abs((int) $existing['created_at'] - (int) $incoming['created_at']) > (int) $window)
+        {
+            return false;
+        }
+
+        $existing_email = strtolower(trim((string) $existing['user_email']));
+        $incoming_email = strtolower(trim((string) $incoming['user_email']));
+        if ($existing_email !== '' && $incoming_email !== '' && $existing_email !== $incoming_email)
+        {
+            return false;
+        }
+
+        $existing_username = strtolower(trim((string) $existing['username']));
+        $incoming_username = strtolower(trim((string) $incoming['username']));
+        if ($existing_username !== '' && $incoming_username !== '' && $existing_username !== $incoming_username)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function normalize_sfs_group_row(array $row)
+    {
+        $row['user_email'] = isset($row['user_email']) ? (string) $row['user_email'] : '';
+        $row['username'] = isset($row['username']) ? (string) $row['username'] : '';
+        $row['listed_count'] = isset($row['listed_count']) ? (int) $row['listed_count'] : 0;
+        $row['strong_hit'] = !empty($row['strong_hit']) ? 1 : 0;
+        $row['blocked'] = !empty($row['blocked']) ? 1 : 0;
+        $row['details_json'] = isset($row['details_json']) ? (string) $row['details_json'] : '';
+        $row['action_mode'] = isset($row['action_mode']) ? (string) $row['action_mode'] : '';
+        $row['review_status'] = isset($row['review_status']) ? (string) $row['review_status'] : '';
+        $row['local_action'] = isset($row['local_action']) ? (string) $row['local_action'] : '';
+
+        return $row;
+    }
+
+    protected function merge_sfs_group_row(array $base, array $incoming)
+    {
+        $base = $this->normalize_sfs_group_row($base);
+        $incoming = $this->normalize_sfs_group_row($incoming);
+
+        $base_score = $this->sfs_report_data_score($base);
+        $incoming_score = $this->sfs_report_data_score($incoming);
+
+        if ($incoming_score > $base_score)
+        {
+            $base['log_id'] = (int) $incoming['log_id'];
+        }
+
+        if ((string) $base['user_email'] === '' && (string) $incoming['user_email'] !== '')
+        {
+            $base['user_email'] = (string) $incoming['user_email'];
+        }
+        if ((string) $base['username'] === '' && (string) $incoming['username'] !== '')
+        {
+            $base['username'] = (string) $incoming['username'];
+        }
+
+        $base['created_at'] = max((int) $base['created_at'], (int) $incoming['created_at']);
+        $base['listed_count'] = max((int) $base['listed_count'], (int) $incoming['listed_count']);
+        $base['strong_hit'] = (!empty($base['strong_hit']) || !empty($incoming['strong_hit'])) ? 1 : 0;
+        $base['blocked'] = (!empty($base['blocked']) || !empty($incoming['blocked'])) ? 1 : 0;
+        $base['action_mode'] = $this->strongest_sfs_action_mode((string) $base['action_mode'], (string) $incoming['action_mode']);
+        $base['details_json'] = $this->merge_sfs_details_json((string) $base['details_json'], (string) $incoming['details_json']);
+        $base['review_status'] = $this->strongest_sfs_review_status((string) $base['review_status'], (string) $incoming['review_status']);
+        $base['local_action'] = $this->strongest_sfs_local_action((string) $base['local_action'], (string) $incoming['local_action']);
+
+        return $base;
+    }
+
+    protected function sfs_report_data_score(array $row)
+    {
+        $score = 0;
+        $score += ((string) $row['user_ip'] !== '') ? 1 : 0;
+        $score += ((string) $row['username'] !== '') ? 2 : 0;
+        $score += ((string) $row['user_email'] !== '') ? 4 : 0;
+
+        return $score;
+    }
+
+    protected function strongest_sfs_action_mode($a, $b)
+    {
+        $rank = array('disabled' => 0, 'whitelist' => 1, 'log_only' => 2, 'soft' => 3, 'block' => 4);
+        $a = isset($rank[$a]) ? $a : 'log_only';
+        $b = isset($rank[$b]) ? $b : 'log_only';
+
+        return ($rank[$b] > $rank[$a]) ? $b : $a;
+    }
+
+    protected function strongest_sfs_review_status($a, $b)
+    {
+        $rank = array('' => 0, 'allowed' => 1, 'reported' => 2, 'blocked' => 3, 'reported_blocked' => 4);
+        $a = isset($rank[$a]) ? $a : '';
+        $b = isset($rank[$b]) ? $b : '';
+
+        return ($rank[$b] > $rank[$a]) ? $b : $a;
+    }
+
+    protected function strongest_sfs_local_action($a, $b)
+    {
+        $rank = array('' => 0, 'allowed' => 1, 'reported' => 2, 'blocked' => 3);
+        $a = isset($rank[$a]) ? $a : '';
+        $b = isset($rank[$b]) ? $b : '';
+
+        return ($rank[$b] > $rank[$a]) ? $b : $a;
+    }
+
+    protected function merge_sfs_details_json($existing_json, $incoming_json)
+    {
+        $existing = json_decode((string) $existing_json, true);
+        $incoming = json_decode((string) $incoming_json, true);
+
+        if (!is_array($existing))
+        {
+            $existing = array();
+        }
+        if (!is_array($incoming))
+        {
+            $incoming = array();
+        }
+
+        foreach ($incoming as $key => $incoming_value)
+        {
+            if (!isset($existing[$key]) || !is_array($existing[$key]) || !is_array($incoming_value))
+            {
+                if (!isset($existing[$key]) || $existing[$key] === '' || $existing[$key] === array())
+                {
+                    $existing[$key] = $incoming_value;
+                }
+                continue;
+            }
+
+            $existing[$key] = array_merge($existing[$key], $incoming_value);
+
+            if (isset($incoming_value['confidence'], $existing[$key]['confidence']))
+            {
+                $existing[$key]['confidence'] = max((float) $existing[$key]['confidence'], (float) $incoming_value['confidence']);
+            }
+            if (isset($incoming_value['frequency'], $existing[$key]['frequency']))
+            {
+                $existing[$key]['frequency'] = max((int) $existing[$key]['frequency'], (int) $incoming_value['frequency']);
+            }
+            if (isset($incoming_value['is_listed'], $existing[$key]['is_listed']))
+            {
+                $existing[$key]['is_listed'] = !empty($existing[$key]['is_listed']) || !empty($incoming_value['is_listed']);
+            }
+            if (isset($incoming_value['cached'], $existing[$key]['cached']))
+            {
+                $existing[$key]['cached'] = !empty($existing[$key]['cached']) || !empty($incoming_value['cached']);
+            }
+        }
+
+        return json_encode($existing);
+    }
+
+    protected function sort_sfs_groups($a, $b)
+    {
+        if ((int) $a['row']['created_at'] === (int) $b['row']['created_at'])
+        {
+            return (int) $b['row']['log_id'] - (int) $a['row']['log_id'];
+        }
+
+        return (int) $b['row']['created_at'] - (int) $a['row']['created_at'];
+    }
+
+    protected function sfs_group_has_successful_submission($db, $table_prefix, array $log_ids)
+    {
+        $log_ids = array_values(array_unique(array_filter(array_map('intval', $log_ids))));
+        if (empty($log_ids))
+        {
+            return false;
+        }
+
+        $sql = 'SELECT submit_id FROM ' . $table_prefix . 'antispamguard_sfs_submit_log
+            WHERE source = \'sfs_log\'
+                AND ' . $db->sql_in_set('source_log_id', $log_ids) . "
+                AND status = 'success'";
+        $result = $db->sql_query_limit($sql, 1);
+        $row = $db->sql_fetchrow($result);
+        $db->sql_freeresult($result);
+
+        return !empty($row);
+    }
+
+    protected function format_sfs_group_details($details, $count)
+    {
+        $details = (string) $details;
+        if ((int) $count <= 1)
+        {
+            return $details;
+        }
+
+        $group_note = '×' . (int) $count;
+
+        return ($details !== '') ? ($group_note . '; ' . $details) : $group_note;
     }
 
     public function get_sfs_review_stats($db, $table_prefix)

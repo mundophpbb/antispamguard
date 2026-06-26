@@ -66,7 +66,7 @@ class sfs_log
      */
     protected function merge_recent_related_log(array $data)
     {
-        $window_start = max(0, (int) $data['created_at'] - 180);
+        $window_start = max(0, (int) $data['created_at'] - 600);
 
         $sql = 'SELECT *
             FROM ' . $this->table . '
