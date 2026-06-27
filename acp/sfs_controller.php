@@ -848,8 +848,8 @@ class sfs_controller
         }
 
         $current = isset($config['antispamguard_ip_blacklist']) ? (string) $config['antispamguard_ip_blacklist'] : '';
-        $current_normalized = $this->normalize_ip_list($current);
-        $updated = $this->normalize_ip_list($current . "\n" . $ip);
+        $current_normalized = $this->settings_helper->normalize_ip_list($current);
+        $updated = $this->settings_helper->normalize_ip_list($current . "\n" . $ip);
 
         if ($updated === $current_normalized)
         {
