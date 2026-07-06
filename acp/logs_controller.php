@@ -420,6 +420,14 @@ class logs_controller
         while ($row = $db->sql_fetchrow($result))
         {
             $has_logs = true;
+
+            // Some phpBB validation paths can create the main block log before the
+            // submitted identity is available, while the StopForumSpam audit log
+            // below may already contain the username/e-mail for the same IP and
+            // registration attempt.  Enrich the ACP row at render time so grouped
+            // logs remain compact without losing the identity data reviewers need.
+            $row = $this->enrich_log_identity_from_sfs($db, $table_prefix, $row);
+
             $template->assign_block_vars('logs', array(
                 'ID'         => (int) $row['log_id'],
                 'TIME'       => $user->format_date((int) $row['log_time']),
@@ -534,6 +542,61 @@ class logs_controller
         }
 
         return $value;
+    }
+
+    protected function enrich_log_identity_from_sfs($db, $table_prefix, array $row)
+    {
+        $username = isset($row['username']) ? (string) $row['username'] : '';
+        $email = isset($row['email']) ? (string) $row['email'] : '';
+
+        if ($username !== '' && $email !== '')
+        {
+            return $row;
+        }
+
+        $ip = isset($row['user_ip']) ? (string) $row['user_ip'] : '';
+        if ($ip === '')
+        {
+            return $row;
+        }
+
+        $log_time = isset($row['log_time']) ? (int) $row['log_time'] : 0;
+        $window_start = max(0, $log_time - 600);
+        $window_end = $log_time + 600;
+        $sfs_table = $table_prefix . 'antispamguard_sfs_log';
+
+        $sql = 'SELECT username, user_email, created_at
+            FROM ' . $sfs_table . "
+            WHERE user_ip = '" . $db->sql_escape($ip) . "'
+                AND created_at >= " . (int) $window_start . "
+                AND created_at <= " . (int) $window_end . "
+                AND (username <> '' OR user_email <> '')
+            ORDER BY created_at DESC, log_id DESC";
+        $result = $db->sql_query_limit($sql, 10);
+
+        while ($sfs_row = $db->sql_fetchrow($result))
+        {
+            if ($username === '' && isset($sfs_row['username']) && (string) $sfs_row['username'] !== '')
+            {
+                $username = (string) $sfs_row['username'];
+            }
+
+            if ($email === '' && isset($sfs_row['user_email']) && (string) $sfs_row['user_email'] !== '')
+            {
+                $email = (string) $sfs_row['user_email'];
+            }
+
+            if ($username !== '' && $email !== '')
+            {
+                break;
+            }
+        }
+        $db->sql_freeresult($result);
+
+        $row['username'] = $username;
+        $row['email'] = $email;
+
+        return $row;
     }
 
     public function build_log_filter_where($db, $filter_form = '', $filter_reason = '')
