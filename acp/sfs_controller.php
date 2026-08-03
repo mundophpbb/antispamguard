@@ -29,6 +29,8 @@ class sfs_controller
         $sfs_cache_total = 0;
         $sfs_cache_expired = 0;
         $sfs_logs_total = 0;
+        $circuit_until = isset($config['antispamguard_sfs_circuit_until']) ? (int) $config['antispamguard_sfs_circuit_until'] : 0;
+        $circuit_open = $circuit_until > time();
 
         $sql = 'SELECT COUNT(cache_id) AS total_cache FROM ' . $table_prefix . 'antispamguard_sfs_cache';
         $result = $db->sql_query($sql);
@@ -56,7 +58,7 @@ class sfs_controller
             'SFS_DEBUG_LOCALHOST_ONLY' => !isset($config['antispamguard_sfs_debug_localhost_only']) || !empty($config['antispamguard_sfs_debug_localhost_only']),
             'SFS_DEBUG_UNTIL' => isset($config['antispamguard_sfs_debug_until']) ? (int) $config['antispamguard_sfs_debug_until'] : 0,
             'SFS_DEBUG_UNTIL_FORMATTED' => !empty($config['antispamguard_sfs_debug_until']) ? $user->format_date((int) $config['antispamguard_sfs_debug_until']) : '',
-            'SFS_LOG_ALL_CHECKS' => !isset($config['antispamguard_sfs_log_all_checks']) || !empty($config['antispamguard_sfs_log_all_checks']),
+            'SFS_LOG_ALL_CHECKS' => !empty($config['antispamguard_sfs_log_all_checks']),
             'SFS_CACHE_TTL' => isset($config['antispamguard_sfs_cache_ttl']) ? (int) $config['antispamguard_sfs_cache_ttl'] : 86400,
             'SFS_CACHE_TOTAL' => $sfs_cache_total,
             'SFS_CACHE_EXPIRED' => $sfs_cache_expired,
@@ -80,18 +82,28 @@ class sfs_controller
             'S_SFS_SUBMIT_PREFILLED' => !empty($sfs_submit_prefill['prefilled']),
             'ANTISPAMGUARD_SFS_LOG_ENABLED' => !isset($config['antispamguard_sfs_log_enabled']) || !empty($config['antispamguard_sfs_log_enabled']),
             'ANTISPAMGUARD_SFS_LOG_ONLY_BLOCKED' => !empty($config['antispamguard_sfs_log_only_blocked']),
-            'ANTISPAMGUARD_SFS_MIN_CONFIDENCE' => isset($config['antispamguard_sfs_min_confidence']) ? (int) $config['antispamguard_sfs_min_confidence'] : 50,
-            'ANTISPAMGUARD_SFS_MIN_FREQUENCY' => isset($config['antispamguard_sfs_min_frequency']) ? (int) $config['antispamguard_sfs_min_frequency'] : 3,
-            'ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS' => !isset($config['antispamguard_sfs_block_multiple_hits']) || !empty($config['antispamguard_sfs_block_multiple_hits']),
+            'ANTISPAMGUARD_SFS_MIN_CONFIDENCE' => isset($config['antispamguard_sfs_min_confidence']) ? (int) $config['antispamguard_sfs_min_confidence'] : 80,
+            'ANTISPAMGUARD_SFS_MIN_FREQUENCY' => isset($config['antispamguard_sfs_min_frequency']) ? (int) $config['antispamguard_sfs_min_frequency'] : 5,
+            'ANTISPAMGUARD_SFS_BLOCK_MULTIPLE_HITS' => !empty($config['antispamguard_sfs_block_multiple_hits']),
             'SFS_WHITELIST_IPS' => isset($config['antispamguard_sfs_whitelist_ips']) ? (string) $config['antispamguard_sfs_whitelist_ips'] : '',
             'SFS_WHITELIST_EMAILS' => isset($config['antispamguard_sfs_whitelist_emails']) ? (string) $config['antispamguard_sfs_whitelist_emails'] : '',
             'SFS_WHITELIST_USERNAMES' => isset($config['antispamguard_sfs_whitelist_usernames']) ? (string) $config['antispamguard_sfs_whitelist_usernames'] : '',
-            'IP_REPUTATION_WEIGHT_SFS' => isset($config['antispamguard_ip_reputation_weight_sfs']) ? (int) $config['antispamguard_ip_reputation_weight_sfs'] : 5,
-            'DECISION_WEIGHT_SFS' => isset($config['antispamguard_decision_weight_sfs']) ? (int) $config['antispamguard_decision_weight_sfs'] : 50,
+            'IP_REPUTATION_WEIGHT_SFS' => isset($config['antispamguard_ip_reputation_weight_sfs']) ? (int) $config['antispamguard_ip_reputation_weight_sfs'] : 2,
+            'DECISION_WEIGHT_SFS' => isset($config['antispamguard_decision_weight_sfs']) ? (int) $config['antispamguard_decision_weight_sfs'] : 80,
             'SFS_DIAG_ENABLED' => !empty($config['antispamguard_sfs_enabled']),
             'SFS_DIAG_ACTION_MODE' => isset($config['antispamguard_sfs_action_mode']) ? $config['antispamguard_sfs_action_mode'] : 'block',
             'SFS_DIAG_CACHE_TOTAL' => $sfs_cache_total,
             'SFS_DIAG_LOGS_TOTAL' => $sfs_logs_total,
+            'SFS_CIRCUIT_OPEN' => $circuit_open,
+            'SFS_CIRCUIT_UNTIL' => $circuit_until,
+            'SFS_CIRCUIT_UNTIL_FORMATTED' => $circuit_until > 0 ? $user->format_date($circuit_until) : '',
+            'SFS_FAILURE_COUNT' => isset($config['antispamguard_sfs_failure_count']) ? (int) $config['antispamguard_sfs_failure_count'] : 0,
+            'SFS_ERROR_CACHE_TTL' => isset($config['antispamguard_sfs_error_cache_ttl']) ? (int) $config['antispamguard_sfs_error_cache_ttl'] : 300,
+            'SFS_HTTP_TIMEOUT' => isset($config['antispamguard_sfs_http_timeout']) ? (int) $config['antispamguard_sfs_http_timeout'] : 2,
+            'SFS_HTTP_RETRIES' => isset($config['antispamguard_sfs_http_retries']) ? (int) $config['antispamguard_sfs_http_retries'] : 1,
+            'SFS_HTTP_MAX_RESPONSE_BYTES' => isset($config['antispamguard_sfs_http_max_response_bytes']) ? (int) $config['antispamguard_sfs_http_max_response_bytes'] : 262144,
+            'SFS_CIRCUIT_THRESHOLD' => isset($config['antispamguard_sfs_circuit_threshold']) ? (int) $config['antispamguard_sfs_circuit_threshold'] : 3,
+            'SFS_CIRCUIT_COOLDOWN' => isset($config['antispamguard_sfs_circuit_cooldown']) ? (int) $config['antispamguard_sfs_circuit_cooldown'] : 300,
         ));
     }
 
@@ -161,34 +173,46 @@ class sfs_controller
         $total_sfs_logs = (int) $db->sql_fetchfield('total_logs');
         $db->sql_freeresult($result);
 
-        $total_sfs_logs_filtered = 0;
-        $has_sfs_logs = false;
-        $sfs_rows_rendered = 0;
-
-        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC, log_id DESC';
-        $result = $db->sql_query($sql);
-
-        $sfs_raw_rows = array();
-        while ($sfs_row = $db->sql_fetchrow($result))
-        {
-            $sfs_raw_rows[] = $sfs_row;
-        }
-        $db->sql_freeresult($result);
-
-        $sfs_grouped_rows = $this->group_sfs_log_rows($sfs_raw_rows);
-        $total_sfs_logs_filtered = count($sfs_grouped_rows);
-
         if ($sfs_where_sql === '')
         {
-            $total_sfs_logs = $total_sfs_logs_filtered;
+            $total_sfs_logs_filtered = $total_sfs_logs;
         }
+        else
+        {
+            $sql = 'SELECT COUNT(log_id) AS total_logs FROM ' . $sfs_table . $sfs_where_sql;
+            $result = $db->sql_query($sql);
+            $total_sfs_logs_filtered = (int) $db->sql_fetchfield('total_logs');
+            $db->sql_freeresult($result);
+        }
+
+        $has_sfs_logs = false;
+        $sfs_rows_rendered = 0;
 
         if ($sfs_start >= $total_sfs_logs_filtered && $total_sfs_logs_filtered > 0)
         {
             $sfs_start = max(0, floor(($total_sfs_logs_filtered - 1) / $sfs_per_page) * $sfs_per_page);
         }
 
-        $sfs_page_rows = array_slice($sfs_grouped_rows, $sfs_start, $sfs_per_page);
+        // New submissions are correlated and merged at write time by
+        // submission_key.  Page in SQL instead of loading and O(n²)-grouping
+        // the complete audit table in PHP.
+        $sql = 'SELECT * FROM ' . $sfs_table . $sfs_where_sql . ' ORDER BY created_at DESC, log_id DESC';
+        $result = $db->sql_query_limit($sql, $sfs_per_page, $sfs_start);
+        $sfs_page_rows = array();
+        $page_log_ids = array();
+        while ($sfs_row = $db->sql_fetchrow($result))
+        {
+            $sfs_page_rows[] = array(
+                'row' => $this->normalize_sfs_group_row($sfs_row),
+                'rows' => array($sfs_row),
+                'ids' => array((int) $sfs_row['log_id']),
+                'count' => 1,
+            );
+            $page_log_ids[] = (int) $sfs_row['log_id'];
+        }
+        $db->sql_freeresult($result);
+
+        $reported_log_ids = $this->get_successful_submission_log_ids($db, $table_prefix, $page_log_ids);
 
         foreach ($sfs_page_rows as $sfs_group)
         {
@@ -203,6 +227,15 @@ class sfs_controller
             $decision_meta = isset($details['_decision']) && is_array($details['_decision']) ? $details['_decision'] : array();
             $action_mode = (isset($sfs_row['action_mode']) && (string) $sfs_row['action_mode'] !== '') ? (string) $sfs_row['action_mode'] : (isset($decision_meta['action_mode']) ? (string) $decision_meta['action_mode'] : 'block');
             $matched = !empty($decision_meta['matched']);
+
+            if (!empty($decision_meta['review_only']))
+            {
+                $detail_parts[] = $user->lang('ACP_ANTISPAMGUARD_SFS_POLICY_REVIEW_ONLY');
+            }
+            else if (!empty($decision_meta['hard_identity_match']))
+            {
+                $detail_parts[] = $user->lang('ACP_ANTISPAMGUARD_SFS_POLICY_HARD_IDENTITY');
+            }
 
             if ($sfs_rows_rendered >= $sfs_per_page)
             {
@@ -225,7 +258,7 @@ class sfs_controller
                     . ', cached=' . (!empty($detail_data['cached']) ? $user->lang('YES') : $user->lang('NO'));
             }
 
-            $already_reported = $this->sfs_group_has_successful_submission($db, $table_prefix, $sfs_group['ids']);
+            $already_reported = isset($reported_log_ids[(int) $sfs_row['log_id']]);
             $review_status_text = $this->format_sfs_review_status($sfs_row, $already_reported, $user);
             $row_class = $this->get_sfs_row_class($sfs_row, $already_reported);
 
@@ -312,7 +345,7 @@ class sfs_controller
     protected function group_sfs_log_rows(array $rows)
     {
         $groups = array();
-        $window = 600;
+        $window = 30;
 
         foreach ($rows as $row)
         {
@@ -351,6 +384,14 @@ class sfs_controller
 
     protected function sfs_rows_belong_to_same_group(array $existing, array $incoming, $window)
     {
+        $existing_key = isset($existing['submission_key']) ? trim((string) $existing['submission_key']) : '';
+        $incoming_key = isset($incoming['submission_key']) ? trim((string) $incoming['submission_key']) : '';
+
+        if ($existing_key !== '' || $incoming_key !== '')
+        {
+            return $existing_key !== '' && $incoming_key !== '' && hash_equals($existing_key, $incoming_key);
+        }
+
         if ((string) $existing['check_source'] !== (string) $incoming['check_source'])
         {
             return false;
@@ -394,6 +435,7 @@ class sfs_controller
         $row['action_mode'] = isset($row['action_mode']) ? (string) $row['action_mode'] : '';
         $row['review_status'] = isset($row['review_status']) ? (string) $row['review_status'] : '';
         $row['local_action'] = isset($row['local_action']) ? (string) $row['local_action'] : '';
+        $row['submission_key'] = isset($row['submission_key']) ? (string) $row['submission_key'] : '';
 
         return $row;
     }
@@ -544,6 +586,30 @@ class sfs_controller
         $db->sql_freeresult($result);
 
         return !empty($row);
+    }
+
+    protected function get_successful_submission_log_ids($db, $table_prefix, array $log_ids)
+    {
+        $log_ids = array_values(array_unique(array_filter(array_map('intval', $log_ids))));
+        if (empty($log_ids))
+        {
+            return array();
+        }
+
+        $sql = 'SELECT source_log_id
+            FROM ' . $table_prefix . "antispamguard_sfs_submit_log
+            WHERE source = 'sfs_log'
+                AND status = 'success'
+                AND " . $db->sql_in_set('source_log_id', $log_ids);
+        $result = $db->sql_query($sql);
+        $reported = array();
+        while ($row = $db->sql_fetchrow($result))
+        {
+            $reported[(int) $row['source_log_id']] = true;
+        }
+        $db->sql_freeresult($result);
+
+        return $reported;
     }
 
     protected function format_sfs_group_details($details, $count)

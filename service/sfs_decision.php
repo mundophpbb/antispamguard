@@ -18,7 +18,7 @@ class sfs_decision
         $this->log = $log;
     }
 
-    public function should_block($ip = '', $email = '', $username = '', $source = 'unknown', $force_log = false)
+    public function should_block($ip = '', $email = '', $username = '', $source = 'unknown', $force_log = false, $submission_key = '')
     {
         $sfs_enabled = !empty($this->config['antispamguard_sfs_enabled']);
 
@@ -47,9 +47,42 @@ class sfs_decision
             'username' => $username,
         );
 
-        if ($this->is_whitelisted_value($ip, 'antispamguard_sfs_whitelist_ips')
-            || $this->is_whitelisted_value($email, 'antispamguard_sfs_whitelist_emails')
-            || $this->is_whitelisted_value($username, 'antispamguard_sfs_whitelist_usernames'))
+        // Whitelists apply to their own identity dimension only.  A common
+        // whitelisted username must not bypass a listed IP or e-mail address.
+        $whitelist_keys = array(
+            'ip' => 'antispamguard_sfs_whitelist_ips',
+            'email' => 'antispamguard_sfs_whitelist_emails',
+            'username' => 'antispamguard_sfs_whitelist_usernames',
+        );
+        $active_checks = array();
+        $whitelisted_results = array();
+
+        foreach ($checks as $type => $value)
+        {
+            $value = trim((string) $value);
+            if ($value === '')
+            {
+                continue;
+            }
+
+            if ($this->is_whitelisted_value($value, $whitelist_keys[$type]))
+            {
+                $whitelisted_results[$type] = array(
+                    'value' => $value,
+                    'checked' => false,
+                    'whitelisted' => true,
+                    'is_listed' => false,
+                    'confidence' => 0,
+                    'frequency' => 0,
+                    'cached' => false,
+                );
+                continue;
+            }
+
+            $active_checks[$type] = $value;
+        }
+
+        if (empty($active_checks) && !empty($whitelisted_results))
         {
             $decision = array(
                 'block' => false,
@@ -59,13 +92,10 @@ class sfs_decision
                 'log_only' => false,
                 'listed_count' => 0,
                 'strong_hit' => false,
-                'results' => array(
-                    'whitelist' => array(
-                        'matched' => true,
-                    ),
-                ),
+                'results' => $whitelisted_results,
                 'status' => 'whitelisted',
                 'sfs_enabled' => $sfs_enabled,
+                'submission_key' => (string) $submission_key,
                 'debug' => (bool) $force_log,
                 'debug_status' => $force_log ? 'manual_force_log_whitelisted' : '',
                 'log_written' => false,
@@ -76,15 +106,19 @@ class sfs_decision
             return $decision;
         }
 
-        $min_confidence = isset($this->config['antispamguard_sfs_min_confidence']) ? (float) $this->config['antispamguard_sfs_min_confidence'] : 50;
-        $min_frequency = isset($this->config['antispamguard_sfs_min_frequency']) ? (int) $this->config['antispamguard_sfs_min_frequency'] : 3;
+        $min_confidence = isset($this->config['antispamguard_sfs_min_confidence']) ? (float) $this->config['antispamguard_sfs_min_confidence'] : 80;
+        $min_frequency = isset($this->config['antispamguard_sfs_min_frequency']) ? (int) $this->config['antispamguard_sfs_min_frequency'] : 5;
         $block_multiple_hits = !empty($this->config['antispamguard_sfs_block_multiple_hits']);
 
         $listed_count = 0;
         $strong_hit = false;
-        $results = array();
+        $listed_identifiers = array();
+        $strong_identifiers = array();
+        $results = $whitelisted_results;
+        $lookup_results = $this->sfs->check_many($active_checks);
+        $had_error = false;
 
-        foreach ($checks as $type => $value)
+        foreach ($active_checks as $type => $value)
         {
             $value = trim((string) $value);
 
@@ -93,10 +127,11 @@ class sfs_decision
                 continue;
             }
 
-            $result = $this->sfs->check($type, $value);
+            $result = isset($lookup_results[$type]) ? $lookup_results[$type] : false;
 
-            if (!$result)
+            if (!$result || !empty($result['error']))
             {
+                $had_error = true;
                 $results[$type] = array(
                     'value' => $value,
                     'checked' => true,
@@ -104,7 +139,8 @@ class sfs_decision
                     'error' => true,
                     'confidence' => 0,
                     'frequency' => 0,
-                    'cached' => false,
+                    'cached' => !empty($result['cached']),
+                    'error_status' => isset($result['error_status']) ? (string) $result['error_status'] : 'request_failed',
                 );
 
                 continue;
@@ -129,14 +165,19 @@ class sfs_decision
             }
 
             $listed_count++;
+            $listed_identifiers[] = $type;
 
             if ($confidence >= $min_confidence || $frequency >= $min_frequency)
             {
                 $strong_hit = true;
+                $strong_identifiers[] = $type;
             }
         }
 
         $matched = $strong_hit || ($block_multiple_hits && $listed_count >= 2);
+        $hard_identity_match = in_array('email', $strong_identifiers, true)
+            || (in_array('username', $strong_identifiers, true) && in_array('ip', $strong_identifiers, true));
+        $review_only = $matched && !$hard_identity_match;
         $action_mode = isset($this->config['antispamguard_sfs_action_mode']) ? (string) $this->config['antispamguard_sfs_action_mode'] : 'block';
 
         if (!in_array($action_mode, array('block', 'soft', 'log_only'), true))
@@ -149,19 +190,24 @@ class sfs_decision
             $action_mode = 'disabled';
         }
 
-        $block = ($sfs_enabled && $action_mode === 'block') ? $matched : false;
+        $block = ($sfs_enabled && $action_mode === 'block') ? ($matched && $hard_identity_match) : false;
 
         $decision = array(
             'block' => $block,
             'matched' => $matched,
             'action_mode' => $action_mode,
-            'soft' => ($sfs_enabled && $matched && $action_mode === 'soft'),
-            'log_only' => ($matched && ($action_mode === 'log_only' || $action_mode === 'disabled')),
+            'soft' => ($sfs_enabled && $matched && $hard_identity_match && $action_mode === 'soft'),
+            'log_only' => ($matched && ($review_only || $action_mode === 'log_only' || $action_mode === 'disabled')),
+            'review_only' => $review_only,
+            'hard_identity_match' => $hard_identity_match,
             'listed_count' => $listed_count,
             'strong_hit' => $strong_hit,
+            'listed_identifiers' => array_values(array_unique($listed_identifiers)),
+            'strong_identifiers' => array_values(array_unique($strong_identifiers)),
             'results' => $results,
-            'status' => $sfs_enabled ? 'checked' : 'sfs_disabled_manual_check',
+            'status' => $sfs_enabled ? ($had_error ? 'partial_error' : 'checked') : 'sfs_disabled_manual_check',
             'sfs_enabled' => $sfs_enabled,
+            'submission_key' => (string) $submission_key,
             'log_written' => false,
         );
 
@@ -210,9 +256,10 @@ class sfs_decision
         $log_enabled = !isset($this->config['antispamguard_sfs_log_enabled']) || !empty($this->config['antispamguard_sfs_log_enabled']);
         $log_only_blocked = !empty($this->config['antispamguard_sfs_log_only_blocked']);
         $debug_log = $this->should_debug_log_sfs($ip);
-        $log_all_checks = !isset($this->config['antispamguard_sfs_log_all_checks']) || !empty($this->config['antispamguard_sfs_log_all_checks']);
+        $log_all_checks = !empty($this->config['antispamguard_sfs_log_all_checks']);
         $listed_count = isset($decision['listed_count']) ? (int) $decision['listed_count'] : 0;
         $block = !empty($decision['block']);
+        $explicit_log_only = !empty($decision['matched']) && !empty($decision['log_only']);
 
         $should_log = false;
 
@@ -220,7 +267,7 @@ class sfs_decision
         {
             $should_log = true;
         }
-        else if ($log_enabled && (!$log_only_blocked || $block || $debug_log) && ($listed_count > 0 || $debug_log || $log_all_checks))
+        else if ($log_enabled && ($explicit_log_only || !$log_only_blocked || $block || $debug_log) && ($listed_count > 0 || $debug_log || $log_all_checks))
         {
             $should_log = true;
         }

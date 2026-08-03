@@ -10,12 +10,14 @@ class ip_rate_limit
     protected $config;
     protected $db;
     protected $table;
+    protected $atomic_store;
 
-    public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, $table_prefix)
+    public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, $table_prefix, atomic_store $atomic_store = null)
     {
         $this->config = $config;
         $this->db = $db;
         $this->table = $table_prefix . 'antispamguard_ip_rate';
+        $this->atomic_store = $atomic_store ?: new atomic_store($db);
     }
 
     public function is_enabled()
@@ -32,43 +34,9 @@ class ip_rate_limit
             return $this->empty_result();
         }
 
-        $now = time();
         $window = $this->get_window();
         $max_hits = $this->get_max_hits();
-
-        $row = $this->get_row($ip);
-
-        if ($row && (int) $row['first_hit'] + $window >= $now)
-        {
-            $hits = ((int) $row['hits']) + 1;
-
-            $data = array(
-                'hits' => $hits,
-                'last_hit' => $now,
-                'expires_at' => $now + $window,
-            );
-
-            $sql = 'UPDATE ' . $this->table . '
-                SET ' . $this->db->sql_build_array('UPDATE', $data) . "
-                WHERE ip = '" . $this->db->sql_escape($ip) . "'";
-            $this->db->sql_query($sql);
-        }
-        else
-        {
-            $hits = 1;
-            $this->delete($ip);
-
-            $data = array(
-                'ip' => $ip,
-                'hits' => $hits,
-                'first_hit' => $now,
-                'last_hit' => $now,
-                'expires_at' => $now + $window,
-            );
-
-            $sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
-            $this->db->sql_query($sql);
-        }
+        $hits = $this->hit_key($ip, $window);
 
         return array(
             'hits' => $hits,
@@ -89,50 +57,18 @@ class ip_rate_limit
             return $this->empty_subnet_result($ip);
         }
 
-        $subnet = $this->get_ipv4_subnet24($ip);
+        $subnet = $this->get_ip_subnet($ip);
         if ($subnet === '')
         {
             return $this->empty_subnet_result($ip);
         }
 
-        $key = 'subnet:' . $subnet;
-        $now = time();
+        $key = (strpos($subnet, ':') !== false)
+            ? 'subnet6:' . substr(hash('sha256', $subnet), 0, 32)
+            : 'subnet:' . str_replace('/24', '', $subnet);
         $window = $this->get_subnet_window();
         $max_hits = $this->get_subnet_max_hits();
-
-        $row = $this->get_row($key);
-
-        if ($row && (int) $row['first_hit'] + $window >= $now)
-        {
-            $hits = ((int) $row['hits']) + 1;
-
-            $data = array(
-                'hits' => $hits,
-                'last_hit' => $now,
-                'expires_at' => $now + $window,
-            );
-
-            $sql = 'UPDATE ' . $this->table . '
-                SET ' . $this->db->sql_build_array('UPDATE', $data) . "
-                WHERE ip = '" . $this->db->sql_escape($key) . "'";
-            $this->db->sql_query($sql);
-        }
-        else
-        {
-            $hits = 1;
-            $this->delete($key);
-
-            $data = array(
-                'ip' => $key,
-                'hits' => $hits,
-                'first_hit' => $now,
-                'last_hit' => $now,
-                'expires_at' => $now + $window,
-            );
-
-            $sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
-            $this->db->sql_query($sql);
-        }
+        $hits = $this->hit_key($key, $window);
 
         return array(
             'subnet' => $subnet,
@@ -172,11 +108,39 @@ class ip_rate_limit
         return $row;
     }
 
-    protected function delete($ip)
+    protected function hit_key($key, $window)
     {
-        $sql = 'DELETE FROM ' . $this->table . "
-            WHERE ip = '" . $this->db->sql_escape($ip) . "'";
+        $now = time();
+        $window = max(1, (int) $window);
+        $key = (string) $key;
+
+        // One atomic UPDATE owns both increment and expired-window reset.
+        // Concurrent requests serialize on the unique IP row instead of
+        // performing DELETE + INSERT and creating duplicate counters.
+        $condition = 'first_hit + ' . $window . ' >= ' . $now;
+        $sql = 'UPDATE ' . $this->table . '
+            SET hits = CASE WHEN ' . $condition . ' THEN hits + 1 ELSE 1 END,
+                first_hit = CASE WHEN ' . $condition . ' THEN first_hit ELSE ' . $now . ' END,
+                last_hit = ' . $now . ',
+                expires_at = ' . ($now + $window) . "
+            WHERE ip = '" . $this->db->sql_escape($key) . "'";
         $this->db->sql_query($sql);
+
+        if ((int) $this->db->sql_affectedrows() === 0)
+        {
+            $this->atomic_store->insert_if_missing($this->table, array(
+                'ip' => $key,
+                'hits' => 0,
+                'first_hit' => $now,
+                'last_hit' => $now,
+                'expires_at' => $now + $window,
+            ), 'ip');
+            $this->db->sql_query($sql);
+        }
+
+        $row = $this->get_row($key);
+
+        return $row ? (int) $row['hits'] : 1;
     }
 
     protected function get_window()
@@ -217,7 +181,7 @@ class ip_rate_limit
     protected function empty_subnet_result($ip)
     {
         return array(
-            'subnet' => $this->get_ipv4_subnet24($ip),
+            'subnet' => $this->get_ip_subnet($ip),
             'hits' => 0,
             'max_hits' => $this->get_subnet_max_hits(),
             'window' => $this->get_subnet_window(),
@@ -226,22 +190,36 @@ class ip_rate_limit
         );
     }
 
-    protected function get_ipv4_subnet24($ip)
+    protected function get_ip_subnet($ip)
     {
         $ip = trim((string) $ip);
 
-        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+        {
+            $parts = explode('.', $ip);
+            if (count($parts) !== 4)
+            {
+                return '';
+            }
+
+            return (int) $parts[0] . '.' . (int) $parts[1] . '.' . (int) $parts[2] . '.0/24';
+        }
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6))
         {
             return '';
         }
 
-        $parts = explode('.', $ip);
-        if (count($parts) !== 4)
+        $packed = @inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16)
         {
             return '';
         }
 
-        return (int) $parts[0] . '.' . (int) $parts[1] . '.' . (int) $parts[2] . '.0';
+        $network = substr($packed, 0, 8) . str_repeat("\0", 8);
+        $formatted = @inet_ntop($network);
+
+        return ($formatted === false) ? '' : $formatted . '/64';
     }
 
     protected function empty_result()

@@ -188,7 +188,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'antispamguard_slowspam_threshold' => array(8, false),
             'antispamguard_slowspam_prune_after' => array(86400, false),
             'antispamguard_decision_weight_slowspam' => array(15, false),
-            'antispamguard_sfs_log_all_checks' => array(1, false),
+            'antispamguard_sfs_log_all_checks' => array(0, false),
             'antispamguard_sfs_debug_log_all' => array(0, false),
             'antispamguard_sfs_debug_localhost_only' => array(1, false),
             'antispamguard_sfs_debug_until' => array(0, false),
@@ -212,6 +212,15 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'antispamguard_ip_reputation_weight_subnet_abuse' => array(1, false),
             'antispamguard_ip_reputation_weight_random_gmail' => array(1, false),
             'antispamguard_sfs_log_preserve_reviewed' => array(1, false),
+            'antispamguard_token_secret' => array('', true),
+            'antispamguard_sfs_error_cache_ttl' => array(300, false),
+            'antispamguard_sfs_http_timeout' => array(2, false),
+            'antispamguard_sfs_http_retries' => array(1, false),
+            'antispamguard_sfs_http_max_response_bytes' => array(262144, false),
+            'antispamguard_sfs_circuit_threshold' => array(3, false),
+            'antispamguard_sfs_circuit_cooldown' => array(300, false),
+            'antispamguard_sfs_failure_count' => array(0, true),
+            'antispamguard_sfs_circuit_until' => array(0, true),
         );
 
         foreach ($defaults as $key => $data)
@@ -220,6 +229,20 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             {
                 $this->config->set($key, $data[0], $data[1]);
             }
+        }
+
+        if (empty($this->config['antispamguard_token_secret']))
+        {
+            try
+            {
+                $secret = bin2hex(random_bytes(32));
+            }
+            catch (\Exception $e)
+            {
+                $secret = hash('sha256', uniqid((string) mt_rand(), true));
+            }
+
+            $this->config->set('antispamguard_token_secret', $secret, true);
         }
     }
 
@@ -297,6 +320,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'cache_id'      => array('UINT', null, 'auto_increment'),
             'lookup_type'   => array('VCHAR:20', ''),
             'lookup_value'  => array('VCHAR:255', ''),
+            'lookup_hash'   => array('VCHAR:64', ''),
             'response_json' => array('MTEXT_UNI', ''),
             'is_listed'     => array('BOOL', 0),
             'confidence'    => array('DECIMAL:5', 0),
@@ -311,7 +335,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
                 'COLUMNS' => $columns,
                 'PRIMARY_KEY' => 'cache_id',
                 'KEYS' => array(
-                    'lookup_idx'  => array('INDEX', array('lookup_type', 'lookup_value')),
+                    'lookup_hash_unique' => array('UNIQUE', array('lookup_hash')),
                     'expires_idx' => array('INDEX', array('expires_at')),
                     'listed_idx'  => array('INDEX', array('is_listed')),
                 ),
@@ -362,6 +386,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'reviewed_by'   => array('UINT', 0),
             'local_action'  => array('VCHAR:32', ''),
             'action_mode'   => array('VCHAR:20', ''),
+            'submission_key'=> array('VCHAR:64', ''),
         );
 
         if (!$this->db_tools->sql_table_exists($table))
@@ -380,6 +405,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
                     'action_created_idx' => array('INDEX', array('action_mode', 'created_at')),
                     'blocked_action_created_idx' => array('INDEX', array('blocked', 'action_mode', 'created_at')),
                     'sfs_ip_created_idx' => array('INDEX', array('user_ip', 'created_at')),
+                    'submission_key_idx' => array('INDEX', array('submission_key')),
                 ),
             ));
             return;
@@ -393,6 +419,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         $this->add_index_if_missing($table, 'action_created_idx', array('action_mode', 'created_at'));
         $this->add_index_if_missing($table, 'blocked_action_created_idx', array('blocked', 'action_mode', 'created_at'));
         $this->add_index_if_missing($table, 'sfs_ip_created_idx', array('user_ip', 'created_at'));
+        $this->add_index_if_missing($table, 'submission_key_idx', array('submission_key'));
     }
 
     protected function repair_ip_score_table()
@@ -414,7 +441,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
                 'COLUMNS' => $columns,
                 'PRIMARY_KEY' => 'score_id',
                 'KEYS' => array(
-                    'ip_idx' => array('INDEX', array('ip')),
+                    'ip_unique' => array('UNIQUE', array('ip')),
                     'score_idx' => array('INDEX', array('score')),
                     'expires_idx' => array('INDEX', array('expires_at')),
                 ),
@@ -442,7 +469,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
                 'COLUMNS' => $columns,
                 'PRIMARY_KEY' => 'rate_id',
                 'KEYS' => array(
-                    'ip_idx' => array('INDEX', array('ip')),
+                    'ip_unique' => array('UNIQUE', array('ip')),
                     'expires_idx' => array('INDEX', array('expires_at')),
                 ),
             ));

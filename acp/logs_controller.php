@@ -35,7 +35,7 @@ class logs_controller
     }
     public function show_stats($db, $template, $table_prefix)
     {
-        global $user;
+        global $user, $config;
 
         $table = $table_prefix . 'antispamguard_log';
         $now = time();
@@ -56,7 +56,7 @@ class logs_controller
         $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
         $ip_rep_total = 0;
         $ip_rep_blocked = 0;
-        $ip_rep_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
+        $ip_rep_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 20;
 
         $sql = 'SELECT COUNT(score_id) AS total_scores
             FROM ' . $ip_rep_table;
@@ -421,13 +421,6 @@ class logs_controller
         {
             $has_logs = true;
 
-            // Some phpBB validation paths can create the main block log before the
-            // submitted identity is available, while the StopForumSpam audit log
-            // below may already contain the username/e-mail for the same IP and
-            // registration attempt.  Enrich the ACP row at render time so grouped
-            // logs remain compact without losing the identity data reviewers need.
-            $row = $this->enrich_log_identity_from_sfs($db, $table_prefix, $row);
-
             $template->assign_block_vars('logs', array(
                 'ID'         => (int) $row['log_id'],
                 'TIME'       => $user->format_date((int) $row['log_time']),
@@ -450,7 +443,7 @@ class logs_controller
 
         $ip_rep_table = $table_prefix . 'antispamguard_ip_score';
         $has_ip_reputation = false;
-        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 5;
+        $ip_reputation_threshold = isset($config['antispamguard_ip_reputation_threshold']) ? (int) $config['antispamguard_ip_reputation_threshold'] : 20;
 
         $sql = 'SELECT *
             FROM ' . $ip_rep_table . '
@@ -520,6 +513,7 @@ class logs_controller
                 'combined_decision' => 'ACP_ANTISPAMGUARD_REASON_COMBINED_DECISION',
                 'slow_spam' => 'ACP_ANTISPAMGUARD_REASON_SLOW_SPAM',
                 'sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
+                'sfs_identity' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
                 'simulation_honeypot' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_HONEYPOT',
                 'simulation_timestamp' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP',
                 'simulation_timestamp_too_fast' => 'ACP_ANTISPAMGUARD_REASON_SIMULATION_TIMESTAMP_TOO_FAST',
@@ -710,7 +704,7 @@ class logs_controller
 
         if ($threshold <= 0)
         {
-            $threshold = 5;
+            $threshold = 20;
         }
 
         $sql = 'SELECT *
@@ -751,6 +745,7 @@ class logs_controller
             'ip_blacklist' => 'ACP_ANTISPAMGUARD_REASON_IP_BLACKLIST',
             'ip_reputation' => 'ACP_ANTISPAMGUARD_REASON_IP_REPUTATION',
             'sfs_reputation' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
+            'sfs_identity' => 'ACP_ANTISPAMGUARD_REASON_SFS_REPUTATION',
         );
 
         if (isset($map[$reason]) && isset($user->lang[$map[$reason]]))
@@ -799,7 +794,7 @@ class logs_controller
             {
                 $class = 'asg-reason-timestamp';
             }
-            elseif (strpos($reason, 'sfs_reputation') !== false)
+            elseif (strpos($reason, 'sfs_reputation') !== false || strpos($reason, 'sfs_identity') !== false)
             {
                 $class = 'asg-reason-sfs';
             }

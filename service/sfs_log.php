@@ -24,6 +24,10 @@ class sfs_log
             'matched' => !empty($decision['matched']),
             'soft' => !empty($decision['soft']),
             'log_only' => !empty($decision['log_only']),
+            'review_only' => !empty($decision['review_only']),
+            'hard_identity_match' => !empty($decision['hard_identity_match']),
+            'listed_identifiers' => isset($decision['listed_identifiers']) ? array_values((array) $decision['listed_identifiers']) : array(),
+            'strong_identifiers' => isset($decision['strong_identifiers']) ? array_values((array) $decision['strong_identifiers']) : array(),
             'debug' => !empty($decision['debug']),
             'debug_status' => isset($decision['debug_status']) ? $decision['debug_status'] : '',
             'status' => isset($decision['status']) ? $decision['status'] : '',
@@ -39,6 +43,7 @@ class sfs_log
             'strong_hit' => !empty($decision['strong_hit']) ? 1 : 0,
             'blocked' => !empty($decision['block']) ? 1 : 0,
             'action_mode' => isset($decision['action_mode']) ? (string) $decision['action_mode'] : 'block',
+            'submission_key' => isset($decision['submission_key']) ? (string) $decision['submission_key'] : '',
             'details_json' => json_encode($details),
             'created_at' => time(),
         );
@@ -66,14 +71,27 @@ class sfs_log
      */
     protected function merge_recent_related_log(array $data)
     {
-        $window_start = max(0, (int) $data['created_at'] - 600);
+        $submission_key = isset($data['submission_key']) ? trim((string) $data['submission_key']) : '';
+        $window_start = max(0, (int) $data['created_at'] - 30);
+
+        $where = "check_source = '" . $this->db->sql_escape($data['check_source']) . "'";
+        if ($submission_key !== '')
+        {
+            $where .= " AND submission_key = '" . $this->db->sql_escape($submission_key) . "'";
+        }
+        else
+        {
+            // Compatibility fallback for manual/legacy calls.  Keep the
+            // correlation window short to avoid joining different people
+            // behind the same carrier-grade NAT or corporate proxy.
+            $where .= ' AND created_at >= ' . (int) $window_start;
+            $where .= " AND user_ip = '" . $this->db->sql_escape($data['user_ip']) . "'";
+        }
 
         $sql = 'SELECT *
             FROM ' . $this->table . '
-            WHERE created_at >= ' . (int) $window_start . "
-                AND check_source = '" . $this->db->sql_escape($data['check_source']) . "'
-                AND user_ip = '" . $this->db->sql_escape($data['user_ip']) . "'
-            ORDER BY created_at DESC, log_id DESC";
+            WHERE ' . $where . '
+            ORDER BY created_at DESC, log_id DESC';
         $result = $this->db->sql_query_limit($sql, 25);
 
         $best = false;
@@ -99,6 +117,7 @@ class sfs_log
             'strong_hit' => (!empty($best['strong_hit']) || !empty($data['strong_hit'])) ? 1 : 0,
             'blocked' => (!empty($best['blocked']) || !empty($data['blocked'])) ? 1 : 0,
             'action_mode' => $this->strongest_action_mode((string) $best['action_mode'], (string) $data['action_mode']),
+            'submission_key' => ((string) $best['submission_key'] !== '') ? (string) $best['submission_key'] : (string) $data['submission_key'],
             'details_json' => $this->merge_details_json((string) $best['details_json'], (string) $data['details_json']),
             'created_at' => max((int) $best['created_at'], (int) $data['created_at']),
         );
@@ -112,6 +131,14 @@ class sfs_log
 
     protected function is_same_submission(array $existing, array $incoming)
     {
+        $existing_key = isset($existing['submission_key']) ? trim((string) $existing['submission_key']) : '';
+        $incoming_key = isset($incoming['submission_key']) ? trim((string) $incoming['submission_key']) : '';
+
+        if ($existing_key !== '' || $incoming_key !== '')
+        {
+            return $existing_key !== '' && hash_equals($existing_key, $incoming_key);
+        }
+
         $existing_email = strtolower(trim((string) $existing['user_email']));
         $incoming_email = strtolower(trim((string) $incoming['user_email']));
         $existing_username = strtolower(trim((string) $existing['username']));

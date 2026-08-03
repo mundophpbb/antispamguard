@@ -1,0 +1,28 @@
+# AntiSpam Guard 3.3.66 — Nginx registration rate limit.
+#
+# 1) Put the map and limit_req_zone directives in the http {} context.
+# 2) Put the limit_req directives in the existing location that executes PHP.
+# 3) Keep dry_run on while reviewing logs, then change it to off.
+# 4) Run nginx -t before reloading.
+#
+# If Nginx is behind a CDN/reverse proxy, configure the Real IP module with
+# only that proxy's official address ranges before using $binary_remote_addr.
+
+# --- http {} context ---
+map "$request_method:$uri:$arg_mode" $asg_registration_key {
+    default                         "";
+    ~^POST:.*/ucp\.php:register$   $binary_remote_addr;
+}
+
+# Average one submission per minute, with an initial burst configured below.
+limit_req_zone $asg_registration_key zone=asg_registration:10m rate=1r/m;
+
+# --- existing PHP location {} (for example location ~ \.php$) ---
+# Empty keys are not counted, so other PHP routes pass through this zone.
+limit_req zone=asg_registration burst=4 nodelay;
+limit_req_status 429;
+limit_req_log_level notice;
+limit_req_dry_run on;
+
+# After 24–48 hours of clean observation:
+# limit_req_dry_run off;

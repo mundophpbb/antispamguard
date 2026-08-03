@@ -1,10 +1,16 @@
 services:
+    mundophpbb.antispamguard.atomic_store:
+        class: mundophpbb\antispamguard\service\atomic_store
+        arguments:
+            - '@dbal.conn'
+
     mundophpbb.antispamguard.sfs_cache:
         class: mundophpbb\antispamguard\service\sfs_cache
         arguments:
             - '@dbal.conn'
             - '@config'
             - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
 
     mundophpbb.antispamguard.stopforumspam_client:
         class: mundophpbb\antispamguard\service\stopforumspam_client
@@ -43,6 +49,7 @@ services:
             - '@config'
             - '@dbal.conn'
             - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
 
     mundophpbb.antispamguard.ip_rate_limit:
         class: mundophpbb\antispamguard\service\ip_rate_limit
@@ -50,6 +57,7 @@ services:
             - '@config'
             - '@dbal.conn'
             - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
 
     mundophpbb.antispamguard.alerts:
         class: mundophpbb\antispamguard\service\alerts
@@ -133,5 +141,15 @@ services:
             - '@mundophpbb.antispamguard.activity_tracker'
         calls:
             - [set_name, [cron.task.mundophpbb.antispamguard.slowspam_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.alerts_cleanup:
+        class: mundophpbb\antispamguard\cron\task\alerts_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.alerts'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.alerts_cleanup]]
         tags:
             - { name: cron.task }

@@ -38,8 +38,6 @@ class registration_policy
         }
 
         $soft_reasons = array(
-            'honeypot',
-            'timestamp',
             'timestamp_too_fast',
             'timestamp_expired',
             'ip_reputation',
@@ -49,39 +47,35 @@ class registration_policy
 
         foreach ($reasons as $reason)
         {
-            if (in_array($reason, $soft_reasons, true))
+            if (!in_array($reason, $soft_reasons, true))
             {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public function should_audit_strict(array $reasons)
     {
-        if ($this->has_hard_block_reason($reasons))
-        {
-            return false;
-        }
-
-        $has_honeypot = in_array('honeypot', $reasons, true);
-        $has_timestamp = in_array('timestamp', $reasons, true)
-            || in_array('timestamp_too_fast', $reasons, true)
-            || in_array('timestamp_expired', $reasons, true);
-
-        return $has_honeypot && $has_timestamp;
+        // Strict mode means every detected signal blocks.  Older versions
+        // audited the exact honeypot + invalid-token combination produced by
+        // direct bot POSTs, allowing the most obvious automated registrations.
+        return false;
     }
 
     protected function has_hard_block_reason(array $reasons)
     {
         $hard_block_reasons = array(
             'ip_blacklist',
+            'honeypot',
+            'timestamp',
             'content_filter',
             'too_many_urls',
             'ip_rate_limit',
             'subnet_abuse',
             'random_gmail',
+            'sfs_identity',
         );
 
         foreach ($hard_block_reasons as $hard_reason)

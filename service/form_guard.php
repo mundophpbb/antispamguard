@@ -65,14 +65,21 @@ class form_guard
         }
 
         $field_name = $this->get_honeypot_name($timestamp);
-        $value = isset($post_fields[$field_name]) ? (string) $post_fields[$field_name] : '';
+        $has_field = array_key_exists($field_name, $post_fields);
+        $value = $has_field ? (string) $post_fields[$field_name] : '';
 
-        if ($value === '' && $this->request !== null)
+        if (!$has_field && $this->request !== null)
         {
+            if (!$this->request->is_set_post($field_name))
+            {
+                return false;
+            }
+
             $value = $this->request->variable($field_name, '', true);
+            $has_field = true;
         }
 
-        return trim($value) === '';
+        return $has_field && trim($value) === '';
     }
 
     public function get_max_form_elapsed_seconds()
@@ -101,8 +108,17 @@ class form_guard
 
     public function build_token($timestamp)
     {
-        $secret = isset($this->config['cookie_name']) ? $this->config['cookie_name'] : 'phpbb';
-        $secret .= isset($this->config['cookie_salt']) ? $this->config['cookie_salt'] : '';
+        $secret = isset($this->config['antispamguard_token_secret'])
+            ? trim((string) $this->config['antispamguard_token_secret'])
+            : '';
+
+        // Backward-compatible fallback for partially upgraded installations.
+        // The 3.3.63 migration creates a random dedicated secret.
+        if ($secret === '')
+        {
+            $secret = isset($this->config['cookie_name']) ? (string) $this->config['cookie_name'] : 'phpbb';
+            $secret .= isset($this->config['cookie_salt']) ? (string) $this->config['cookie_salt'] : '';
+        }
 
         return hash_hmac('sha256', (string) $timestamp, $secret);
     }

@@ -53,11 +53,6 @@ class sfs_cleanup extends \phpbb\cron\task\base
 
     public function should_run()
     {
-        if (empty($this->config['antispamguard_sfs_enabled']))
-        {
-            return false;
-        }
-
         $last_gc = isset($this->config['antispamguard_sfs_cleanup_last_gc']) ? (int) $this->config['antispamguard_sfs_cleanup_last_gc'] : 0;
         $interval = isset($this->config['antispamguard_sfs_cleanup_interval']) ? (int) $this->config['antispamguard_sfs_cleanup_interval'] : 86400;
 

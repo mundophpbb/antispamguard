@@ -221,7 +221,27 @@ class listener implements EventSubscriberInterface
             return false;
         }
 
-        return in_array((int) $this->user->data['group_id'], $configured, true);
+        if (in_array((int) $this->user->data['group_id'], $configured, true))
+        {
+            return true;
+        }
+
+        // A bypass group does not need to be the user's primary group.
+        if (!defined('USER_GROUP_TABLE'))
+        {
+            return false;
+        }
+
+        $sql = 'SELECT group_id
+            FROM ' . USER_GROUP_TABLE . '
+            WHERE user_id = ' . (int) $this->user->data['user_id'] . '
+                AND user_pending = 0
+                AND ' . $this->db->sql_in_set('group_id', $configured);
+        $result = $this->db->sql_query_limit($sql, 1);
+        $matched = (bool) $this->db->sql_fetchrow($result);
+        $this->db->sql_freeresult($result);
+
+        return $matched;
     }
 
     protected function validate_submission($event, $form_type)
@@ -229,6 +249,16 @@ class listener implements EventSubscriberInterface
         $this->user->add_lang_ext('mundophpbb/antispamguard', 'common');
 
         $errors = $event['error'];
+
+        // phpBB has already rejected this submission (form token, CAPTCHA,
+        // username/e-mail validation, permissions, etc.).  Avoid expensive
+        // reputation lookups and duplicate anti-spam errors for a request that
+        // cannot create content or an account anyway.
+        if (!empty($errors))
+        {
+            return;
+        }
+
         $reason = $this->get_submission_block_reason($form_type);
 
         if ($reason !== '')
@@ -258,24 +288,27 @@ class listener implements EventSubscriberInterface
 
     protected function get_submission_block_reason($form_type)
     {
-        if ($this->ip_whitelist_matches((string) $this->user->ip) && $this->get_ip_whitelist_mode() === 'total')
+        $ip = (string) $this->user->ip;
+        $ip_whitelisted = $this->ip_whitelist_matches($ip);
+
+        if ($ip_whitelisted && $this->get_ip_whitelist_mode() === 'total')
         {
             return '';
         }
 
         $reasons = array();
+        $score_signals = array();
+        $audit_reasons = array();
 
-        if ($this->ip_is_whitelisted())
-        {
-            return '';
-        }
-
-        if ($this->ip_is_blacklisted())
+        if (!$ip_whitelisted && $this->ip_is_blacklisted())
         {
             return 'ip_blacklist';
         }
 
-        if (!$this->passes_ip_rate_limit())
+        // Keep the legacy log-based limiter only as a compatibility fallback.
+        // When the dedicated limiter is enabled, running both implementations
+        // doubles queries and can produce contradictory decisions.
+        if (!$ip_whitelisted && empty($this->config['antispamguard_ip_rate_limit_enabled']) && !$this->passes_ip_rate_limit())
         {
             $reasons[] = 'ip_rate_limit';
         }
@@ -293,7 +326,7 @@ class listener implements EventSubscriberInterface
             $reasons[] = $timestamp_reason;
         }
 
-        if (!empty($this->config['antispamguard_ip_rate_limit_enabled']))
+        if (!$ip_whitelisted && !empty($this->config['antispamguard_ip_rate_limit_enabled']))
         {
             $rate_result = $this->ip_rate_limit->hit((string) $this->user->ip);
 
@@ -305,12 +338,16 @@ class listener implements EventSubscriberInterface
                 }
                 else if ($rate_result['action'] === 'score')
                 {
-                    $this->ip_reputation->add_event((string) $this->user->ip, 'ip_rate_limit');
+                    $score_signals[] = 'ip_rate_limit';
+                }
+                else if ($rate_result['action'] === 'log_only')
+                {
+                    $audit_reasons[] = 'ip_rate_limit';
                 }
             }
         }
 
-        if (!empty($this->config['antispamguard_subnet_rate_limit_enabled']))
+        if (!$ip_whitelisted && !empty($this->config['antispamguard_subnet_rate_limit_enabled']))
         {
             $subnet_result = $this->ip_rate_limit->hit_subnet((string) $this->user->ip);
 
@@ -322,8 +359,11 @@ class listener implements EventSubscriberInterface
                 }
                 else if ($subnet_result['action'] === 'score')
                 {
-                    $reasons[] = 'subnet_abuse';
-                    $this->ip_reputation->add_event((string) $this->user->ip, 'subnet_abuse');
+                    $score_signals[] = 'subnet_abuse';
+                }
+                else if ($subnet_result['action'] === 'log_only')
+                {
+                    $audit_reasons[] = 'subnet_abuse';
                 }
             }
         }
@@ -342,12 +382,27 @@ class listener implements EventSubscriberInterface
             $reasons[] = 'random_gmail';
         }
 
-        if ($this->sfs_reputation_is_blocked($form_type))
+        // Remote reputation is a last-mile signal.  Do not let a bot that has
+        // already failed a decisive local check amplify outbound SFS traffic.
+        if (!$ip_whitelisted && !$this->has_definitive_local_block($reasons, $form_type))
         {
-            $reasons[] = 'sfs_reputation';
+            $sfs_result = $this->get_sfs_reputation_decision($form_type);
+
+            if (!empty($sfs_result['block']))
+            {
+                $reasons[] = $this->sfs_has_identity_match($sfs_result) ? 'sfs_identity' : 'sfs_reputation';
+            }
+            else if (!empty($sfs_result['soft']) && !empty($sfs_result['matched']))
+            {
+                $score_signals[] = 'sfs_reputation';
+            }
+            else if (!empty($sfs_result['log_only']) && !empty($sfs_result['matched']))
+            {
+                $audit_reasons[] = $this->sfs_has_identity_match($sfs_result) ? 'sfs_identity' : 'sfs_reputation';
+            }
         }
 
-        if (!empty($this->config['antispamguard_ip_reputation_enabled']))
+        if (!$ip_whitelisted && !$this->has_definitive_local_block($reasons, $form_type) && !empty($this->config['antispamguard_ip_reputation_enabled']))
         {
             $ip_reputation = $this->ip_reputation->get((string) $this->user->ip);
 
@@ -357,40 +412,57 @@ class listener implements EventSubscriberInterface
             }
         }
 
-        $this->force_sfs_debug_trace($reasons);
-
-        $slow_spam_reason = $this->check_slow_spam();
+        $slow_spam_reason = ($ip_whitelisted || $this->has_definitive_local_block($reasons, $form_type)) ? '' : $this->check_slow_spam($form_type);
 
         if ($slow_spam_reason !== '')
         {
             $reasons[] = $slow_spam_reason;
         }
 
-        $combined_reason = $this->apply_combined_decision_engine($reasons);
+        $decision_signals = array_values(array_unique(array_merge($reasons, $score_signals)));
+        $combined_decision = $this->has_definitive_local_block($reasons, $form_type)
+            ? array('score' => 0, 'action' => 'allow', 'reasons' => array())
+            : $this->apply_combined_decision_engine($decision_signals);
 
-        if ($combined_reason !== '')
+        if (!empty($combined_decision['action']) && $combined_decision['action'] === 'block')
         {
-            $reasons[] = $combined_reason;
+            $reasons[] = 'combined_decision';
+        }
+        else if (!empty($combined_decision['action']) && $combined_decision['action'] === 'log')
+        {
+            $audit_reasons[] = 'combined_decision';
         }
 
-        $this->apply_shadowban($reasons);
-        $this->apply_autoban($reasons);
+        if (!$ip_whitelisted)
+        {
+            $this->apply_shadowban($decision_signals);
+            $this->apply_autoban($decision_signals);
+        }
 
         $reasons = array_unique($reasons);
 
-        if ($this->should_audit_registration_without_blocking($form_type, $reasons))
+        if (!empty($reasons) && $this->should_audit_registration_without_blocking($form_type, $reasons))
         {
             $reasons[] = 'possible_false_positive';
             $final_reason = 'audit:' . implode(',', array_unique($reasons));
+        }
+        else if (empty($reasons) && !empty($audit_reasons))
+        {
+            $audit_reasons[] = 'possible_false_positive';
+            $final_reason = 'audit:' . implode(',', array_unique($audit_reasons));
         }
         else
         {
             $final_reason = !empty($reasons) ? implode(',', $reasons) : '';
         }
 
-        if ($final_reason !== '' && !$this->is_audit_only_reason($final_reason))
+        if ($final_reason !== '')
         {
-            foreach (explode(',', $this->strip_audit_reason_prefix($final_reason)) as $reason)
+            $reputation_events = $this->is_audit_only_reason($final_reason)
+                ? $score_signals
+                : array_merge($reasons, $score_signals);
+
+            foreach (array_unique($reputation_events) as $reason)
             {
                 $reason = trim($reason);
 
@@ -486,9 +558,22 @@ class listener implements EventSubscriberInterface
 
     protected function sfs_reputation_is_blocked($form_type)
     {
+        $decision = $this->get_sfs_reputation_decision($form_type);
+
+        return !empty($decision['block']);
+    }
+
+    protected function get_sfs_reputation_decision($form_type)
+    {
         if (empty($this->config['antispamguard_sfs_enabled']))
         {
-            return false;
+            return array(
+                'block' => false,
+                'matched' => false,
+                'soft' => false,
+                'log_only' => false,
+                'results' => array(),
+            );
         }
 
         $ip = (string) $this->user->ip;
@@ -512,21 +597,69 @@ class listener implements EventSubscriberInterface
             }
         }
 
-        $decision = $this->sfs_decision->should_block($ip, $email, $username, $form_type);
+        $submission_key = hash('sha256',
+            (string) $this->request->variable('antispamguard_ts', '') . '|' .
+            $ip . '|' . (string) $form_type
+        );
 
-        return !empty($decision['block']);
+        return $this->sfs_decision->should_block($ip, $email, $username, $form_type, false, $submission_key);
+    }
+
+    protected function has_definitive_local_block(array $reasons, $form_type = '')
+    {
+        $definitive = array(
+            'ip_blacklist',
+            'ip_rate_limit',
+            'subnet_abuse',
+            'honeypot',
+            'timestamp',
+            'content_filter',
+            'too_many_urls',
+            'random_gmail',
+        );
+
+        foreach ($definitive as $reason)
+        {
+            if (in_array($reason, $reasons, true))
+            {
+                return true;
+            }
+        }
+
+        if (in_array('timestamp_too_fast', $reasons, true) || in_array('timestamp_expired', $reasons, true))
+        {
+            $lenient_registration = (string) $form_type === 'register'
+                && (!isset($this->config['antispamguard_register_audit_soft_signals']) || !empty($this->config['antispamguard_register_audit_soft_signals']));
+
+            return !$lenient_registration;
+        }
+
+        return false;
+    }
+
+    protected function sfs_has_identity_match(array $decision)
+    {
+        if (isset($decision['hard_identity_match']))
+        {
+            return !empty($decision['hard_identity_match']);
+        }
+
+        $strong = isset($decision['strong_identifiers']) ? (array) $decision['strong_identifiers'] : array();
+
+        return in_array('email', $strong, true)
+            || (in_array('username', $strong, true) && in_array('ip', $strong, true));
     }
 
     protected function record_antispam_alerts($reason)
     {
         global $phpbb_container;
 
-        if ((string) $reason === '' || !isset($phpbb_container) || !$phpbb_container->has('mundophpbb.antispamguard.alerts'))
+        if ((string) $reason === '' || $this->is_audit_only_reason($reason) || !isset($phpbb_container) || !$phpbb_container->has('mundophpbb.antispamguard.alerts'))
         {
             return;
         }
 
-        $important = array('combined_decision', 'slow_spam', 'ip_rate_limit', 'subnet_abuse', 'random_gmail', 'sfs_reputation');
+        $important = array('combined_decision', 'slow_spam', 'ip_rate_limit', 'subnet_abuse', 'random_gmail', 'sfs_reputation', 'sfs_identity');
 
         $matched = false;
         foreach ($important as $item)
@@ -549,7 +682,7 @@ class listener implements EventSubscriberInterface
         $user_id = isset($this->user->data['user_id']) ? (int) $this->user->data['user_id'] : 0;
         $username = isset($this->user->data['username']) ? (string) $this->user->data['username'] : '';
 
-        $severity = (strpos((string) $reason, 'combined_decision') !== false || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'subnet_abuse') !== false) ? 'high' : 'medium';
+        $severity = (strpos((string) $reason, 'combined_decision') !== false || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'sfs_identity') !== false || strpos((string) $reason, 'subnet_abuse') !== false) ? 'high' : 'medium';
 
         $alerts->add(
             'submission_risk',
@@ -631,7 +764,7 @@ class listener implements EventSubscriberInterface
         return;
     }
 
-    protected function check_slow_spam()
+    protected function check_slow_spam($form_type = 'submission')
     {
         global $phpbb_container;
 
@@ -649,7 +782,11 @@ class listener implements EventSubscriberInterface
 
         $ip = !empty($this->user->ip) ? (string) $this->user->ip : '';
         $user_id = isset($this->user->data['user_id']) ? (int) $this->user->data['user_id'] : 0;
-        $action_type = 'submission';
+        $action_type = trim((string) $form_type);
+        if ($action_type === '')
+        {
+            $action_type = 'submission';
+        }
 
         $tracker->log($ip, $user_id, $action_type);
 
@@ -662,14 +799,14 @@ class listener implements EventSubscriberInterface
 
         if (!isset($phpbb_container) || !$phpbb_container->has('mundophpbb.antispamguard.decision_engine'))
         {
-            return '';
+            return array('score' => 0, 'action' => 'allow', 'reasons' => array());
         }
 
         $decision_engine = $phpbb_container->get('mundophpbb.antispamguard.decision_engine');
 
         if (!$decision_engine->is_enabled())
         {
-            return '';
+            return array('score' => 0, 'action' => 'allow', 'reasons' => array());
         }
 
         $signals = array(
@@ -680,7 +817,7 @@ class listener implements EventSubscriberInterface
             'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
             'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
-            'sfs' => in_array('sfs_reputation', $reasons, true),
+            'sfs' => in_array('sfs_reputation', $reasons, true) || in_array('sfs_identity', $reasons, true),
             'ip_reputation_score' => 0,
         );
 
@@ -694,14 +831,7 @@ class listener implements EventSubscriberInterface
             }
         }
 
-        $decision = $decision_engine->evaluate($signals);
-
-        if (!empty($decision['action']) && $decision['action'] === 'block')
-        {
-            return 'combined_decision';
-        }
-
-        return '';
+        return $decision_engine->evaluate($signals);
     }
 
     protected function get_ip_whitelist_mode()
@@ -781,6 +911,7 @@ class listener implements EventSubscriberInterface
             case 'too_many_urls':
                 return 'simulation_too_many_urls';
             case 'sfs_reputation':
+            case 'sfs_identity':
                 return 'simulation_sfs_reputation';
             case 'honeypot':
             default:
@@ -809,6 +940,7 @@ class listener implements EventSubscriberInterface
             case 'too_many_urls':
                 return $this->user->lang('ANTISPAMGUARD_BLOCKED_CONTENT');
             case 'sfs_reputation':
+            case 'sfs_identity':
                 return $this->user->lang('ANTISPAMGUARD_BLOCKED_SFS');
             case 'honeypot':
             default:
@@ -956,7 +1088,7 @@ class listener implements EventSubscriberInterface
 
     protected function recent_duplicate_log_exists($table, array $log_row, $now)
     {
-        $window_start = max(0, (int) $now - 180);
+        $window_start = max(0, (int) $now - 30);
 
         // De-duplicate by request identity. Some phpBB validation paths can log
         // an early row before username/email are available, then another row for
@@ -1006,7 +1138,7 @@ class listener implements EventSubscriberInterface
         $merged_email = ((string) $row['email'] !== '') ? (string) $row['email'] : (string) $log_row['email'];
 
         $sql = 'UPDATE ' . $table . "
-            SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 255)) . "',
+            SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 191)) . "',
                 username = '" . $this->db->sql_escape($this->truncate_for_storage($merged_username, 255)) . "',
                 email = '" . $this->db->sql_escape($this->truncate_for_storage($merged_email, 255)) . "',
                 risk_score = " . (int) $this->calculate_log_score($merged_reason) . ",
@@ -1072,6 +1204,7 @@ class listener implements EventSubscriberInterface
             'subnet_abuse' => 45,
             'random_gmail' => 20,
             'sfs_reputation' => 50,
+            'sfs_identity' => 80,
             'ip_reputation' => 40,
             'ip_blacklist' => 100,
             'content_filter' => 20,
@@ -1101,7 +1234,7 @@ class listener implements EventSubscriberInterface
     {
         $score = $this->calculate_log_score($reason);
 
-        if ($score >= 100 || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'subnet_abuse') !== false)
+        if ($score >= 100 || strpos((string) $reason, 'sfs_reputation') !== false || strpos((string) $reason, 'sfs_identity') !== false || strpos((string) $reason, 'subnet_abuse') !== false)
         {
             return 'high';
         }
@@ -1177,7 +1310,7 @@ class listener implements EventSubscriberInterface
             'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
             'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
-            'sfs' => in_array('sfs_reputation', $reasons, true),
+            'sfs' => in_array('sfs_reputation', $reasons, true) || in_array('sfs_identity', $reasons, true),
             'ip_reputation_score' => 0,
         );
 
@@ -1220,7 +1353,7 @@ class listener implements EventSubscriberInterface
             'subnet_abuse' => in_array('subnet_abuse', $reasons, true),
             'random_gmail' => in_array('random_gmail', $reasons, true),
             'slow_spam' => in_array('slow_spam', $reasons, true),
-            'sfs' => in_array('sfs_reputation', $reasons, true),
+            'sfs' => in_array('sfs_reputation', $reasons, true) || in_array('sfs_identity', $reasons, true),
             'ip_reputation_score' => 0,
         );
 

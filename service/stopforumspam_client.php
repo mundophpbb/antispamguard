@@ -9,13 +9,14 @@ class stopforumspam_client
 {
     protected $sfs_cache;
     protected $config;
-    protected $timeout = 5;
-    protected $retries = 2;
+    /** @var object|null Reusable Guzzle-compatible HTTP client. */
+    protected $http_client;
 
-    public function __construct(sfs_cache $sfs_cache, \phpbb\config\config $config = null)
+    public function __construct(sfs_cache $sfs_cache, \phpbb\config\config $config = null, $http_client = null)
     {
         $this->sfs_cache = $sfs_cache;
         $this->config = $config;
+        $this->http_client = $http_client;
     }
 
     public function check($type, $value)
@@ -28,45 +29,209 @@ class stopforumspam_client
             return false;
         }
 
-        $cache = $this->sfs_cache->get($type, $value);
+        $results = $this->check_many(array($type => $value));
 
-        if (!empty($cache['cached']))
+        return isset($results[$type]) ? $results[$type] : false;
+    }
+
+    /**
+     * Check every missing identity field with one StopForumSpam request.
+     * Cached fields are returned without being sent again.
+     *
+     * @param array<string,string> $checks
+     * @return array<string,array|false>
+     */
+    public function check_many(array $checks)
+    {
+        $results = array();
+        $missing = array();
+        $normalized = array();
+
+        foreach ($checks as $type => $value)
         {
-            return $cache;
+            $type = (string) $type;
+            $value = $this->normalize_lookup_value($type, $value);
+
+            if (!in_array($type, array('ip', 'email', 'username'), true) || $value === '')
+            {
+                continue;
+            }
+
+            $normalized[$type] = $value;
         }
 
-        $url = 'https://api.stopforumspam.org/api?json&' . $type . '=' . urlencode($value);
+        $cached_results = $this->sfs_cache->get_many($normalized);
+
+        foreach ($normalized as $type => $value)
+        {
+            $cache = isset($cached_results[$type]) ? $cached_results[$type] : false;
+
+            if (!empty($cache['cached']))
+            {
+                $results[$type] = $cache;
+            }
+            else
+            {
+                $missing[$type] = $value;
+            }
+        }
+
+        if (empty($missing))
+        {
+            return $results;
+        }
+
+        if ($this->is_circuit_open())
+        {
+            foreach ($missing as $type => $value)
+            {
+                $results[$type] = $this->error_result(false, 'circuit_open');
+            }
+
+            return $results;
+        }
+
+        $url = 'https://api.stopforumspam.org/api?json&' . http_build_query($missing, '', '&');
         $response = $this->http_get($url);
 
         if ($response === false)
         {
-            $this->sfs_cache->set_error($type, $value);
-            return false;
+            $this->record_remote_failure();
+
+            foreach ($missing as $type => $value)
+            {
+                $this->sfs_cache->set_error($type, $value);
+                $results[$type] = $this->error_result(false, 'request_failed');
+            }
+
+            return $results;
         }
 
         $data = json_decode($response, true);
 
-        if (!is_array($data) || !isset($data[$type]))
+        if (!is_array($data) || (isset($data['success']) && empty($data['success'])))
         {
-            $this->sfs_cache->set_error($type, $value);
-            return false;
+            $this->record_remote_failure();
+
+            foreach ($missing as $type => $value)
+            {
+                $this->sfs_cache->set_error($type, $value);
+                $results[$type] = $this->error_result(false, 'invalid_response');
+            }
+
+            return $results;
         }
 
-        $entry = $data[$type];
+        $valid_response = false;
 
-        $is_listed = !empty($entry['appears']);
-        $confidence = isset($entry['confidence']) ? (float) $entry['confidence'] : 0;
-        $frequency = isset($entry['frequency']) ? (int) $entry['frequency'] : 0;
+        foreach ($missing as $type => $value)
+        {
+            if (!isset($data[$type]) || !is_array($data[$type]))
+            {
+                $this->sfs_cache->set_error($type, $value);
+                $results[$type] = $this->error_result(false, 'missing_result');
+                continue;
+            }
 
-        $this->sfs_cache->set($type, $value, $data, $is_listed, $confidence, $frequency);
+            $entry = $data[$type];
+            $is_listed = !empty($entry['appears']);
+            $confidence = isset($entry['confidence']) ? (float) $entry['confidence'] : 0;
+            $frequency = isset($entry['frequency']) ? (int) $entry['frequency'] : 0;
 
+            $this->sfs_cache->set($type, $value, array($type => $entry), $is_listed, $confidence, $frequency);
+
+            $results[$type] = array(
+                'cached' => false,
+                'data' => array($type => $entry),
+                'is_listed' => $is_listed,
+                'confidence' => $confidence,
+                'frequency' => $frequency,
+                'error' => false,
+            );
+            $valid_response = true;
+        }
+
+        if ($valid_response)
+        {
+            $this->record_remote_success();
+        }
+
+        return $results;
+    }
+
+    protected function normalize_lookup_value($type, $value)
+    {
+        $value = trim((string) $value);
+
+        if ($type === 'email' || $type === 'username')
+        {
+            $value = strtolower($value);
+        }
+
+        return $value;
+    }
+
+    protected function error_result($cached, $status)
+    {
         return array(
-            'cached' => false,
-            'data' => $data,
-            'is_listed' => $is_listed,
-            'confidence' => $confidence,
-            'frequency' => $frequency,
+            'cached' => (bool) $cached,
+            'data' => array('error' => true, 'status' => (string) $status),
+            'is_listed' => false,
+            'confidence' => 0,
+            'frequency' => 0,
+            'error' => true,
+            'error_status' => (string) $status,
         );
+    }
+
+    protected function is_circuit_open()
+    {
+        return $this->config !== null
+            && !empty($this->config['antispamguard_sfs_circuit_until'])
+            && (int) $this->config['antispamguard_sfs_circuit_until'] > time();
+    }
+
+    protected function record_remote_failure()
+    {
+        if ($this->config === null)
+        {
+            return;
+        }
+
+        $failures = isset($this->config['antispamguard_sfs_failure_count'])
+            ? ((int) $this->config['antispamguard_sfs_failure_count']) + 1
+            : 1;
+        $threshold = isset($this->config['antispamguard_sfs_circuit_threshold'])
+            ? max(1, (int) $this->config['antispamguard_sfs_circuit_threshold'])
+            : 3;
+
+        if ($failures >= $threshold)
+        {
+            $cooldown = isset($this->config['antispamguard_sfs_circuit_cooldown'])
+                ? max(60, (int) $this->config['antispamguard_sfs_circuit_cooldown'])
+                : 300;
+            $this->config->set('antispamguard_sfs_circuit_until', time() + $cooldown, true);
+            $failures = 0;
+        }
+
+        $this->config->set('antispamguard_sfs_failure_count', $failures, true);
+    }
+
+    protected function record_remote_success()
+    {
+        if ($this->config === null)
+        {
+            return;
+        }
+
+        if (!empty($this->config['antispamguard_sfs_failure_count']))
+        {
+            $this->config->set('antispamguard_sfs_failure_count', 0, true);
+        }
+        if (!empty($this->config['antispamguard_sfs_circuit_until']))
+        {
+            $this->config->set('antispamguard_sfs_circuit_until', 0, true);
+        }
     }
 
     public function has_api_key()
@@ -197,62 +362,175 @@ class stopforumspam_client
 
     protected function http_get($url)
     {
-        $attempt = 0;
-        $response = false;
-
-        while ($attempt <= $this->retries)
-        {
-            $context = stream_context_create(array(
-                'http' => array(
-                    'method' => 'GET',
-                    'timeout' => $this->timeout,
-                    'header' => "User-Agent: AntiSpamGuard/3.3.22\r\n",
-                ),
-            ));
-
-            $response = @file_get_contents($url, false, $context);
-
-            if ($response !== false)
-            {
-                break;
-            }
-
-            $attempt++;
-        }
-
-        return $response;
+        return $this->http_request('GET', $url, array(
+            'Accept' => 'application/json',
+        ));
     }
 
     protected function http_post($url, array $fields)
     {
-        $body = http_build_query($fields, '', '&');
-        $attempt = 0;
-        $response = false;
+        return $this->http_request('POST', $url, array(
+            'Accept' => 'text/plain, application/json',
+        ), $fields);
+    }
 
-        while ($attempt <= $this->retries)
+    /**
+     * Use the Guzzle library shipped with phpBB without depending on a core
+     * container service name. Not every supported phpBB 3.3 installation
+     * exposes an "http_client" service identifier. Redirects are disabled because both
+     * SFS endpoints are fixed and a redirect must never move submitted
+     * identities or the private API key to another host.
+     */
+    protected function http_request($method, $url, array $headers, array $form_fields = null)
+    {
+        $http_client = $this->get_http_client();
+        if ($http_client === null)
         {
-            $context = stream_context_create(array(
-                'http' => array(
-                    'method' => 'POST',
-                    'timeout' => $this->timeout,
-                    'header' => "Content-Type: application/x-www-form-urlencoded\r\n" .
-                        "Content-Length: " . strlen($body) . "\r\n" .
-                        "User-Agent: AntiSpamGuard/3.3.22\r\n",
-                    'content' => $body,
-                ),
-            ));
+            return false;
+        }
 
-            $response = @file_get_contents($url, false, $context);
+        $options = array(
+            'timeout' => $this->get_timeout(),
+            'connect_timeout' => $this->get_timeout(),
+            'http_errors' => false,
+            'allow_redirects' => false,
+            'headers' => array_merge(array(
+                'User-Agent' => 'AntiSpamGuard/3.3.66',
+            ), $headers),
+        );
 
-            if ($response !== false)
+        if ($form_fields !== null)
+        {
+            $options['form_params'] = $form_fields;
+        }
+
+        $attempt = 0;
+        $retries = $this->get_retries();
+
+        while ($attempt <= $retries)
+        {
+            try
             {
-                break;
+                $response = $http_client->request((string) $method, (string) $url, $options);
+                $status = is_object($response) && is_callable(array($response, 'getStatusCode'))
+                    ? (int) $response->getStatusCode()
+                    : 0;
+
+                if ($status >= 200 && $status < 300)
+                {
+                    $body = $this->read_response_body($response);
+                    if ($body !== false)
+                    {
+                        return $body;
+                    }
+                }
+            }
+            catch (\Exception $e)
+            {
+                // The circuit breaker records the final failure after retries.
             }
 
             $attempt++;
         }
 
-        return $response;
+        return false;
+    }
+
+    /**
+     * Lazily build one client per AntiSpam Guard service instance. Keeping the
+     * optional constructor argument supports tests and custom integrations,
+     * while production no longer requires a version-specific phpBB service.
+     */
+    protected function get_http_client()
+    {
+        if ($this->http_client !== null && is_callable(array($this->http_client, 'request')))
+        {
+            return $this->http_client;
+        }
+
+        if (!class_exists('\\GuzzleHttp\\Client'))
+        {
+            return null;
+        }
+
+        try
+        {
+            $this->http_client = new \GuzzleHttp\Client();
+        }
+        catch (\Exception $e)
+        {
+            $this->http_client = null;
+        }
+
+        return $this->http_client !== null && is_callable(array($this->http_client, 'request'))
+            ? $this->http_client
+            : null;
+    }
+
+    protected function read_response_body($response)
+    {
+        if (!is_object($response) || !is_callable(array($response, 'getBody')))
+        {
+            return false;
+        }
+
+        $stream = $response->getBody();
+        $max_bytes = $this->get_max_response_bytes();
+
+        if (is_object($stream) && is_callable(array($stream, 'getSize')))
+        {
+            $declared_size = $stream->getSize();
+            if ($declared_size !== null && (int) $declared_size > $max_bytes)
+            {
+                return false;
+            }
+        }
+
+        if (is_object($stream) && is_callable(array($stream, 'read')) && is_callable(array($stream, 'eof')))
+        {
+            $contents = '';
+            while (!$stream->eof() && strlen($contents) <= $max_bytes)
+            {
+                $remaining = ($max_bytes + 1) - strlen($contents);
+                $chunk = (string) $stream->read(min(8192, $remaining));
+                if ($chunk === '')
+                {
+                    break;
+                }
+                $contents .= $chunk;
+            }
+        }
+        else if (is_object($stream) && is_callable(array($stream, 'read')))
+        {
+            $contents = (string) $stream->read($max_bytes + 1);
+        }
+        else
+        {
+            $contents = (string) $stream;
+        }
+
+        return strlen($contents) <= $max_bytes ? $contents : false;
+    }
+
+    protected function get_timeout()
+    {
+        return ($this->config !== null && isset($this->config['antispamguard_sfs_http_timeout']))
+            ? max(1, min(10, (int) $this->config['antispamguard_sfs_http_timeout']))
+            : 2;
+    }
+
+    protected function get_retries()
+    {
+        return ($this->config !== null && isset($this->config['antispamguard_sfs_http_retries']))
+            ? max(0, min(2, (int) $this->config['antispamguard_sfs_http_retries']))
+            : 1;
+    }
+
+    protected function get_max_response_bytes()
+    {
+        return ($this->config !== null && isset($this->config['antispamguard_sfs_http_max_response_bytes']))
+            ? max(4096, min(1048576, (int) $this->config['antispamguard_sfs_http_max_response_bytes']))
+            : 262144;
     }
 
     protected function strip_control_chars($value)
