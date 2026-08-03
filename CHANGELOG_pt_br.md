@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.67 - Auditoria agrupada do cadastro
+
+- Adicionada telemetria compacta de cadastro, agrupada por IP e janela configurável, com limpeza automática por retenção.
+- Adicionados contadores no ACP para acessos agrupados à página de cadastro, formulários enviados, rejeições do phpBB, rejeições por regras locais e decisões SFS avaliadas nas últimas 24 horas.
+- Envios já rejeitados pelo phpBB agora são registrados localmente como revisão, incluindo evidências disponíveis de campo invisível/timestamp, sem consultar StopForumSpam nem reputação de IP.
+- Logs idênticos e repetidos de rejeição do phpBB são deduplicados durante a janela configurada e deixam de executar atualização desnecessária quando os dados não mudaram.
+- Adicionados controles no ACP para ativar a auditoria, contar acessos agrupados, definir a janela e configurar a retenção.
+
 ## 3.3.66 - Compatibilidade do cliente HTTP
 
 - Removida a dependência do serviço inexistente `http_client`, que impedia a compilação do container em algumas instalações phpBB 3.3.

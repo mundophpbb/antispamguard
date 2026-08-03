@@ -691,6 +691,10 @@ class main_module
             $config->set('antispamguard_rate_limit_max_attempts', max(1, $request->variable('antispamguard_rate_limit_max_attempts', 5)));
             $config->set('antispamguard_rate_limit_window', max(60, $request->variable('antispamguard_rate_limit_window', 3600)));
             $config->set('antispamguard_log_retention_enabled', $request->variable('antispamguard_log_retention_enabled', 0));
+            $config->set('antispamguard_registration_audit_enabled', $request->variable('antispamguard_registration_audit_enabled', 0));
+            $config->set('antispamguard_registration_track_page_views', $request->variable('antispamguard_registration_track_page_views', 0));
+            $config->set('antispamguard_registration_audit_window', max(60, min(3600, $request->variable('antispamguard_registration_audit_window', 300))));
+            $config->set('antispamguard_registration_audit_retention_days', max(1, min(365, $request->variable('antispamguard_registration_audit_retention_days', 7))));
             $config->set('antispamguard_silent_mode', $request->variable('antispamguard_silent_mode', 0));
             $config->set('antispamguard_simulation_mode', $request->variable('antispamguard_simulation_mode', 0));
             $config->set('antispamguard_log_retention_days', max(1, $request->variable('antispamguard_log_retention_days', 30)));
@@ -992,6 +996,10 @@ class main_module
             'IP_RATE_LIMIT_EXPIRED' => $ip_rate_expired,
             'ANTISPAMGUARD_MAX_FORM_AGE' => isset($config['antispamguard_max_form_age']) ? (int) $config['antispamguard_max_form_age'] : 3600,
             'ANTISPAMGUARD_LOG_RETENTION_ENABLED' => !empty($config['antispamguard_log_retention_enabled']),
+            'ANTISPAMGUARD_REG_AUDIT_ENABLED' => !isset($config['antispamguard_registration_audit_enabled']) || !empty($config['antispamguard_registration_audit_enabled']),
+            'ANTISPAMGUARD_REG_AUDIT_PAGE_TRACKING' => !empty($config['antispamguard_registration_track_page_views']),
+            'ANTISPAMGUARD_REG_AUDIT_WINDOW' => isset($config['antispamguard_registration_audit_window']) ? (int) $config['antispamguard_registration_audit_window'] : 300,
+            'ANTISPAMGUARD_REG_AUDIT_RETENTION_DAYS' => isset($config['antispamguard_registration_audit_retention_days']) ? (int) $config['antispamguard_registration_audit_retention_days'] : 7,
             'ANTISPAMGUARD_SILENT_MODE' => !empty($config['antispamguard_silent_mode']),
             'ANTISPAMGUARD_SIMULATION_MODE' => !empty($config['antispamguard_simulation_mode']),
             'ANTISPAMGUARD_LOG_RETENTION_DAYS' => isset($config['antispamguard_log_retention_days']) ? (int) $config['antispamguard_log_retention_days'] : 30,
@@ -1168,6 +1176,10 @@ class main_module
             'antispamguard_protect_pm',
             'antispamguard_log_retention_enabled',
             'antispamguard_log_retention_days',
+            'antispamguard_registration_audit_enabled',
+            'antispamguard_registration_track_page_views',
+            'antispamguard_registration_audit_window',
+            'antispamguard_registration_audit_retention_days',
             'antispamguard_cron_last_prune',
             'antispamguard_simulation_mode',
         );

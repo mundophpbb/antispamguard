@@ -1,5 +1,13 @@
 # AntiSpam Guard Changelog
 
+## 3.3.67
+
+- Added compact registration telemetry grouped by IP and configurable time window, with automatic retention cleanup.
+- Added ACP counters for grouped registration-page visits, submitted forms, phpBB validation rejections, local-rule rejections and SFS decisions evaluated in the last 24 hours.
+- Registration submissions already rejected by phpBB are now logged locally as review events, including available honeypot/timestamp evidence, without triggering StopForumSpam or IP-reputation lookups.
+- Repeated identical phpBB rejection logs are deduplicated for the configured audit window and no longer perform an unnecessary update when their data is unchanged.
+- Added ACP controls to enable the audit, count grouped page visits, set the grouping window and configure retention.
+
 ## 3.3.66
 
 - Removed the dependency on the non-existent `http_client` service that prevented container compilation on some phpBB 3.3 installations.

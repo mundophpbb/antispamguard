@@ -75,6 +75,14 @@ services:
             - '@config'
             - '@request'
 
+    mundophpbb.antispamguard.registration_audit:
+        class: mundophpbb\antispamguard\service\registration_audit
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
+
     mundophpbb.antispamguard.listener:
         class: mundophpbb\antispamguard\event\listener
         arguments:
@@ -89,6 +97,7 @@ services:
             - '@mundophpbb.antispamguard.ip_rate_limit'
             - '@mundophpbb.antispamguard.form_guard'
             - '@mundophpbb.antispamguard.ip_matcher'
+            - '@mundophpbb.antispamguard.registration_audit'
         tags:
             - { name: event.listener }
 
@@ -151,5 +160,15 @@ services:
             - '@mundophpbb.antispamguard.alerts'
         calls:
             - [set_name, [cron.task.mundophpbb.antispamguard.alerts_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.registration_audit_cleanup:
+        class: mundophpbb\antispamguard\cron\task\registration_audit_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.registration_audit'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.registration_audit_cleanup]]
         tags:
             - { name: cron.task }

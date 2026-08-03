@@ -107,6 +107,23 @@ class logs_controller
 
         $sfs_block_rate = ($sfs_total_logs > 0) ? (int) round(($sfs_blocked_logs / $sfs_total_logs) * 100) : 0;
 
+        $registration_audit = array(
+            'page_views' => 0,
+            'form_submissions' => 0,
+            'phpbb_rejected' => 0,
+            'local_rejected' => 0,
+            'sfs_analyzed' => 0,
+        );
+        if (isset($config['antispamguard_version'])
+            && version_compare((string) $config['antispamguard_version'], '3.3.67', '>='))
+        {
+            $registration_audit = $this->get_registration_audit_totals(
+                $db,
+                $table_prefix . 'antispamguard_registration_audit',
+                $now - 86400
+            );
+        }
+
         $this->assign_group_stats($db, $template, $table, 'form_type', 'stats_forms', 'register', $total_logs, $user);
         $this->assign_group_stats($db, $template, $table, 'reason', 'stats_reasons', 'unknown', $total_logs, $user);
         $this->assign_daily_stats($db, $template, $table, 7);
@@ -138,9 +155,47 @@ class logs_controller
             'ANTISPAMGUARD_SFS_STATS_CACHE_POSITIVE' => $sfs_cache_positive,
             'ANTISPAMGUARD_SFS_STATS_CACHE_EXPIRED' => $sfs_cache_expired,
             'ANTISPAMGUARD_SFS_STATS_BLOCK_RATE' => $sfs_block_rate,
+            'ANTISPAMGUARD_REG_AUDIT_PAGE_VIEWS' => $registration_audit['page_views'],
+            'ANTISPAMGUARD_REG_AUDIT_SUBMISSIONS' => $registration_audit['form_submissions'],
+            'ANTISPAMGUARD_REG_AUDIT_PHPBB_REJECTED' => $registration_audit['phpbb_rejected'],
+            'ANTISPAMGUARD_REG_AUDIT_LOCAL_REJECTED' => $registration_audit['local_rejected'],
+            'ANTISPAMGUARD_REG_AUDIT_SFS_ANALYZED' => $registration_audit['sfs_analyzed'],
             'S_HAS_SFS_STATS' => ($sfs_total_logs > 0 || $sfs_cache_total > 0),
             'S_HAS_STATS' => ($total_logs > 0),
         ));
+    }
+
+    public function get_registration_audit_totals($db, $table, $since)
+    {
+        $totals = array(
+            'page_views' => 0,
+            'form_submissions' => 0,
+            'phpbb_rejected' => 0,
+            'local_rejected' => 0,
+            'sfs_analyzed' => 0,
+        );
+
+        $sql = 'SELECT
+                SUM(page_views) AS page_views,
+                SUM(form_submissions) AS form_submissions,
+                SUM(phpbb_rejected) AS phpbb_rejected,
+                SUM(local_rejected) AS local_rejected,
+                SUM(sfs_analyzed) AS sfs_analyzed
+            FROM ' . $table . '
+            WHERE bucket_start >= ' . (int) $since;
+        $result = $db->sql_query($sql);
+        $row = $db->sql_fetchrow($result);
+        $db->sql_freeresult($result);
+
+        if ($row)
+        {
+            foreach ($totals as $key => $value)
+            {
+                $totals[$key] = isset($row[$key]) ? (int) $row[$key] : 0;
+            }
+        }
+
+        return $totals;
     }
 
     public function count_logs($db, $table, $where = '')
@@ -266,7 +321,7 @@ class logs_controller
             $filter_form = '';
         }
 
-        if (!in_array($filter_reason, array('', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'subnet_abuse', 'random_gmail', 'simulation_subnet_abuse', 'simulation_random_gmail', 'possible_false_positive', 'simulation_multiple'), true))
+        if (!in_array($filter_reason, array('', 'phpbb_rejected', 'honeypot', 'timestamp', 'timestamp_too_fast', 'timestamp_expired', 'ip_reputation', 'content_filter', 'too_many_urls', 'ip_rate_limit', 'ip_blacklist', 'sfs_reputation', 'simulation_honeypot', 'simulation_timestamp', 'simulation_content_filter', 'simulation_too_many_urls', 'simulation_ip_rate_limit', 'simulation_ip_blacklist', 'simulation_sfs_reputation', 'subnet_abuse', 'random_gmail', 'simulation_subnet_abuse', 'simulation_random_gmail', 'possible_false_positive', 'simulation_multiple'), true))
         {
             $filter_reason = '';
         }
@@ -500,6 +555,7 @@ class logs_controller
                 'pm' => 'ACP_ANTISPAMGUARD_FORM_PM',
             ),
             'reason' => array(
+                'phpbb_rejected' => 'ACP_ANTISPAMGUARD_REASON_PHPBB_REJECTED',
                 'honeypot' => 'ACP_ANTISPAMGUARD_REASON_HONEYPOT',
                 'timestamp' => 'ACP_ANTISPAMGUARD_REASON_TIMESTAMP',
                 'content_filter' => 'ACP_ANTISPAMGUARD_REASON_CONTENT_FILTER',

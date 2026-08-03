@@ -106,7 +106,7 @@ Também há filtros e exportação CSV específicos para os registros do StopFor
 3. Ative novamente ou execute a atualização pelo ACP.
 4. Limpe o cache do phpBB.
 5. Verifique a aba **Sobre / Diagnóstico**.
-6. Após atualizar para a versão **3.3.66**, confirme a migração na aba **Sobre / Diagnóstico** e revise os logs do StopForumSpam.
+6. Após atualizar para a versão **3.3.67**, confirme a migração na aba **Sobre / Diagnóstico** e revise os logs do StopForumSpam.
 
 ---
 
@@ -135,7 +135,7 @@ Para melhor proteção:
 
 ## Status
 
-Versão atual: **3.3.66**  
+Versão atual: **3.3.67**  
 Status: pronto para uso em produção.
 
 ---

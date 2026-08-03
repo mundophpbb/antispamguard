@@ -19,6 +19,7 @@ use mundophpbb\antispamguard\service\ip_rate_limit;
 use mundophpbb\antispamguard\service\form_guard;
 use mundophpbb\antispamguard\service\ip_matcher;
 use mundophpbb\antispamguard\service\registration_policy;
+use mundophpbb\antispamguard\service\registration_audit;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 
@@ -35,8 +36,11 @@ class listener implements EventSubscriberInterface
     protected $ip_rate_limit;
     protected $form_guard;
     protected $ip_matcher;
+    protected $registration_audit;
+    protected $registration_sfs_analyzed = false;
+    protected $registration_submission_recorded = false;
 
-    public function __construct(config $config, request_interface $request, template $template, user $user, driver_interface $db, $table_prefix, sfs_decision $sfs_decision, ip_reputation $ip_reputation, ip_rate_limit $ip_rate_limit, form_guard $form_guard, ip_matcher $ip_matcher)
+    public function __construct(config $config, request_interface $request, template $template, user $user, driver_interface $db, $table_prefix, sfs_decision $sfs_decision, ip_reputation $ip_reputation, ip_rate_limit $ip_rate_limit, form_guard $form_guard, ip_matcher $ip_matcher, registration_audit $registration_audit)
     {
         $this->config = $config;
         $this->request = $request;
@@ -49,6 +53,7 @@ class listener implements EventSubscriberInterface
         $this->ip_rate_limit = $ip_rate_limit;
         $this->form_guard = $form_guard;
         $this->ip_matcher = $ip_matcher;
+        $this->registration_audit = $registration_audit;
     }
 
     public static function getSubscribedEvents()
@@ -71,15 +76,25 @@ class listener implements EventSubscriberInterface
             return;
         }
 
-        if (strtoupper($this->request->server('REQUEST_METHOD', 'GET')) !== 'POST')
-        {
-            return;
-        }
-
+        $request_method = strtoupper($this->request->server('REQUEST_METHOD', 'GET'));
         $mode = $this->request->variable('mode', '');
         $i = $this->request->variable('i', '');
         $request_uri = (string) $this->request->server('REQUEST_URI', '');
         $script_name = (string) $this->request->server('SCRIPT_NAME', '');
+
+        if ($request_method === 'GET' && $this->is_registration_request($mode, $request_uri, $script_name))
+        {
+            $this->registration_audit->record_page_view(
+                (string) $this->user->ip,
+                (string) $this->request->server('HTTP_USER_AGENT', '')
+            );
+            return;
+        }
+
+        if ($request_method !== 'POST')
+        {
+            return;
+        }
 
         if (!empty($this->config['antispamguard_protect_contact']))
         {
@@ -256,10 +271,21 @@ class listener implements EventSubscriberInterface
         // cannot create content or an account anyway.
         if (!empty($errors))
         {
+            if ($form_type === 'register')
+            {
+                $reason = $this->get_phpbb_rejection_audit_reason();
+                $this->record_registration_submission(true, false, $reason);
+                $this->write_log('audit:' . $reason, $form_type, $this->get_registration_audit_window());
+            }
             return;
         }
 
         $reason = $this->get_submission_block_reason($form_type);
+
+        if ($form_type === 'register')
+        {
+            $this->record_registration_submission(false, $this->is_local_registration_rejection($reason), $reason !== '' ? $reason : 'accepted');
+        }
 
         if ($reason !== '')
         {
@@ -602,7 +628,88 @@ class listener implements EventSubscriberInterface
             $ip . '|' . (string) $form_type
         );
 
+        if ($form_type === 'register')
+        {
+            $this->registration_sfs_analyzed = true;
+        }
+
         return $this->sfs_decision->should_block($ip, $email, $username, $form_type, false, $submission_key);
+    }
+
+    protected function is_registration_request($mode, $request_uri, $script_name)
+    {
+        return strpos((string) $script_name, 'ucp.php') !== false
+            && ((string) $mode === 'register' || strpos((string) $request_uri, 'mode=register') !== false);
+    }
+
+    protected function get_phpbb_rejection_audit_reason()
+    {
+        $reasons = array('phpbb_rejected');
+        $raw_timestamp = $this->request->variable('antispamguard_ts', '');
+
+        if (!$this->form_guard->passes_honeypot($raw_timestamp, array()))
+        {
+            $reasons[] = 'honeypot';
+        }
+
+        $timestamp_reason = $this->form_guard->get_timestamp_block_reason($raw_timestamp);
+        if ($timestamp_reason !== '')
+        {
+            $reasons[] = $timestamp_reason;
+        }
+
+        return implode(',', array_unique($reasons));
+    }
+
+    protected function record_registration_submission($phpbb_rejected, $local_rejected, $reason)
+    {
+        if ($this->registration_submission_recorded)
+        {
+            return;
+        }
+
+        $this->registration_audit->record_submission(
+            (string) $this->user->ip,
+            (string) $this->request->server('HTTP_USER_AGENT', ''),
+            array(
+                'phpbb_rejected' => (bool) $phpbb_rejected,
+                'local_rejected' => (bool) $local_rejected,
+                'sfs_analyzed'   => (bool) $this->registration_sfs_analyzed,
+                'reason'         => $this->strip_audit_reason_prefix($reason),
+            )
+        );
+        $this->registration_submission_recorded = true;
+    }
+
+    protected function is_local_registration_rejection($reason)
+    {
+        if ($reason === '' || $this->is_audit_only_reason($reason) || !empty($this->config['antispamguard_simulation_mode']))
+        {
+            return false;
+        }
+
+        $parts = array_map('trim', explode(',', $this->strip_audit_reason_prefix($reason)));
+        $has_combined_decision = in_array('combined_decision', $parts, true);
+        $has_sfs_reason = in_array('sfs_reputation', $parts, true) || in_array('sfs_identity', $parts, true);
+
+        foreach ($parts as $part)
+        {
+            if ($part !== '' && !in_array($part, array('sfs_reputation', 'sfs_identity', 'combined_decision', 'possible_false_positive'), true))
+            {
+                return true;
+            }
+        }
+
+        // A combined-only block is produced by local score signals. When an
+        // SFS rule caused the decision, its canonical SFS reason is preserved.
+        return $has_combined_decision && !$has_sfs_reason;
+    }
+
+    protected function get_registration_audit_window()
+    {
+        return isset($this->config['antispamguard_registration_audit_window'])
+            ? max(60, min(3600, (int) $this->config['antispamguard_registration_audit_window']))
+            : 300;
     }
 
     protected function has_definitive_local_block(array $reasons, $form_type = '')
@@ -1053,7 +1160,7 @@ class listener implements EventSubscriberInterface
     }
 
 
-    protected function write_log($reason, $form_type = 'register')
+    protected function write_log($reason, $form_type = 'register', $duplicate_window = 30)
     {
         $table = $this->table_prefix . 'antispamguard_log';
         $now = time();
@@ -1077,7 +1184,7 @@ class listener implements EventSubscriberInterface
         // phpBB can execute more than one validation path for some submissions
         // (notably the contact form). Avoid storing the same block twice when
         // the same request reaches the logger again during the same pass.
-        if ($this->recent_duplicate_log_exists($table, $sql_ary, $now))
+        if ($this->recent_duplicate_log_exists($table, $sql_ary, $now, $duplicate_window))
         {
             return;
         }
@@ -1086,9 +1193,9 @@ class listener implements EventSubscriberInterface
         $this->db->sql_query($sql);
     }
 
-    protected function recent_duplicate_log_exists($table, array $log_row, $now)
+    protected function recent_duplicate_log_exists($table, array $log_row, $now, $duplicate_window = 30)
     {
-        $window_start = max(0, (int) $now - 30);
+        $window_start = max(0, (int) $now - max(1, (int) $duplicate_window));
 
         // De-duplicate by request identity. Some phpBB validation paths can log
         // an early row before username/email are available, then another row for
@@ -1136,6 +1243,13 @@ class listener implements EventSubscriberInterface
         $merged_reason = $this->merge_log_reasons($row['reason'], $log_row['reason']);
         $merged_username = ((string) $row['username'] !== '') ? (string) $row['username'] : (string) $log_row['username'];
         $merged_email = ((string) $row['email'] !== '') ? (string) $row['email'] : (string) $log_row['email'];
+
+        if ($merged_reason === (string) $row['reason']
+            && $merged_username === (string) $row['username']
+            && $merged_email === (string) $row['email'])
+        {
+            return true;
+        }
 
         $sql = 'UPDATE ' . $table . "
             SET reason = '" . $this->db->sql_escape($this->truncate_for_storage($merged_reason, 191)) . "',

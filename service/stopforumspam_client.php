@@ -395,7 +395,7 @@ class stopforumspam_client
             'http_errors' => false,
             'allow_redirects' => false,
             'headers' => array_merge(array(
-                'User-Agent' => 'AntiSpamGuard/3.3.66',
+                'User-Agent' => 'AntiSpamGuard/3.3.67',
             ), $headers),
         );
 

@@ -153,6 +153,10 @@ class settings_helper
             'antispamguard_rate_limit_window',
             'antispamguard_log_retention_enabled',
             'antispamguard_log_retention_days',
+            'antispamguard_registration_audit_enabled',
+            'antispamguard_registration_track_page_views',
+            'antispamguard_registration_audit_window',
+            'antispamguard_registration_audit_retention_days',
             'antispamguard_silent_mode',
             'antispamguard_simulation_mode',
             'antispamguard_min_seconds',
@@ -255,6 +259,14 @@ class settings_helper
 
                 case 'antispamguard_log_retention_days':
                     $value = max(1, (int) $value);
+                break;
+
+                case 'antispamguard_registration_audit_window':
+                    $value = max(60, min(3600, (int) $value));
+                break;
+
+                case 'antispamguard_registration_audit_retention_days':
+                    $value = max(1, min(365, (int) $value));
                 break;
 
                 case 'antispamguard_min_seconds':

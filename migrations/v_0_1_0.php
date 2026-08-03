@@ -105,6 +105,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         $this->repair_alerts_table();
         $this->repair_sfs_submit_log_table();
         $this->repair_sfs_review_log_table();
+        $this->repair_registration_audit_table();
     }
 
     public function ensure_config_defaults()
@@ -221,6 +222,11 @@ class v_0_1_0 extends \phpbb\db\migration\migration
             'antispamguard_sfs_circuit_cooldown' => array(300, false),
             'antispamguard_sfs_failure_count' => array(0, true),
             'antispamguard_sfs_circuit_until' => array(0, true),
+            'antispamguard_registration_audit_enabled' => array(1, false),
+            'antispamguard_registration_track_page_views' => array(0, false),
+            'antispamguard_registration_audit_window' => array(300, false),
+            'antispamguard_registration_audit_retention_days' => array(7, false),
+            'antispamguard_registration_audit_last_gc' => array(0, true),
         );
 
         foreach ($defaults as $key => $data)
@@ -311,6 +317,45 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         $this->add_index_if_missing($table, 'user_ip', array('user_ip'));
         $this->add_index_if_missing($table, 'reason', array('reason'));
         $this->add_index_if_missing($table, 'form_type', array('form_type'));
+    }
+
+    public function repair_registration_audit_table()
+    {
+        $table = $this->table_prefix . 'antispamguard_registration_audit';
+        $columns = array(
+            'audit_id'         => array('UINT', null, 'auto_increment'),
+            'bucket_key'       => array('VCHAR:64', ''),
+            'bucket_start'     => array('TIMESTAMP', 0),
+            'user_ip'          => array('VCHAR:45', ''),
+            'user_agent'       => array('VCHAR:255', ''),
+            'page_views'       => array('UINT', 0),
+            'form_submissions' => array('UINT', 0),
+            'phpbb_rejected'   => array('UINT', 0),
+            'local_rejected'   => array('UINT', 0),
+            'sfs_analyzed'     => array('UINT', 0),
+            'last_reason'      => array('VCHAR:191', ''),
+            'first_seen'       => array('TIMESTAMP', 0),
+            'last_seen'        => array('TIMESTAMP', 0),
+        );
+
+        if (!$this->db_tools->sql_table_exists($table))
+        {
+            $this->db_tools->sql_create_table($table, array(
+                'COLUMNS' => $columns,
+                'PRIMARY_KEY' => 'audit_id',
+                'KEYS' => array(
+                    'bucket_key_unique' => array('UNIQUE', array('bucket_key')),
+                    'bucket_start_idx'  => array('INDEX', array('bucket_start')),
+                    'user_ip_idx'       => array('INDEX', array('user_ip')),
+                ),
+            ));
+            return;
+        }
+
+        $this->add_missing_columns($table, $columns, array('audit_id'));
+        $this->add_unique_index_if_missing($table, 'bucket_key_unique', array('bucket_key'));
+        $this->add_index_if_missing($table, 'bucket_start_idx', array('bucket_start'));
+        $this->add_index_if_missing($table, 'user_ip_idx', array('user_ip'));
     }
 
     protected function repair_sfs_cache_table()
@@ -650,6 +695,15 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         }
     }
 
+    protected function add_unique_index_if_missing($table, $index_name, array $columns)
+    {
+        $indexes = $this->db_tools->sql_list_index($table);
+        if (!in_array($index_name, $indexes, true))
+        {
+            $this->db_tools->sql_create_unique_index($table, $index_name, $columns);
+        }
+    }
+
     protected function safe_column_change($table, $column, array $definition)
     {
         if ($this->db_tools->sql_column_exists($table, $column))
@@ -663,6 +717,7 @@ class v_0_1_0 extends \phpbb\db\migration\migration
         return array(
             'drop_tables' => array(
                 $this->table_prefix . 'antispamguard_sfs_review_log',
+                $this->table_prefix . 'antispamguard_registration_audit',
                 $this->table_prefix . 'antispamguard_sfs_submit_log',
                 $this->table_prefix . 'antispamguard_alerts',
                 $this->table_prefix . 'antispamguard_activity_log',

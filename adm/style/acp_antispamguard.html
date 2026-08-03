@@ -189,6 +189,10 @@
         </div>
 
         <div class="asg-panel"><h2>🧾 {{ lang('ACP_ANTISPAMGUARD_PANEL_MAINTENANCE') }}</h2>
+            <dl><dt><label for="antispamguard_registration_audit_enabled">{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_registration_audit_enabled" value="1"{% if ANTISPAMGUARD_REG_AUDIT_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_registration_audit_enabled" value="0"{% if not ANTISPAMGUARD_REG_AUDIT_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_registration_track_page_views">{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_PAGE_TRACKING') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_PAGE_TRACKING_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_registration_track_page_views" value="1"{% if ANTISPAMGUARD_REG_AUDIT_PAGE_TRACKING %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_registration_track_page_views" value="0"{% if not ANTISPAMGUARD_REG_AUDIT_PAGE_TRACKING %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+            <dl><dt><label for="antispamguard_registration_audit_window">{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_WINDOW') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_WINDOW_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_registration_audit_window" name="antispamguard_registration_audit_window" value="{{ ANTISPAMGUARD_REG_AUDIT_WINDOW }}" min="60" max="3600"></dd></dl>
+            <dl><dt><label for="antispamguard_registration_audit_retention_days">{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_RETENTION') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_RETENTION_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_registration_audit_retention_days" name="antispamguard_registration_audit_retention_days" value="{{ ANTISPAMGUARD_REG_AUDIT_RETENTION_DAYS }}" min="1" max="365"></dd></dl>
             <dl><dt><label for="antispamguard_log_retention_enabled">{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_ENABLE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_ENABLE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_log_retention_enabled" value="1"{% if ANTISPAMGUARD_LOG_RETENTION_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_log_retention_enabled" value="0"{% if not ANTISPAMGUARD_LOG_RETENTION_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_log_retention_days">{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_DAYS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_LOG_RETENTION_DAYS_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_log_retention_days" name="antispamguard_log_retention_days" value="{{ ANTISPAMGUARD_LOG_RETENTION_DAYS }}" min="1" max="3650"></dd></dl>
             <dl><dt><label>{{ lang('ACP_ANTISPAMGUARD_CRON_STATUS') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_CRON_STATUS_EXPLAIN') }}</span></dt><dd>{{ lang('ACP_ANTISPAMGUARD_CRON_LAST_RUN') ~ lang('COLON') }} <strong>{{ ANTISPAMGUARD_CRON_LAST_PRUNE }}</strong></dd></dl>
@@ -272,6 +276,17 @@
         <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_STATS_24H') }}</span><strong>{{ ANTISPAMGUARD_STATS_24H }}</strong></div>
         <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_STATS_7D') }}</span><strong>{{ ANTISPAMGUARD_STATS_7D }}</strong></div>
         <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_STATS_30D') }}</span><strong>{{ ANTISPAMGUARD_STATS_30D }}</strong></div>
+    </div>
+
+    <h2>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_STATS_TITLE') }}</h2>
+    <p>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_STATS_EXPLAIN') }}</p>
+
+    <div class="asg-dashboard">
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_PAGE_VIEWS') }}</span><strong>{{ ANTISPAMGUARD_REG_AUDIT_PAGE_VIEWS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_SUBMISSIONS') }}</span><strong>{{ ANTISPAMGUARD_REG_AUDIT_SUBMISSIONS }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_PHPBB_REJECTED') }}</span><strong>{{ ANTISPAMGUARD_REG_AUDIT_PHPBB_REJECTED }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_LOCAL_REJECTED') }}</span><strong>{{ ANTISPAMGUARD_REG_AUDIT_LOCAL_REJECTED }}</strong></div>
+        <div class="asg-card"><span>{{ lang('ACP_ANTISPAMGUARD_REG_AUDIT_SFS_ANALYZED') }}</span><strong>{{ ANTISPAMGUARD_REG_AUDIT_SFS_ANALYZED }}</strong></div>
     </div>
 
 
@@ -768,6 +783,7 @@
         <label for="filter_reason">{{ lang('ACP_ANTISPAMGUARD_FILTER_REASON') ~ lang('COLON') }}</label>
         <select id="filter_reason" name="filter_reason">
             <option value=""{% if FILTER_REASON == '' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_FILTER_ALL') }}</option>
+            <option value="phpbb_rejected"{% if FILTER_REASON == 'phpbb_rejected' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_PHPBB_REJECTED') }}</option>
             <option value="honeypot"{% if FILTER_REASON == 'honeypot' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_HONEYPOT') }}</option>
             <option value="timestamp"{% if FILTER_REASON == 'timestamp' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TIMESTAMP') }}</option>
             <option value="timestamp_too_fast"{% if FILTER_REASON == 'timestamp_too_fast' %} selected="selected"{% endif %}>{{ lang('ACP_ANTISPAMGUARD_REASON_TIMESTAMP_TOO_FAST') }}</option>

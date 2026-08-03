@@ -1,4 +1,4 @@
-# AntiSpam Guard 3.3.66 — Apache + ModSecurity 2.x registration rate limit.
+# AntiSpam Guard 3.3.67 — Apache + ModSecurity 2.x registration rate limit.
 #
 # Requirements: Apache with ModSecurity 2.x, a working writable SecDataDir,
 # and the real client IP configured through trusted proxies only.
