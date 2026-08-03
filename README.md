@@ -131,7 +131,7 @@ A extensão pode limpar logs antigos automaticamente via cron do phpBB, usando a
 3. Ative novamente ou execute a atualização pelo ACP.
 4. Limpe o cache do phpBB.
 5. Verifique a aba **Sobre / Diagnóstico**.
-6. Após atualizar para a versão **3.3.26**, confira se os logs do StopForumSpam aparecem tanto na página própria quanto em **Logs de bloqueio**.
+6. Após atualizar para a versão **3.3.66**, confirme a migração em **Sobre / Diagnóstico** e revise os logs do StopForumSpam.
 
 ---
 
@@ -145,7 +145,9 @@ Para uma configuração equilibrada:
 - mantenha logs ativos no início;
 - use o modo simulação ao testar regras novas;
 - ative o StopForumSpam em modo de teste ou somente log antes de aplicar bloqueios definitivos;
-- configure retenção automática de logs.
+- configure retenção automática de logs;
+- ative a confirmação de conta por e-mail no painel AntiSpam Guard somente depois de configurar e testar o envio de e-mail do phpBB;
+- se administrar o servidor ou CDN, aplique um dos modelos em `contrib/edge-protection/` inicialmente no modo de observação.
 
 ---
 
@@ -158,7 +160,7 @@ Para uma configuração equilibrada:
 
 ### Status
 
-Versão atual: **3.3.26**  
+Versão atual: **3.3.66**  
 Status: pronto para uso em produção.
 
 ---
@@ -291,7 +293,7 @@ The extension can automatically prune old logs through phpBB cron using the rete
 3. Enable it again or run the update through the ACP.
 4. Clear the phpBB cache.
 5. Check the **About / Diagnostics** tab.
-6. After updating to version **3.3.26**, confirm that StopForumSpam logs appear both on the dedicated page and on **Blocking logs**.
+6. After updating to version **3.3.66**, confirm the migration under **About / Diagnostics** and review the StopForumSpam logs.
 
 ---
 
@@ -305,7 +307,9 @@ For a balanced configuration:
 - keep logs enabled at first;
 - use simulation mode when testing new rules;
 - enable StopForumSpam in test mode or log-only mode before applying definitive blocks;
-- configure automatic log retention.
+- configure automatic log retention;
+- enable email account confirmation in the AntiSpam Guard panel only after configuring and testing phpBB email delivery;
+- if you manage the server or CDN, apply one of the `contrib/edge-protection/` templates in observation mode first.
 
 ---
 
@@ -318,7 +322,7 @@ For a balanced configuration:
 
 ### Status
 
-Current version: **3.3.26**  
+Current version: **3.3.66**  
 Status: production-ready.
 
 ---

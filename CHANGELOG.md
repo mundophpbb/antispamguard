@@ -1,5 +1,37 @@
 # AntiSpam Guard Changelog
 
+## 3.3.66
+
+- Removed the dependency on the non-existent `http_client` service that prevented container compilation on some phpBB 3.3 installations.
+- StopForumSpam now creates and reuses Guzzle lazily without falling back to direct `file_get_contents` transport.
+- Added regression coverage for initialization without an injected HTTP service and static `services.yml` validation.
+
+## 3.3.65
+
+- Replaced direct stream HTTP calls with phpBB's shared HTTP client, disabled redirects and capped remote response size.
+- Added StopForumSpam circuit-breaker status, tuning and manual reset to the ACP.
+- Added a guarded ACP action for phpBB user email activation; it cannot be enabled while email delivery is disabled.
+- Added conservative Cloudflare, Nginx and Apache/ModSecurity edge-rate-limit templates with observation-first guidance.
+- Added regression checks for native HTTP transport, retry limits, status handling and oversized responses.
+
+## 3.3.64
+
+- StopForumSpam no longer hard-blocks an isolated IP or username match; those matches are logged for review.
+- Hard SFS blocking now requires a strongly listed e-mail or the strong username + IP combination.
+- Added unique keys for IP rate limits, local IP reputation and SFS cache identities.
+- Replaced race-prone read/delete/insert counters with atomic insert-if-missing and update operations.
+- Added a one-time migration that safely consolidates historical duplicate rows before installing unique indexes.
+- Expanded regression coverage to 27 checks, including real SQLite writes for counters, reputation and cache refreshes.
+
+## 3.3.63
+
+- Registration now rejects missing/invalid honeypot and form tokens before any remote reputation lookup.
+- StopForumSpam IP, e-mail and username checks are combined into one request, with short error caching, configurable timeouts and a circuit breaker.
+- Corrected strict/lenient registration policy, score/log-only actions, per-field SFS whitelists and IPv6 /64 subnet limiting.
+- Reduced duplicate database reads and log writes; SFS ACP logs now use SQL pagination and bulk submission-status lookup.
+- Added automatic cleanup for alerts and stale protection data even after an individual protection is disabled.
+- Added migration 3.3.63 for the form-token secret, SFS submission correlation and safer defaults.
+
 ## 3.3.47
 
 - Reduced false positives during registration when `slow_spam` appears together with local `ip_reputation` but the user submitted a normal username and email.

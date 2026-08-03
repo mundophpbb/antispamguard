@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.3.66 - Compatibilidade do cliente HTTP
+
+- Removida a dependência do serviço inexistente `http_client`, que impedia a compilação do container em algumas instalações phpBB 3.3.
+- O cliente StopForumSpam agora cria o Guzzle sob demanda e reutiliza a instância, sem retornar ao transporte direto por `file_get_contents`.
+- Adicionado teste de regressão para a inicialização sem injeção do serviço HTTP e validação estática do `services.yml`.
+
+## 3.3.65 - Borda, confirmação por e-mail e transporte HTTP
+
+- Chamadas HTTP diretas substituídas pelo cliente compartilhado do phpBB, sem redirecionamentos e com limite de resposta remota.
+- Status, parâmetros e restauração manual do circuit breaker StopForumSpam adicionados ao ACP.
+- Ação protegida no ACP para ativar confirmação de conta por e-mail; a extensão impede a ativação enquanto o envio de e-mail estiver desligado.
+- Modelos conservadores de rate limit para Cloudflare, Nginx e Apache/ModSecurity, com observação antes do bloqueio.
+- Testes ampliados para transporte HTTP, repetição, status inválido e resposta excessiva.
+
+## 3.3.64 - Decisão SFS segura e gravações atômicas
+
+- Ocorrência isolada de IP ou username no StopForumSpam passa a ser registrada para revisão, sem bloqueio direto.
+- Bloqueio SFS exige e-mail fortemente listado ou a combinação forte de username + IP.
+- Adicionadas chaves únicas ao rate limit, reputação local e cache SFS.
+- Contadores deixam de usar leitura/exclusão/inserção sujeita a corrida e passam a usar inserção condicional e atualização atômica.
+- Migração consolida com segurança registros duplicados antigos antes de instalar os índices únicos.
+- Testes ampliados para 27 verificações, incluindo gravações reais em SQLite.
+
+## 3.3.63 - Proteção de cadastro e redução de tráfego
+
+- Honeypot e token ausentes ou inválidos agora bloqueiam antes de consultas externas.
+- IP, e-mail e usuário são consultados no StopForumSpam em uma única requisição, com cache de erro curto e circuit breaker.
+- Ocorrência forte da identidade enviada bloqueia; ocorrência isolada do IP fica para revisão no cadastro tolerante.
+- Corrigidos os modos de ação por pontuação/somente log, whitelist por campo, subnet IPv6 /64 e valores padrão divergentes.
+- Paginação SFS passa a ocorrer no banco e consultas repetidas do ACP foram removidas.
+- Limpezas automáticas continuam removendo dados antigos mesmo quando uma proteção é desativada.
+
 ## 3.3.26 - Janela ampliada para mesclagem do log principal
 
 - Reforça a detecção de quase duplicados nos Logs de bloqueio.
