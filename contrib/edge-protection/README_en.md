@@ -4,6 +4,12 @@ These templates reduce repeated registration requests before phpBB and PHP run. 
 
 Recommended starting profile: match only `POST /ucp.php?mode=register`, allow a burst of five submissions, observe for 24–48 hours, then return HTTP 429 or a managed challenge. Keep AntiSpam Guard's internal limiter enabled as a second layer.
 
+Configuration templates:
+
+- `cloudflare-rate-limit.md`: guidance for Cloudflare plans.
+- `nginx-antispamguard.conf.txt`: selective Nginx `limit_req` rules.
+- `apache-modsecurity-antispamguard.conf.txt`: persistent per-IP counter for Apache with ModSecurity 2.x.
+
 If a CDN or proxy is present, configure the real client IP using only explicitly trusted proxy ranges. Never trust arbitrary forwarding headers. Validate the web-server configuration and test normal registration, validation errors, and resubmission before enforcement.
 
 Official references:

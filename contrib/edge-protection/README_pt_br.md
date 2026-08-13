@@ -13,8 +13,8 @@ Estes modelos reduzem requisições repetidas ao cadastro antes que o phpBB e o 
 ## Arquivos
 
 - `cloudflare-rate-limit.md`: regras por plano do Cloudflare.
-- `nginx-antispamguard.conf.example`: `limit_req` seletivo; requisições fora do cadastro usam chave vazia e não são contadas.
-- `apache-modsecurity-antispamguard.conf.example`: contador persistente por IP para Apache com ModSecurity 2.x.
+- `nginx-antispamguard.conf.txt`: `limit_req` seletivo; requisições fora do cadastro usam chave vazia e não são contadas.
+- `apache-modsecurity-antispamguard.conf.txt`: contador persistente por IP para Apache com ModSecurity 2.x.
 
 ## IP real e proxies
 

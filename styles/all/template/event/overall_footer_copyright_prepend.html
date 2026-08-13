@@ -1,0 +1,8 @@
+{% if ANTISPAMGUARD_ENABLED and ANTISPAMGUARD_PROTECT_CONTACT and ANTISPAMGUARD_IS_CONTACT %}
+<!-- INCLUDECSS @mundophpbb_antispamguard/antispamguard.css -->
+<div class="{{ ANTISPAMGUARD_HP_CLASS }}" style="{{ ANTISPAMGUARD_HP_STYLE }}" aria-hidden="true">
+	<label for="antispamguard-hp-contact">{{ lang('ANTISPAMGUARD_HP_LABEL') }}</label>
+	<input type="text" id="antispamguard-hp-contact" name="{{ ANTISPAMGUARD_HP_NAME }}" value="" tabindex="-1" autocomplete="off" form="postform" />
+</div>
+<input type="hidden" name="antispamguard_ts" value="{{ ANTISPAMGUARD_TS }}" form="postform" />
+{% endif %}

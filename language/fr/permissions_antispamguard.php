@@ -5,9 +5,9 @@
 
 if (!defined('IN_PHPBB'))
 {
-    exit;
+	exit;
 }
 
 $lang = array_merge($lang, array(
-    'ACL_A_ANTISPAMGUARD_MANAGE' => 'Peut gérer AntiSpam Guard',
+	'ACL_A_ANTISPAMGUARD_MANAGE' => 'Peut gérer AntiSpam Guard',
 ));

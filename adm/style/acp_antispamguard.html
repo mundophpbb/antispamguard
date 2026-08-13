@@ -50,6 +50,7 @@
         </div>
         <div class="asg-panel"><h2>🌐 {{ lang('ACP_ANTISPAMGUARD_PANEL_IP') }}</h2>
             <dl><dt><label for="antispamguard_ip_whitelist">{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_EXPLAIN') }}</span></dt><dd><textarea id="antispamguard_ip_whitelist" name="antispamguard_ip_whitelist" rows="5" cols="45">{{ ANTISPAMGUARD_IP_WHITELIST }}</textarea></dd></dl>
+			<dl><dt><label for="antispamguard_trusted_ip_whitelist">{{ lang('ACP_ANTISPAMGUARD_TRUSTED_IP_WHITELIST') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_TRUSTED_IP_WHITELIST_EXPLAIN') }}</span></dt><dd><textarea id="antispamguard_trusted_ip_whitelist" name="antispamguard_trusted_ip_whitelist" rows="4" cols="45">{{ TRUSTED_IP_WHITELIST }}</textarea></dd></dl>
             <dl>
                 <dt><label for="antispamguard_ip_whitelist_mode">{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_IP_WHITELIST_MODE_EXPLAIN') }}</span></dt>
                 <dd>
@@ -91,6 +92,24 @@
             <dl><dt><label for="antispamguard_silent_mode">{{ lang('ACP_ANTISPAMGUARD_SILENT_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SILENT_MODE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_silent_mode" value="1"{% if ANTISPAMGUARD_SILENT_MODE %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_silent_mode" value="0"{% if not ANTISPAMGUARD_SILENT_MODE %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
             <dl><dt><label for="antispamguard_simulation_mode">{{ lang('ACP_ANTISPAMGUARD_SIMULATION_MODE') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_SIMULATION_MODE_EXPLAIN') }}</span></dt><dd><label><input type="radio" class="radio" name="antispamguard_simulation_mode" value="1"{% if ANTISPAMGUARD_SIMULATION_MODE %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_simulation_mode" value="0"{% if not ANTISPAMGUARD_SIMULATION_MODE %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
         </div>
+		<div class="asg-panel"><h2>⛔ {{ lang('ACP_ANTISPAMGUARD_PANEL_AUTOBAN') }}</h2>
+			<p>{{ lang('ACP_ANTISPAMGUARD_PANEL_AUTOBAN_EXPLAIN') }}</p>
+			<dl><dt><label for="antispamguard_autoban_enabled">{{ lang('ACP_ANTISPAMGUARD_AUTOBAN_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_autoban_enabled" value="1"{% if AUTOBAN_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_autoban_enabled" value="0"{% if not AUTOBAN_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+			<dl><dt><label for="antispamguard_autoban_threshold">{{ lang('ACP_ANTISPAMGUARD_AUTOBAN_THRESHOLD') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_AUTOBAN_THRESHOLD_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_autoban_threshold" name="antispamguard_autoban_threshold" value="{{ AUTOBAN_THRESHOLD }}" min="1"></dd></dl>
+			<dl><dt><label for="antispamguard_autoban_duration">{{ lang('ACP_ANTISPAMGUARD_AUTOBAN_DURATION') ~ lang('COLON') }}</label><span>{{ lang('ACP_ANTISPAMGUARD_AUTOBAN_DURATION_EXPLAIN') }}</span></dt><dd><input type="number" id="antispamguard_autoban_duration" name="antispamguard_autoban_duration" value="{{ AUTOBAN_DURATION }}" min="60"></dd></dl>
+		</div>
+		<div class="asg-panel"><h2>⚖️ {{ lang('ACP_ANTISPAMGUARD_PANEL_DECISION_ENGINE') }}</h2>
+			<p>{{ lang('ACP_ANTISPAMGUARD_PANEL_DECISION_ENGINE_EXPLAIN') }}</p>
+			<dl><dt><label for="antispamguard_decision_engine_enabled">{{ lang('ACP_ANTISPAMGUARD_DECISION_ENGINE_ENABLE') ~ lang('COLON') }}</label></dt><dd><label><input type="radio" class="radio" name="antispamguard_decision_engine_enabled" value="1"{% if DECISION_ENGINE_ENABLED %} checked="checked"{% endif %}> {{ lang('YES') }}</label> <label><input type="radio" class="radio" name="antispamguard_decision_engine_enabled" value="0"{% if not DECISION_ENGINE_ENABLED %} checked="checked"{% endif %}> {{ lang('NO') }}</label></dd></dl>
+			<dl><dt><label for="antispamguard_decision_score_log">{{ lang('ACP_ANTISPAMGUARD_DECISION_SCORE_LOG') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_score_log" name="antispamguard_decision_score_log" value="{{ DECISION_SCORE_LOG }}" min="0"></dd></dl>
+			<dl><dt><label for="antispamguard_decision_score_block">{{ lang('ACP_ANTISPAMGUARD_DECISION_SCORE_BLOCK') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_score_block" name="antispamguard_decision_score_block" value="{{ DECISION_SCORE_BLOCK }}" min="1"></dd></dl>
+			<h3>{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHTS') }}</h3>
+			<dl><dt><label for="antispamguard_decision_weight_honeypot">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_HONEYPOT') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_honeypot" name="antispamguard_decision_weight_honeypot" value="{{ DECISION_WEIGHT_HONEYPOT }}" min="0"></dd></dl>
+			<dl><dt><label for="antispamguard_decision_weight_timestamp_fast">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_TIMESTAMP_FAST') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_timestamp_fast" name="antispamguard_decision_weight_timestamp_fast" value="{{ DECISION_WEIGHT_TIMESTAMP_FAST }}" min="0"></dd></dl>
+			<dl><dt><label for="antispamguard_decision_weight_timestamp_expired">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_TIMESTAMP_EXPIRED') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_timestamp_expired" name="antispamguard_decision_weight_timestamp_expired" value="{{ DECISION_WEIGHT_TIMESTAMP_EXPIRED }}" min="0"></dd></dl>
+			<dl><dt><label for="antispamguard_decision_weight_rate_limit">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_RATE_LIMIT') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_rate_limit" name="antispamguard_decision_weight_rate_limit" value="{{ DECISION_WEIGHT_RATE_LIMIT }}" min="0"></dd></dl>
+			<dl><dt><label for="antispamguard_decision_weight_ip_reputation">{{ lang('ACP_ANTISPAMGUARD_DECISION_WEIGHT_IP_REPUTATION') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_decision_weight_ip_reputation" name="antispamguard_decision_weight_ip_reputation" value="{{ DECISION_WEIGHT_IP_REPUTATION }}" min="0"></dd></dl>
+		</div>
 <div class="asg-panel"><h2>🧠 {{ lang('ACP_ANTISPAMGUARD_PANEL_IP_REPUTATION') }}</h2>
             <p>{{ lang('ACP_ANTISPAMGUARD_PANEL_IP_REPUTATION_EXPLAIN') }}</p>
 
@@ -112,6 +131,7 @@
             <dl><dt><label for="antispamguard_ip_reputation_weight_timestamp_expired">{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_WEIGHT_TIMESTAMP_EXPIRED') ~ lang('COLON') }}</label></dt><dd><input type="number" id="antispamguard_ip_reputation_weight_timestamp_expired" name="antispamguard_ip_reputation_weight_timestamp_expired" value="{{ IP_REPUTATION_WEIGHT_TIMESTAMP_EXPIRED }}" min="0"></dd></dl>
 
             <div class="asg-actions">
+				<input class="button2" type="submit" name="export_ip_reputation" value="{{ lang('ACP_ANTISPAMGUARD_EXPORT_IP_REPUTATION') }}" data-ajax="false">
                 <input class="button2" type="submit" name="prune_ip_reputation" value="{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_PRUNE') }}" data-ajax="false">
                 <input class="button2" type="submit" name="reset_ip_reputation" value="{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_RESET') }}" data-ajax="false" onclick="return confirm('{{ lang('ACP_ANTISPAMGUARD_IP_REPUTATION_RESET_CONFIRM')|e('js') }}');">
             </div>
@@ -434,7 +454,7 @@
             </div>
 
             {% if S_SFS_TEST_DONE %}
-            <div class="successbox notice">
+            <div class="{% if S_SFS_TEST_ERROR %}errorbox{% else %}successbox{% endif %} notice">
                 <h3>{{ lang('ACP_ANTISPAMGUARD_SFS_TEST_RESULT') }}</h3>
                 <p><strong>{{ SFS_TEST_RESULT }}</strong></p>
                 <p>
@@ -460,7 +480,7 @@
             </div>
 
             {% if S_SFS_MANUAL_TEST_DONE %}
-            <div class="successbox notice">
+            <div class="{% if S_SFS_MANUAL_TEST_ERROR %}errorbox{% else %}successbox{% endif %} notice">
                 <h3>{{ lang('ACP_ANTISPAMGUARD_SFS_MANUAL_TEST_RESULT') }}</h3>
                 <p>
                     {{ lang('ACP_ANTISPAMGUARD_SFS_LISTED_COUNT') }}{{ lang('COLON') }} <strong>{{ SFS_MANUAL_TEST_LISTED_COUNT }}</strong><br>

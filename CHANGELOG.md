@@ -1,5 +1,25 @@
 # AntiSpam Guard Changelog
 
+## 3.3.69
+
+- Fixed registration blocking by subscribing to `core.ucp_register_data_after`, the event that exposes the registration error array.
+- Replaced the MySQL-only diagnostics table check and the legacy SQL substring migration with portable phpBB DBAL operations.
+- Added reversible cleanup for historical configuration, ACP modules and permissions, and removed the obsolete extension-version configuration key.
+- Exposed the active autoban and decision-engine settings in the ACP, connected critical-alert rows, and removed the unused shadowban feature.
+- Hardened CSV exports against spreadsheet formula injection and generated the StopForumSpam User-Agent from package metadata.
+- Added server-rendered contact and private-message protection fields with a no-JavaScript-safe fallback.
+- Removed unused routing and language entries and normalized PHP indentation to phpBB tabs.
+- Replaced the deprecated global `add_log()` call with phpBB's logger service and packaged auxiliary configuration samples with validator-recognized text filenames.
+
+## 3.3.68
+
+- ACP StopForumSpam tests now report transport, invalid-response, missing-result and circuit-breaker errors instead of presenting them as clean lookups.
+- Technical SFS failures are written to the dedicated log whenever SFS logging is enabled, including blocked-only logging mode.
+- The SFS error cache preserves the original technical status for repeated diagnostics.
+- SFS debug tracing now runs when a decisive local rule skips the regular lookup, without duplicating lookups that already ran.
+- The lookup-only and test-and-log ACP actions now explain their distinct logging behavior.
+- Added regression coverage for remote errors, cached error status, clean lookups, log-all and forced manual audit rows.
+
 ## 3.3.67
 
 - Added compact registration telemetry grouped by IP and configurable time window, with automatic retention cleanup.

@@ -7,68 +7,86 @@ namespace mundophpbb\antispamguard\service;
 
 class alerts
 {
-    protected $db;
-    protected $config;
-    protected $table;
+	protected $db;
+	protected $config;
+	protected $table;
 
-    public function __construct(\phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, $table_prefix)
-    {
-        $this->db = $db;
-        $this->config = $config;
-        $this->table = $table_prefix . 'antispamguard_alerts';
-    }
+	public function __construct(\phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, $table_prefix)
+	{
+		$this->db = $db;
+		$this->config = $config;
+		$this->table = $table_prefix . 'antispamguard_alerts';
+	}
 
-    public function is_enabled()
-    {
-        return !empty($this->config['antispamguard_alerts_enabled']);
-    }
+	public function is_enabled()
+	{
+		return !empty($this->config['antispamguard_alerts_enabled']);
+	}
 
-    public function add($type, $severity, $ip, $user_id, $username, $message, array $details = array())
-    {
-        if (!$this->is_enabled())
-        {
-            return;
-        }
+	public function add($type, $severity, $ip, $user_id, $username, $message, array $details = array())
+	{
+		if (!$this->is_enabled())
+		{
+			return;
+		}
 
-        $data = array(
-            'alert_type' => (string) $type,
-            'severity' => (string) $severity,
-            'ip' => (string) $ip,
-            'user_id' => (int) $user_id,
-            'username' => (string) $username,
-            'message' => (string) $message,
-            'details_json' => json_encode($details),
-            'created_at' => time(),
-            'is_read' => 0,
-        );
+		$data = array(
+			'alert_type' => (string) $type,
+			'severity' => (string) $severity,
+			'ip' => (string) $ip,
+			'user_id' => (int) $user_id,
+			'username' => (string) $username,
+			'message' => (string) $message,
+			'details_json' => json_encode($details),
+			'created_at' => time(),
+			'is_read' => 0,
+		);
 
-        $sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
-        $this->db->sql_query($sql);
-    }
+		$sql = 'INSERT INTO ' . $this->table . ' ' . $this->db->sql_build_array('INSERT', $data);
+		$this->db->sql_query($sql);
+	}
 
-    public function prune()
-    {
-        $retention = isset($this->config['antispamguard_alerts_retention']) ? (int) $this->config['antispamguard_alerts_retention'] : 604800;
+	public function prune()
+	{
+		$retention = isset($this->config['antispamguard_alerts_retention']) ? (int) $this->config['antispamguard_alerts_retention'] : 604800;
 
-        if ($retention <= 0)
-        {
-            return 0;
-        }
+		if ($retention <= 0)
+		{
+			return 0;
+		}
 
-        $sql = 'DELETE FROM ' . $this->table . '
-            WHERE created_at < ' . (time() - $retention);
-        $this->db->sql_query($sql);
+		$sql = 'DELETE FROM ' . $this->table . '
+			WHERE created_at < ' . (time() - $retention);
+		$this->db->sql_query($sql);
 
-        return (int) $this->db->sql_affectedrows();
-    }
+		return (int) $this->db->sql_affectedrows();
+	}
 
-    public function mark_all_read()
-    {
-        $sql = 'UPDATE ' . $this->table . '
-            SET is_read = 1
-            WHERE is_read = 0';
-        $this->db->sql_query($sql);
+	public function mark_all_read()
+	{
+		$sql = 'UPDATE ' . $this->table . '
+			SET is_read = 1
+			WHERE is_read = 0';
+		$this->db->sql_query($sql);
 
-        return (int) $this->db->sql_affectedrows();
-    }
+		return (int) $this->db->sql_affectedrows();
+	}
+
+	public function get_recent($limit = 20)
+	{
+		$limit = max(1, min(100, (int) $limit));
+		$rows = array();
+		$sql = 'SELECT alert_id, severity, ip, username, message, created_at, is_read
+			FROM ' . $this->table . '
+			ORDER BY created_at DESC, alert_id DESC';
+		$result = $this->db->sql_query_limit($sql, $limit);
+
+		while ($row = $this->db->sql_fetchrow($result))
+		{
+			$rows[] = $row;
+		}
+		$this->db->sql_freeresult($result);
+
+		return $rows;
+	}
 }

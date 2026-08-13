@@ -1,0 +1,23 @@
+# AntiSpam Guard 3.3.69 — Apache + ModSecurity 2.x registration rate limit.
+#
+# Requirements: Apache with ModSecurity 2.x, a working writable SecDataDir,
+# and the real client IP configured through trusted proxies only.
+# Rule IDs 1100650–1100652 must be unique in your installation.
+#
+# This example starts in OBSERVATION mode. After reviewing logs for 24–48
+# hours, replace "pass,log" in rule 1100652 with "deny,status:429,log".
+
+SecAction "id:1100650,phase:1,pass,nolog,initcol:ip=%{REMOTE_ADDR}"
+
+# Count only a complete POST registration match. setvar/expirevar are on the
+# final chained rule so the counter changes only when all conditions match.
+SecRule REQUEST_METHOD "@streq POST" "id:1100651,phase:1,pass,nolog,chain"
+    SecRule REQUEST_FILENAME "@rx (?:^|/)ucp\.php$" "chain"
+        SecRule ARGS_GET:mode "@streq register" "setvar:ip.asg_registration=+1,expirevar:ip.asg_registration=600"
+
+# Re-check the same route before acting, so a high registration counter never
+# affects normal pages. Observation action: pass,log. Production: deny,429.
+SecRule REQUEST_METHOD "@streq POST" "id:1100652,phase:1,pass,log,msg:'AntiSpam Guard registration rate exceeded',chain"
+    SecRule REQUEST_FILENAME "@rx (?:^|/)ucp\.php$" "chain"
+        SecRule ARGS_GET:mode "@streq register" "chain"
+            SecRule IP:ASG_REGISTRATION "@gt 5"
