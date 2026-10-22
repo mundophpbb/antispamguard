@@ -214,8 +214,7 @@ class v_3_3_64 extends \mundophpbb\antispamguard\migrations\v_0_1_0
 
 	protected function add_unique_index_if_missing($table, $index_name, array $columns)
 	{
-		$indexes = $this->db_tools->sql_list_index($table);
-		if (!in_array($index_name, $indexes, true))
+		if (!$this->db_tools->sql_unique_index_exists($table, $index_name))
 		{
 			$this->db_tools->sql_create_unique_index($table, $index_name, $columns);
 		}
