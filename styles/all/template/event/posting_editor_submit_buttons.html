@@ -1,0 +1,8 @@
+{% if ANTISPAMGUARD_ENABLED and ((S_PRIVMSGS and ANTISPAMGUARD_PROTECT_PM) or (not S_PRIVMSGS and ANTISPAMGUARD_PROTECT_POSTS)) %}
+<!-- INCLUDECSS @mundophpbb_antispamguard/antispamguard.css -->
+<div class="{{ ANTISPAMGUARD_HP_CLASS }}" style="{{ ANTISPAMGUARD_HP_STYLE }}" aria-hidden="true">
+	<label for="antispamguard-hp-post">{{ lang('ANTISPAMGUARD_HP_LABEL') }}</label>
+	<input type="text" id="antispamguard-hp-post" name="{{ ANTISPAMGUARD_HP_NAME }}" value="" tabindex="-1" autocomplete="off" />
+</div>
+<input type="hidden" name="antispamguard_ts" value="{{ ANTISPAMGUARD_TS }}" />
+{% endif %}

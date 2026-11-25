@@ -1,0 +1,148 @@
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em tests/run.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em styles/all/theme/antispamguard.css (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em styles/all/template/event/ucp_register_credentials_after.html (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em styles/all/template/event/posting_editor_submit_buttons.html (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em styles/all/template/event/overall_footer_copyright_prepend.html (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/stopforumspam_client.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/sfs_log.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/sfs_decision.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/sfs_cache.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/registration_policy.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/registration_audit.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/ip_reputation.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/ip_rate_limit.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/ip_matcher.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/form_guard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/decision_engine.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/atomic_store.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/alerts.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em service/activity_tracker.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_73.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_72.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_71.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_69.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_68.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_67.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_66.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_65.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_64.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_63.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_48.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_45.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_44.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_43.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_42.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_41.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_40.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_39.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_38.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_37.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_36.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_3_3_35.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em migrations/v_0_1_0.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/pt_br/permissions_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/pt_br/info_acp_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/pt_br/common.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/pt_br/acp.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/fr/permissions_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/fr/info_acp_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/fr/common.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/fr/acp.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/en/permissions_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/en/info_acp_antispamguard.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/en/common.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em language/en/acp.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em ext.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em event/listener.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/slowspam_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/sfs_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/registration_audit_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/prune_logs.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/ip_reputation_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/ip_rate_limit_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em cron/task/alerts_cleanup.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em composer.json (coding-indent-tabs-json).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em adm/style/acp_antispamguard.css (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/sfs_controller.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/settings_helper.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/pagination_helper.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/main_module.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/main_info.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:27] Validador phpBB: correções seguras aplicadas em acp/logs_controller.php (line-ending-crlf).
+----------------------------------------
+[12/11/2026 12:26] Importação de ZIP: 84 arquivo(s) novo(s), 0 atualizado(s)
+----------------------------------------
+==================================================
+PROJETO CRIADO EM 12/11/2026 12:25
+==================================================
+
