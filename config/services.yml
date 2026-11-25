@@ -1,0 +1,234 @@
+services:
+    mundophpbb.antispamguard.atomic_store:
+        class: mundophpbb\antispamguard\service\atomic_store
+        arguments:
+            - '@dbal.conn'
+
+    mundophpbb.antispamguard.sfs_cache:
+        class: mundophpbb\antispamguard\service\sfs_cache
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
+
+    mundophpbb.antispamguard.stopforumspam_client:
+        class: mundophpbb\antispamguard\service\stopforumspam_client
+        arguments:
+            - '@mundophpbb.antispamguard.sfs_cache'
+            - '@config'
+
+    mundophpbb.antispamguard.sfs_log:
+        class: mundophpbb\antispamguard\service\sfs_log
+        arguments:
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.sfs_decision:
+        class: mundophpbb\antispamguard\service\sfs_decision
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.stopforumspam_client'
+            - '@mundophpbb.antispamguard.sfs_log'
+            - '@mundophpbb.antispamguard.ip_matcher'
+
+    mundophpbb.antispamguard.decision_engine:
+        class: mundophpbb\antispamguard\service\decision_engine
+        arguments:
+            - '@config'
+
+    mundophpbb.antispamguard.activity_tracker:
+        class: mundophpbb\antispamguard\service\activity_tracker
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.ip_reputation:
+        class: mundophpbb\antispamguard\service\ip_reputation
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
+
+    mundophpbb.antispamguard.ip_rate_limit:
+        class: mundophpbb\antispamguard\service\ip_rate_limit
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
+
+    mundophpbb.antispamguard.alerts:
+        class: mundophpbb\antispamguard\service\alerts
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.ip_matcher:
+        class: mundophpbb\antispamguard\service\ip_matcher
+
+    mundophpbb.antispamguard.form_guard:
+        class: mundophpbb\antispamguard\service\form_guard
+        arguments:
+            - '@config'
+            - '@request'
+
+    mundophpbb.antispamguard.registration_audit:
+        class: mundophpbb\antispamguard\service\registration_audit
+        arguments:
+            - '@dbal.conn'
+            - '@config'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.atomic_store'
+
+    mundophpbb.antispamguard.listener:
+        class: mundophpbb\antispamguard\event\listener
+        arguments:
+            - '@config'
+            - '@request'
+            - '@template'
+            - '@user'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.sfs_decision'
+            - '@mundophpbb.antispamguard.ip_reputation'
+            - '@mundophpbb.antispamguard.ip_rate_limit'
+            - '@mundophpbb.antispamguard.form_guard'
+            - '@mundophpbb.antispamguard.ip_matcher'
+            - '@mundophpbb.antispamguard.registration_audit'
+            - '@mundophpbb.antispamguard.decision_engine'
+        tags:
+            - { name: event.listener }
+
+    mundophpbb.antispamguard.cron.prune_logs:
+        class: mundophpbb\antispamguard\cron\task\prune_logs
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.prune_logs]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.sfs_cleanup:
+        class: mundophpbb\antispamguard\cron\task\sfs_cleanup
+        arguments:
+            - '@config'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.sfs_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.ip_reputation_cleanup:
+        class: mundophpbb\antispamguard\cron\task\ip_reputation_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.ip_reputation'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.ip_reputation_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.ip_rate_limit_cleanup:
+        class: mundophpbb\antispamguard\cron\task\ip_rate_limit_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.ip_rate_limit'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.ip_rate_limit_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.slowspam_cleanup:
+        class: mundophpbb\antispamguard\cron\task\slowspam_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.activity_tracker'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.slowspam_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.alerts_cleanup:
+        class: mundophpbb\antispamguard\cron\task\alerts_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.alerts'
+            - '@mundophpbb.antispamguard.delivery_history'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.alerts_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.cron.registration_audit_cleanup:
+        class: mundophpbb\antispamguard\cron\task\registration_audit_cleanup
+        arguments:
+            - '@config'
+            - '@mundophpbb.antispamguard.registration_audit'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.registration_audit_cleanup]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.email_reports:
+        class: mundophpbb\antispamguard\service\email_reports
+        arguments:
+            - '@config'
+            - '@config_text'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '@mundophpbb.antispamguard.delivery_history'
+
+    mundophpbb.antispamguard.cron.email_reports:
+        class: mundophpbb\antispamguard\cron\task\email_reports
+        arguments:
+            - '@mundophpbb.antispamguard.email_reports'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.email_reports]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.country_index:
+        class: mundophpbb\antispamguard\service\country_index
+        arguments:
+            - '%core.root_path%'
+
+    mundophpbb.antispamguard.telegram_alerts:
+        class: mundophpbb\antispamguard\service\telegram_alerts
+        arguments:
+            - '@config'
+            - '@config_text'
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+            - '@mundophpbb.antispamguard.email_reports'
+            - null
+            - '@mundophpbb.antispamguard.delivery_history'
+
+    mundophpbb.antispamguard.cron.telegram_alerts:
+        class: mundophpbb\antispamguard\cron\task\telegram_alerts
+        arguments:
+            - '@mundophpbb.antispamguard.telegram_alerts'
+        calls:
+            - [set_name, [cron.task.mundophpbb.antispamguard.telegram_alerts]]
+        tags:
+            - { name: cron.task }
+
+    mundophpbb.antispamguard.delivery_history:
+        class: mundophpbb\antispamguard\service\delivery_history
+        arguments:
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+
+    mundophpbb.antispamguard.spike_preview:
+        class: mundophpbb\antispamguard\service\spike_preview
+        arguments:
+            - '@dbal.conn'
+            - '%core.table_prefix%'

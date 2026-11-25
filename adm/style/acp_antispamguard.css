@@ -1,0 +1,684 @@
+/*
+ * AntiSpam Guard ACP module.
+ * Same visual language as the mundophpBB Download Center and Changelog ACP modules:
+ * prosilver colours, page header with icon, tab bar, cards with a tinted header strip,
+ * pills, callouts and flat buttons that keep the same look on hover, focus and click.
+ * Every rule is scoped to .mphpbb-asg-admin so the rest of the ACP is untouched.
+ */
+.mphpbb-asg-admin {
+	--asg-ink: #333333;
+	--asg-heading: #28313F;
+	--asg-accent: #115098;
+	--asg-link: #105289;
+	--asg-brand: #0076B1;
+	--asg-muted: #536482;
+	--asg-line: #CCCCCC;
+	--asg-line-soft: #DCE3E8;
+	--asg-control-line: #B4BAC0;
+	--asg-panel: #ECF1F3;
+	--asg-tint: #ECF3F7;
+	--asg-tint-alt: #E1EBF2;
+	--asg-tint-strong: #CADCEB;
+	--asg-surface: #FFFFFF;
+	--asg-success: #228822;
+	--asg-success-bg: #E6F2E6;
+	--asg-success-line: #BEDDBE;
+	--asg-warning: #8A5A00;
+	--asg-warning-bg: #FFF6E0;
+	--asg-warning-line: #E8CF92;
+	--asg-error: #BC2A4D;
+	--asg-error-bg: #F7ECEF;
+	--asg-error-line: #E3B5C1;
+	--asg-radius: 7px;
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+	color: var(--asg-ink);
+	line-height: 1.45;
+}
+
+.mphpbb-asg-admin *,
+.mphpbb-asg-admin *::before,
+.mphpbb-asg-admin *::after { box-sizing: border-box; }
+
+.mphpbb-asg-admin a { color: var(--asg-link); }
+.mphpbb-asg-admin .fa { line-height: inherit; }
+.mphpbb-asg-admin [hidden] { display: none !important; }
+.mphpbb-asg-admin :is(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid #11A3EA; outline-offset: 1px; }
+
+/* ---------------------------------------------------------------- page header */
+.mphpbb-asg-admin .asg-admin-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 0 0 18px;
+	padding: 4px 0 16px;
+	border-bottom: 1px solid var(--asg-line);
+}
+
+.mphpbb-asg-admin .asg-admin-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.mphpbb-asg-admin .asg-admin-icon {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border-radius: var(--asg-radius);
+	background: var(--asg-brand);
+	color: #FFFFFF;
+	font-size: 22px;
+}
+
+#content .mphpbb-asg-admin h1 {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	color: var(--asg-accent);
+	font-family: inherit;
+	font-size: 1.9em;
+	font-weight: 400;
+	line-height: 1.2;
+	text-transform: none;
+}
+
+.mphpbb-asg-admin .asg-admin-intro { margin: 3px 0 0; color: var(--asg-muted); }
+.mphpbb-asg-admin .asg-admin-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+/* ---------------------------------------------------------------- tabs */
+.mphpbb-asg-admin .asg-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin: 0 0 16px;
+	padding: 0 6px;
+	border-bottom: 1px solid var(--asg-line);
+}
+
+.mphpbb-asg-admin .asg-tabs a {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin-bottom: -1px;
+	padding: 10px 14px;
+	border: 1px solid transparent;
+	border-bottom: 0;
+	border-radius: var(--asg-radius) var(--asg-radius) 0 0;
+	color: var(--asg-link);
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.mphpbb-asg-admin .asg-tabs a:hover { background: var(--asg-tint); }
+
+.mphpbb-asg-admin .asg-tabs a[aria-current] {
+	border-color: var(--asg-line);
+	border-top: 3px solid var(--asg-brand);
+	background: var(--asg-surface);
+	color: var(--asg-heading);
+}
+
+.mphpbb-asg-admin .asg-tabs a[aria-current] .fa { color: var(--asg-brand); }
+
+/* ---------------------------------------------------------------- headings */
+#content .mphpbb-asg-admin h2 {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 22px 0 12px;
+	padding: 0 0 8px;
+	border: 0;
+	border-bottom: 2px solid var(--asg-tint-strong);
+	color: var(--asg-heading);
+	font-family: inherit;
+	font-size: 1.35em;
+	font-weight: 700;
+	text-transform: none;
+	letter-spacing: normal;
+}
+
+#content .mphpbb-asg-admin h3 {
+	margin: 0 0 8px;
+	padding: 0;
+	border: 0;
+	color: var(--asg-heading);
+	font-family: inherit;
+	font-size: 1.1em;
+	font-weight: 700;
+	text-transform: none;
+}
+
+.mphpbb-asg-admin h2 .fa,
+.mphpbb-asg-admin legend .fa { color: var(--asg-brand); }
+
+/* ---------------------------------------------------------------- fieldsets as cards */
+.mphpbb-asg-admin fieldset {
+	min-inline-size: 0;
+	margin: 0 0 16px;
+	padding: 0 20px 14px;
+	border: 1px solid var(--asg-line);
+	border-radius: var(--asg-radius);
+	background: var(--asg-surface);
+}
+
+.mphpbb-asg-admin fieldset > legend {
+	float: left;
+	width: calc(100% + 40px);
+	margin: 0 -20px 14px;
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--asg-line-soft);
+	border-radius: var(--asg-radius) var(--asg-radius) 0 0;
+	background: var(--asg-panel);
+	color: var(--asg-heading);
+	font-family: inherit;
+	font-size: 1.2em;
+	font-weight: 700;
+	line-height: 1.3;
+	top: 0;
+}
+
+.mphpbb-asg-admin fieldset > legend ~ * { clear: both; }
+.mphpbb-asg-admin fieldset fieldset { margin-top: 12px; }
+
+.mphpbb-asg-admin fieldset dl {
+	margin: 0;
+	padding: 10px 0;
+	border: 0;
+	border-top: 1px solid var(--asg-line-soft);
+	background: none;
+}
+
+.mphpbb-asg-admin fieldset > legend + dl,
+.mphpbb-asg-admin fieldset dl:first-of-type { border-top: 0; }
+.mphpbb-asg-admin fieldset dl:hover dt label,
+.mphpbb-asg-admin fieldset dt label { color: var(--asg-heading); font-weight: 700; }
+.mphpbb-asg-admin fieldset dt span { color: var(--asg-muted); }
+
+#content .mphpbb-asg-admin fieldset.submit-buttons,
+#content .mphpbb-asg-admin fieldset.quick,
+#content .mphpbb-asg-admin fieldset.display-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 14px 20px;
+	border: 1px solid var(--asg-line-soft);
+	background: var(--asg-panel);
+	text-align: left;
+}
+
+#content .mphpbb-asg-admin fieldset.display-actions > div { flex-basis: 100%; color: var(--asg-muted); }
+.mphpbb-asg-admin fieldset.submit-buttons > legend { display: none; }
+
+/* ---------------------------------------------------------------- panels (div cards with an h2 header strip) */
+.mphpbb-asg-admin :is(.asg-panel, .asg-diagnostic-card) {
+	min-width: 0;
+	margin: 0;
+	padding: 0 16px 14px;
+	overflow: hidden;
+	border: 1px solid var(--asg-line);
+	border-radius: var(--asg-radius);
+	background: var(--asg-surface);
+}
+
+#content .mphpbb-asg-admin :is(.asg-panel, .asg-diagnostic-card) > h2:first-child {
+	margin: 0 -16px 12px;
+	padding: 11px 16px;
+	border-bottom: 1px solid var(--asg-line-soft);
+	background: var(--asg-panel);
+	font-size: 1.15em;
+	line-height: 1.3;
+}
+
+.mphpbb-asg-admin fieldset.asg-panel { padding: 0 16px 14px; }
+.mphpbb-asg-admin fieldset.asg-panel > legend { width: calc(100% + 32px); margin: 0 -16px 12px; padding: 11px 16px; font-size: 1.15em; }
+
+.mphpbb-asg-admin .asg-panel dl {
+	margin: 0;
+	padding: 10px 0;
+	border: 0;
+	border-top: 1px solid var(--asg-line-soft);
+	background: none;
+}
+
+.mphpbb-asg-admin .asg-panel > h2 + dl,
+.mphpbb-asg-admin .asg-panel > legend + dl { border-top: 0; padding-top: 0; }
+.mphpbb-asg-admin .asg-panel dt { float: none; width: auto; margin-bottom: 4px; }
+.mphpbb-asg-admin .asg-panel dd { margin-left: 0; }
+.mphpbb-asg-admin .asg-panel dt label { color: var(--asg-heading); font-weight: 700; }
+.mphpbb-asg-admin .asg-panel dt span { display: block; margin-top: 2px; color: var(--asg-muted); font-size: 0.95em; line-height: 1.4; }
+.mphpbb-asg-admin .asg-panel :is(input[type=text], input[type=number], input[type=password], input[type=email]) { width: 100%; max-width: 320px; }
+.mphpbb-asg-admin .asg-panel textarea { width: 100%; max-width: 100%; }
+
+/* ---------------------------------------------------------------- grids */
+.mphpbb-asg-admin :is(.asg-modern-grid, .asg-sfs-layout, .asg-diagnostic-grid) {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	margin: 0 0 16px;
+	align-items: start;
+}
+
+.mphpbb-asg-admin .asg-sfs-layout .asg-panel-wide { grid-column: 1 / -1; }
+.mphpbb-asg-admin .asg-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 14px 0; }
+.mphpbb-asg-admin > form > .asg-panel,
+.mphpbb-asg-admin > .asg-panel { margin: 0 0 16px; }
+.mphpbb-asg-admin .asg-admin-wrap { margin: 0; }
+
+/* ---------------------------------------------------------------- form controls */
+.mphpbb-asg-admin :is(input[type=text], input[type=search], input[type=url], input[type=email], input[type=password], input[type=number], input[type=date], input[type=datetime-local], input[type=file], select, textarea) {
+	max-width: 100%;
+	min-height: 34px;
+	padding: 6px 9px;
+	border: 1px solid var(--asg-control-line);
+	border-radius: 4px;
+	background: var(--asg-surface);
+	color: var(--asg-ink);
+	font: inherit;
+	box-shadow: none;
+}
+
+.mphpbb-asg-admin textarea { line-height: 1.55; resize: vertical; }
+.mphpbb-asg-admin input[type=file] { padding: 4px; background: var(--asg-tint); }
+.mphpbb-asg-admin input::file-selector-button {
+	margin-inline-end: 10px;
+	padding: 4px 10px;
+	border: 1px solid var(--asg-control-line);
+	border-radius: 4px;
+	background: var(--asg-surface);
+	color: var(--asg-link);
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.mphpbb-asg-admin label > input.radio,
+.mphpbb-asg-admin label > input[type=radio],
+.mphpbb-asg-admin label > input[type=checkbox] { margin-right: 4px; }
+
+/* ---------------------------------------------------------------- buttons */
+#content .mphpbb-asg-admin :is(.button1, .button2),
+#content .mphpbb-asg-admin :is(.button1, .button2):is(:hover, :focus, :active, :link, :visited) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	width: auto;
+	max-width: 100%;
+	min-height: 34px;
+	margin: 0 4px 4px 0;
+	padding: 6px 14px;
+	border: 1px solid var(--asg-control-line);
+	border-radius: 4px;
+	background: var(--asg-surface);
+	background-image: none;
+	color: var(--asg-link);
+	font: inherit;
+	font-weight: 700;
+	line-height: 1.35;
+	text-align: center;
+	text-decoration: none;
+	text-shadow: none;
+	white-space: normal;
+	box-shadow: none;
+	transition: none;
+	cursor: pointer;
+}
+
+#content .mphpbb-asg-admin .button1,
+#content .mphpbb-asg-admin .button1:is(:hover, :focus, :active, :link, :visited) {
+	border-color: var(--asg-link);
+	background: var(--asg-link);
+	color: #FFFFFF;
+}
+
+#content .mphpbb-asg-admin :is(.button1, .button2):disabled { opacity: 0.55; cursor: not-allowed; }
+#content .mphpbb-asg-admin :is(.button1, .button2):focus-visible { outline: 2px solid #11A3EA; outline-offset: 2px; }
+
+.mphpbb-asg-admin .asg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#content .mphpbb-asg-admin .asg-actions :is(.button1, .button2) { margin: 0; }
+
+/* compact buttons inside wide log tables */
+#content .mphpbb-asg-admin .asg-sfs-report-cell :is(.button1, .button2),
+#content .mphpbb-asg-admin .asg-sfs-report-btn {
+	min-height: 26px;
+	margin: 1px 2px 2px 0;
+	padding: 2px 9px;
+	font-size: 0.92em;
+	white-space: nowrap;
+}
+
+.mphpbb-asg-admin .asg-sfs-report-cell { min-width: 78px; text-align: center; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- tables */
+#content .mphpbb-asg-admin table.table1 {
+	width: 100%;
+	margin: 0 0 16px;
+	border: 1px solid var(--asg-line);
+	border-collapse: separate;
+	border-spacing: 0;
+	border-radius: var(--asg-radius);
+	overflow: hidden;
+	background: var(--asg-surface);
+}
+
+#content .mphpbb-asg-admin table.table1 :is(th, td) {
+	padding: 9px 12px;
+	border: 0;
+	border-top: 1px solid var(--asg-line-soft);
+	background: none;
+	color: var(--asg-ink);
+	font-size: 1em;
+	text-align: left;
+	vertical-align: middle;
+}
+
+#content .mphpbb-asg-admin table.table1 thead th {
+	border-top: 0;
+	background: var(--asg-brand);
+	color: #FFFFFF;
+	font-size: 0.85em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+#content .mphpbb-asg-admin table.table1 thead th a { color: #FFFFFF; }
+#content .mphpbb-asg-admin table.table1 tbody tr:nth-child(odd) :is(th, td) { background: var(--asg-tint); }
+#content .mphpbb-asg-admin table.table1 tbody tr:nth-child(even) :is(th, td) { background: var(--asg-tint-alt); }
+#content .mphpbb-asg-admin table.table1 tbody tr:first-child :is(th, td) { border-top: 0; }
+#content .mphpbb-asg-admin table.table1 td strong { color: var(--asg-heading); }
+#content .mphpbb-asg-admin fieldset table.table1 { margin-top: 6px; }
+
+/* SFS moderation row states keep their meaning on top of the zebra striping */
+#content .mphpbb-asg-admin table.table1 tr.asg-sfs-row-reported td { background: #EAF6FF; }
+#content .mphpbb-asg-admin table.table1 tr.asg-sfs-row-blocked td { background: var(--asg-error-bg); }
+#content .mphpbb-asg-admin table.table1 tr.asg-sfs-row-reported-blocked td { background: var(--asg-warning-bg); }
+#content .mphpbb-asg-admin table.table1 tr.asg-sfs-row-allowed td { background: var(--asg-success-bg); }
+
+.mphpbb-asg-admin :is(.asg-mark-col, .asg-sfs-select-col) { width: 28px; text-align: center; }
+.mphpbb-asg-admin .asg-center { text-align: center; }
+
+/* key/value tables on the diagnostics page */
+.mphpbb-asg-admin .asg-kv { width: 100%; border-collapse: collapse; }
+.mphpbb-asg-admin .asg-kv :is(th, td) { padding: 7px 4px; border-top: 1px solid var(--asg-line-soft); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.mphpbb-asg-admin .asg-kv tr:first-child :is(th, td) { border-top: 0; }
+.mphpbb-asg-admin .asg-kv th { width: 42%; color: var(--asg-muted); font-weight: 700; }
+
+/* ---------------------------------------------------------------- pills and badges */
+.mphpbb-asg-admin .asg-status-strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+
+.mphpbb-asg-admin :is(.asg-pill, .asg-status, .asg-sfs-status-badge) {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 9px;
+	border: 1px solid var(--asg-tint-strong);
+	border-radius: 999px;
+	background: var(--asg-tint-alt);
+	color: var(--asg-muted);
+	font-size: 0.9em;
+	font-weight: 700;
+	line-height: 1.5;
+	white-space: nowrap;
+}
+
+.mphpbb-asg-admin .asg-pill-on { border-color: var(--asg-success-line); background: var(--asg-success-bg); color: var(--asg-success); }
+.mphpbb-asg-admin .asg-pill-warn { border-color: var(--asg-warning-line); background: var(--asg-warning-bg); color: var(--asg-warning); }
+.mphpbb-asg-admin .asg-pill-off { border-color: var(--asg-line-soft); background: var(--asg-surface); color: var(--asg-muted); }
+
+.mphpbb-asg-admin .asg-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 9px;
+	border: 1px solid var(--asg-control-line);
+	border-radius: 999px;
+	background: var(--asg-surface);
+	color: var(--asg-heading);
+	font-family: Consolas, Monaco, monospace;
+	font-size: 0.9em;
+	line-height: 1.5;
+	white-space: nowrap;
+}
+
+/* reason badges on the logs page keep their per-rule colours */
+.mphpbb-asg-admin .asg-reason-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.mphpbb-asg-admin .asg-reason-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 9px;
+	border: 1px solid;
+	border-radius: 999px;
+	font-size: 0.9em;
+	font-weight: 700;
+	line-height: 1.5;
+	white-space: nowrap;
+}
+
+.mphpbb-asg-admin .asg-reason-honeypot       { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+.mphpbb-asg-admin .asg-reason-timestamp      { background: #DBEAFE; color: #1E40AF; border-color: #BFDBFE; }
+.mphpbb-asg-admin .asg-reason-sfs            { background: #EDE9FE; color: #5B21B6; border-color: #DDD6FE; }
+.mphpbb-asg-admin .asg-reason-combined       { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+.mphpbb-asg-admin .asg-reason-ip-reputation  { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.mphpbb-asg-admin .asg-reason-rate-limit     { background: #FFEDD5; color: #9A3412; border-color: #FED7AA; }
+.mphpbb-asg-admin .asg-reason-content-filter { background: #F3E8FF; color: #6B21A8; border-color: #E9D5FF; }
+.mphpbb-asg-admin .asg-reason-simulation     { background: #F3F4F6; color: #374151; border-color: #E5E7EB; }
+.mphpbb-asg-admin .asg-reason-other          { background: #F1F5F9; color: #334155; border-color: #E2E8F0; }
+
+/* ---------------------------------------------------------------- stat tiles */
+.mphpbb-asg-admin .asg-dashboard {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+	gap: 10px;
+	margin: 0 0 16px;
+}
+
+.mphpbb-asg-admin .asg-card {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 10px 14px;
+	border: 1px solid var(--asg-line-soft);
+	border-radius: var(--asg-radius);
+	background: var(--asg-surface);
+}
+
+.mphpbb-asg-admin .asg-card > span {
+	display: block;
+	color: var(--asg-muted);
+	font-size: 0.85em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.mphpbb-asg-admin .asg-card > strong {
+	display: block;
+	margin-top: 4px;
+	color: var(--asg-accent);
+	font-size: 1.6em;
+	font-weight: 700;
+	line-height: 1.2;
+	overflow-wrap: anywhere;
+}
+
+.mphpbb-asg-admin .asg-card p { margin: 4px 0 0; color: var(--asg-muted); font-size: 0.92em; line-height: 1.35; }
+
+/* ---------------------------------------------------------------- callouts */
+.mphpbb-asg-admin :is(.asg-alert, .asg-diagnostic-hero, .asg-sfs-review-stats, .asg-sfs-diag, .asg-sfs-bulk-actions) {
+	margin: 0 0 14px;
+	padding: 11px 14px;
+	border: 1px solid var(--asg-line-soft);
+	border-left: 4px solid var(--asg-brand);
+	border-radius: var(--asg-radius);
+	background: var(--asg-tint);
+	color: var(--asg-ink);
+	line-height: 1.45;
+}
+
+.mphpbb-asg-admin :is(.asg-alert, .asg-diagnostic-hero) > strong { display: block; margin-bottom: 3px; color: var(--asg-heading); }
+.mphpbb-asg-admin .asg-sfs-diag > strong:first-child { display: inline-block; margin-bottom: 4px; color: var(--asg-heading); font-size: 1.05em; }
+.mphpbb-asg-admin .asg-sfs-diag > strong:not(:first-child) { color: var(--asg-heading); }
+.mphpbb-asg-admin .asg-alert { border-color: var(--asg-warning-line); border-left-color: #D49A28; background: var(--asg-warning-bg); }
+.mphpbb-asg-admin .asg-alert > strong { color: var(--asg-warning); }
+.mphpbb-asg-admin .asg-alert.asg-alert-info { border-color: var(--asg-line-soft); border-left-color: var(--asg-brand); background: var(--asg-tint); }
+.mphpbb-asg-admin .asg-alert.asg-alert-info > strong { color: var(--asg-heading); }
+.mphpbb-asg-admin .asg-sfs-review-stats { font-weight: 700; }
+#content .mphpbb-asg-admin .asg-sfs-diag :is(.button1, .button2) { margin-top: 8px; }
+.mphpbb-asg-admin .asg-sfs-diag { line-height: 1.75; }
+.mphpbb-asg-admin .asg-sfs-bulk-actions { border-left-color: var(--asg-muted); background: var(--asg-panel); }
+.mphpbb-asg-admin .asg-sfs-prefill-link { font-size: 0.92em; }
+
+/* ---------------------------------------------------------------- pagination */
+.mphpbb-asg-admin .asg-pagination {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px 12px;
+	margin: 0 0 12px;
+	padding: 8px 12px;
+	border: 1px solid var(--asg-line-soft);
+	border-radius: var(--asg-radius);
+	background: var(--asg-panel);
+	line-height: 1.7;
+}
+
+.mphpbb-asg-admin .asg-pagination-summary { color: var(--asg-heading); font-weight: 700; }
+.mphpbb-asg-admin .asg-pagination-filtered { display: inline-block; margin-left: 6px; padding-left: 6px; border-left: 1px solid var(--asg-line); color: var(--asg-muted); font-weight: 400; }
+.mphpbb-asg-admin .asg-pagination-pages { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 3px; }
+.mphpbb-asg-admin .asg-pagination-label { margin-right: 5px; color: var(--asg-muted); white-space: nowrap; }
+
+.mphpbb-asg-admin :is(.asg-pagination-pages a, .asg-page-current, .asg-page-gap) {
+	display: inline-block;
+	min-width: 26px;
+	padding: 1px 7px;
+	border: 1px solid var(--asg-control-line);
+	border-radius: 4px;
+	background: var(--asg-surface);
+	color: var(--asg-link);
+	font-weight: 700;
+	text-align: center;
+	text-decoration: none;
+}
+
+.mphpbb-asg-admin .asg-pagination-pages a:hover { background: var(--asg-tint); }
+.mphpbb-asg-admin .asg-page-current { border-color: var(--asg-brand); background: var(--asg-brand); color: #FFFFFF; }
+.mphpbb-asg-admin .asg-page-gap { min-width: auto; border-color: transparent; background: transparent; color: var(--asg-muted); }
+.mphpbb-asg-admin .pagination { margin: 0 0 16px; color: var(--asg-muted); }
+
+/* ---------------------------------------------------------------- filters */
+.mphpbb-asg-admin .asg-filter-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+	gap: 10px 12px;
+	margin-bottom: 12px;
+}
+
+.mphpbb-asg-admin .asg-filter-grid label { display: grid; align-content: start; gap: 4px; color: var(--asg-heading); font-weight: 700; }
+.mphpbb-asg-admin .asg-filter-grid :is(input, select) { width: 100%; min-width: 0; margin: 0; font-weight: 400; }
+
+/* ---------------------------------------------------------------- statistics */
+.mphpbb-asg-admin .asg-statistics { min-inline-size: 0; }
+.mphpbb-asg-admin :is(.asg-activity-header, .asg-activity-legend, .asg-period-links) { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.mphpbb-asg-admin .asg-activity-header { justify-content: space-between; margin-top: 18px; }
+#content .mphpbb-asg-admin .asg-activity-header h2 { margin: 0; border-bottom: 0; padding-bottom: 0; }
+.mphpbb-asg-admin .asg-period-links { gap: 6px; }
+#content .mphpbb-asg-admin .asg-period-links :is(.button1, .button2) { margin: 0; }
+.mphpbb-asg-admin .asg-activity-legend { margin: 0 0 8px; }
+.mphpbb-asg-admin .asg-activity-legend form { margin: 0; }
+
+.mphpbb-asg-admin .asg-series-marker {
+	display: inline-block;
+	width: 0.8em;
+	height: 0.8em;
+	margin-inline-end: 0.35em;
+	border-radius: 2px;
+	background: var(--asg-brand);
+}
+
+.mphpbb-asg-admin .asg-series-marker.asg-series-sfs { background: var(--asg-success); }
+
+.mphpbb-asg-admin .asg-activity-scroll {
+	overflow-x: auto;
+	border: 1px solid var(--asg-line);
+	border-radius: var(--asg-radius);
+	background: var(--asg-surface);
+}
+
+.mphpbb-asg-admin .asg-activity-chart { display: flex; gap: 4px; padding: 10px; }
+.mphpbb-asg-admin .asg-activity-bucket { flex: 1 0 55px; min-width: 55px; text-align: center; }
+.mphpbb-asg-admin .asg-activity-bars { display: flex; justify-content: center; gap: 3px; border-bottom: 1px solid var(--asg-line-soft); }
+
+.mphpbb-asg-admin .asg-activity-bar {
+	position: relative;
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	height: 94px;
+	padding-top: 17px;
+	color: var(--asg-brand);
+	text-decoration: none;
+}
+
+.mphpbb-asg-admin .asg-activity-bar.asg-series-sfs { color: var(--asg-success); }
+.mphpbb-asg-admin .asg-activity-bar span { display: block; width: 80%; max-width: 40px; border-radius: 3px 3px 0 0; background: currentColor; }
+.mphpbb-asg-admin .asg-activity-bar:is(:hover, :focus-visible) { background: var(--asg-tint); color: var(--asg-accent); }
+.mphpbb-asg-admin .asg-activity-bar.asg-series-sfs:is(:hover, :focus-visible) { background: var(--asg-success-bg); color: #1A6B1A; }
+.mphpbb-asg-admin .asg-activity-bar:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.mphpbb-asg-admin .asg-activity-bar strong { position: absolute; inset: 0 0 auto; color: var(--asg-heading); font-size: 0.9em; font-variant-numeric: tabular-nums; }
+.mphpbb-asg-admin .asg-activity-label { display: block; padding-top: 4px; color: var(--asg-muted); }
+
+.mphpbb-asg-admin .asg-bar-row { display: grid; grid-template-columns: 120px 1fr 50px; align-items: center; gap: 8px; margin: 6px 0; }
+.mphpbb-asg-admin .asg-bar-row strong { overflow-wrap: anywhere; }
+.mphpbb-asg-admin .asg-bar-wrap { height: 10px; overflow: hidden; border-radius: 999px; background: var(--asg-tint-alt); }
+.mphpbb-asg-admin .asg-bar-fill { height: 10px; min-width: 0; border-radius: 999px; background: var(--asg-brand); }
+
+.mphpbb-asg-admin .asg-ip-ranking { margin: 0; padding: 0; list-style: none; }
+.mphpbb-asg-admin .asg-ip-ranking li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--asg-line-soft); overflow-wrap: anywhere; }
+.mphpbb-asg-admin .asg-ip-ranking li:last-child { border-bottom: 0; }
+.mphpbb-asg-admin .asg-ip-summary { margin-bottom: 14px; }
+.mphpbb-asg-admin .asg-ip-summary p:last-child { margin-bottom: 0; }
+
+.mphpbb-asg-admin .asg-country-panel { margin: 14px 0; }
+.mphpbb-asg-admin .asg-country-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.mphpbb-asg-admin .asg-country-list li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border: 1px solid var(--asg-line-soft); border-radius: var(--asg-radius); background: var(--asg-tint); }
+.mphpbb-asg-admin .asg-country-panel details { margin-top: 8px; }
+.mphpbb-asg-admin :is(.asg-country-panel, .asg-delivery-daily) summary { color: var(--asg-link); font-weight: 700; cursor: pointer; }
+
+/* ---------------------------------------------------------------- alerts and summaries */
+.mphpbb-asg-admin .asg-email-recipient input { width: min(100%, 350px); margin-inline-start: 6px; }
+.mphpbb-asg-admin .asg-email-panels fieldset.asg-panel { min-inline-size: 0; margin: 0; }
+.mphpbb-asg-admin .asg-email-toggle { display: block; margin: 0 0 12px; font-weight: 700; }
+.mphpbb-asg-admin .asg-delivery-summary th { white-space: normal; }
+.mphpbb-asg-admin .asg-delivery-summary td { text-align: end; font-variant-numeric: tabular-nums; }
+.mphpbb-asg-admin .asg-delivery-daily { margin: 1em 0; }
+
+/* ---------------------------------------------------------------- small screens */
+@media (max-width: 900px) {
+	.mphpbb-asg-admin :is(.asg-modern-grid, .asg-sfs-layout, .asg-diagnostic-grid, .asg-grid-2) { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 700px) {
+	.mphpbb-asg-admin fieldset { padding: 0 12px 12px; }
+	.mphpbb-asg-admin fieldset > legend { width: calc(100% + 24px); margin: 0 -12px 12px; padding: 10px 12px; }
+	.mphpbb-asg-admin .asg-pagination { display: block; }
+	.mphpbb-asg-admin .asg-pagination-pages { justify-content: flex-start; margin-top: 4px; }
+	.mphpbb-asg-admin .asg-tabs a { padding: 8px 10px; }
+}
+
+@media (max-width: 540px) {
+	.mphpbb-asg-admin .asg-email-recipient label { display: block; margin-bottom: 4px; }
+	.mphpbb-asg-admin .asg-email-recipient input { margin-inline-start: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.mphpbb-asg-admin * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
