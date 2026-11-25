@@ -1,0 +1,9 @@
+Subject: AntiSpam Guard: alerta de pico de bloqueios
+
+A regra de pico de bloqueios foi atingida no fórum {SITENAME}.
+
+Janela de observação (UTC): de {PERIOD_START} a {PERIOD_END}.
+Registros de bloqueios confirmados: {BLOCKED_RECORDS} (mínimo: {MIN_BLOCKS}).
+Endereços IP distintos: {DISTINCT_IPS} (mínimo: {MIN_IPS}).
+
+Cada registro agrupado no log geral conta uma vez. Para investigar, abra AntiSpam Guard > Logs de bloqueio no painel de administração e filtre pelo período e pela ação final.

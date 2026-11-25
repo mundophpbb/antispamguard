@@ -1,0 +1,17 @@
+Subject: AntiSpam Guard : résumé {% if S_WEEKLY %}hebdomadaire{% else %}quotidien{% endif %} de l’activité
+
+Activité d’AntiSpam Guard sur le forum {SITENAME}.
+Période (UTC) : du {PERIOD_START} au {PERIOD_END}.
+
+Journal général
+Total des entrées conservées : {GENERAL_TOTAL}
+Blocages confirmés : {GENERAL_BLOCKED}
+Entrées à examiner : {GENERAL_REVIEW}
+Simulations : {GENERAL_SIMULATION}
+
+Journal StopForumSpam
+Total des entrées conservées : {SFS_TOTAL}
+Blocages : {SFS_BLOCKED}
+
+Chaque entrée groupée compte une fois. Un envoi peut apparaître dans les deux journaux.
+Pour consulter l’activité, ouvrez AntiSpam Guard > Statistiques dans le panneau d’administration.

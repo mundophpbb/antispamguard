@@ -1,0 +1,17 @@
+Subject: AntiSpam Guard {% if S_WEEKLY %}weekly{% else %}daily{% endif %} activity summary
+
+AntiSpam Guard activity on {SITENAME}.
+Period (UTC): {PERIOD_START} to {PERIOD_END}.
+
+General log
+Total retained records: {GENERAL_TOTAL}
+Confirmed blocks: {GENERAL_BLOCKED}
+Review records: {GENERAL_REVIEW}
+Simulations: {GENERAL_SIMULATION}
+
+StopForumSpam log
+Total retained records: {SFS_TOTAL}
+Blocks: {SFS_BLOCKED}
+
+Each grouped record counts once. A submission may appear in both logs.
+Open AntiSpam Guard > Statistics in the administration panel to review the activity.

@@ -1,0 +1,17 @@
+Subject: AntiSpam Guard: resumo {% if S_WEEKLY %}semanal{% else %}diário{% endif %} de atividade
+
+Atividade do AntiSpam Guard no fórum {SITENAME}.
+Período (UTC): de {PERIOD_START} a {PERIOD_END}.
+
+Log geral
+Total de registros disponíveis: {GENERAL_TOTAL}
+Bloqueios confirmados: {GENERAL_BLOCKED}
+Registros para revisão: {GENERAL_REVIEW}
+Simulações: {GENERAL_SIMULATION}
+
+Log do StopForumSpam
+Total de registros disponíveis: {SFS_TOTAL}
+Bloqueios: {SFS_BLOCKED}
+
+Cada registro agrupado conta uma vez. Uma submissão pode aparecer nos dois logs.
+Para consultar a atividade, abra AntiSpam Guard > Estatísticas no painel de administração.

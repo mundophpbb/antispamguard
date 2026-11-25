@@ -1,0 +1,9 @@
+Subject: AntiSpam Guard block spike alert
+
+The block spike rule was reached on {SITENAME}.
+
+Time window (UTC): {PERIOD_START} to {PERIOD_END}.
+Confirmed block records: {BLOCKED_RECORDS} (minimum: {MIN_BLOCKS}).
+Distinct IP addresses: {DISTINCT_IPS} (minimum: {MIN_IPS}).
+
+Each grouped record in the general log counts once. Open AntiSpam Guard > Block logs in the administration panel and filter by period and final action to investigate.

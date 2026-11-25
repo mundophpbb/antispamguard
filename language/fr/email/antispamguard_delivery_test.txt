@@ -1,0 +1,3 @@
+Subject: AntiSpam Guard — Test d’envoi
+
+Ceci est un message de test d’AntiSpam Guard sur le forum {SITENAME}.

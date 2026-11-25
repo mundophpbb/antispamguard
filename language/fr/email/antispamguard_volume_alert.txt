@@ -1,0 +1,9 @@
+Subject: AntiSpam Guard : alerte de pic de blocages
+
+La règle de pic de blocages a été déclenchée sur le forum {SITENAME}.
+
+Fenêtre d’observation (UTC) : du {PERIOD_START} au {PERIOD_END}.
+Blocages confirmés : {BLOCKED_RECORDS} (minimum : {MIN_BLOCKS}).
+Adresses IP distinctes : {DISTINCT_IPS} (minimum : {MIN_IPS}).
+
+Chaque entrée groupée dans le journal général compte une fois. Pour examiner les blocages, ouvrez AntiSpam Guard > Journaux de blocage dans le panneau d’administration et filtrez par période et action finale.
